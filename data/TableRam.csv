@@ -1,0 +1,88 @@
+Region,Stock,Latin binomial,F/Fmsy,SAR,FP,Overlap
+Adriatic Sea (GFCM 2.1),Common sole,Solea solea,4.14,7.93,80.7,42.2
+Adriatic Sea (GFCM 2.1),Hake,Merluccius merluccius,8.48,7.93,80.7,28.31
+Adriatic Sea (GFCM 2.1),Red mullet,Mullus barbatus,1.75,7.93,80.7,28.31
+Skagerrak and Kattegat (ICES 3a),Atlantic cod,Gadus morhua,3.86,3.33,54.4,NA
+Skagerrak and Kattegat (ICES 3a),Atlantic cod,Gadus morhua,1.6,3.33,54.4,NA
+"North Sea (ICES 4a, b, c)",Common sole,Solea solea,2.21,1.19,51.7,NA
+"North Sea (ICES 4a, b, c)",European Plaice,Pleuronectes platessa,1.24,1.19,51.7,NA
+"North Sea (ICES 4a, b, c)",Hake,Merluccius merluccius,1.67,1.19,51.7,NA
+"North Sea (ICES 4a, b, c)",Norway lobster,Nephrops norvegicus,1.04,1.19,51.7,NA
+"North Sea (ICES 4a, b, c)",Norway lobster,Nephrops norvegicus,1.36,1.19,51.7,NA
+"North Sea (ICES 4a, b, c)",Norway lobster,Nephrops norvegicus,1.13,1.19,51.7,NA
+Tyrrhenian Sea (GFCM 1.3),Blue whiting,Micromesistius poutassou,1.71,2.29,49.9,69.05
+Tyrrhenian Sea (GFCM 1.3),Giant red shrimp,Aristaeomorpha foliacea,0.37,2.29,49.9,27.81
+Tyrrhenian Sea (GFCM 1.3),Giant red shrimp,Aristaeomorpha foliacea,2.13,2.29,49.9,19.9
+Tyrrhenian Sea (GFCM 1.3),Giant red shrimp,Aristaeomorpha foliacea,1.34,2.29,49.9,69.05
+Tyrrhenian Sea (GFCM 1.3),Hake,Merluccius merluccius,5,2.29,49.9,30.96
+Tyrrhenian Sea (GFCM 1.3),Norway lobster,Nephrops norvegicus,1.81,2.29,49.9,69.05
+Tyrrhenian Sea (GFCM 1.3),Red mullet,Mullus barbatus,5.4,2.29,49.9,NA
+Tyrrhenian Sea (GFCM 1.3),Red mullet,Mullus barbatus,1.15,2.29,49.9,69.05
+Tyrrhenian Sea (GFCM 1.3),Red mullet,Mullus barbatus,2.74,2.29,49.9,27.81
+Tyrrhenian Sea (GFCM 1.3),Spottail mantis shrimp,Squilla mantis,2.31,2.29,49.9,69.05
+Tyrrhenian Sea (GFCM 1.3),Surmullet,Mullus surmuletus,2.1,2.29,49.9,69.05
+Irish Sea (ICES 7a),Atlantic cod,Gadus morhua,3.29,1.46,28.5,99.42
+Irish Sea (ICES 7a),Common sole,Solea solea,1.64,1.46,28.5,99.42
+Irish Sea (ICES 7a),Norway lobster,Nephrops norvegicus,0.61,1.46,28.5,NA
+Irish Sea (ICES 7a),Norway lobster,Nephrops norvegicus,1.07,1.46,28.5,NA
+Argentina,Argentine hake,Merluccius hubbsi,2.23,0.28,17.6,79.75
+Argentina,Patagonian grenadier,Macruronus magellanicus,1.31,0.28,17.6,78.6
+South Benguela Current,shallow-water cape hake,Merluccius capensis,0.25,0.44,13.8,20.18
+East Agulhas Current,deep-water cape hake,Merluccius paradoxus,0.7,0.25,11.1,16.68
+East Bering Sea,Alaska plaice,Pleuronectes quadrituberculatus,0.2,0.09,7.9,91.35
+East Bering Sea,Arrowtooth flounder,Reinhardtius stomias,0.08,0.09,7.9,80.98
+East Bering Sea,Atka mackerel,Pleurogrammus monopterygius,0.61,0.09,7.9,38.29
+East Bering Sea,Dover sole,Microstomus pacificus,0.06,0.09,7.9,NA
+East Bering Sea,Flathead sole,Hippoglossoides elassodon,0.18,0.09,7.9,88.73
+East Bering Sea,Northern rock sole,Lepidopsetta polyxystra,0.35,0.09,7.9,87.78
+East Bering Sea,Northern rockfish,Sebastes polyspinis,0.31,0.09,7.9,38.48
+East Bering Sea,Pacific Ocean perch,Sebastes alutus,0.39,0.09,7.9,47.58
+East Bering Sea,Rougheye rockfish,Sebastes aleutianus,0.46,0.09,7.9,35.11
+East Bering Sea,Walleye pollock,Theragra chalcogramma,0.39,0.09,7.9,78.06
+East Bering Sea,Yellowfin sole,Limanda aspera,0.73,0.09,7.9,94.71
+North California Current,Arrowtooth flounder,Reinhardtius stomias,0.5,0.08,6.9,25.18
+North California Current,Aurora rockfish,Sebastes aurora,0.72,0.08,6.9,NA
+North California Current,Black rockfish,Sebastes melanops,1.16,0.08,6.9,NA
+North California Current,Black rockfish,Sebastes melanops,0.73,0.08,6.9,NA
+North California Current,Black rockfish,Sebastes melanops,0.91,0.08,6.9,NA
+North California Current,Blackgill rockfish,Sebastes melanostomus,0.42,0.08,6.9,37.93
+North California Current,Bocaccio,Sebastes paucispinis,0.12,0.08,6.9,28.75
+North California Current,Brown rockfish,Sebastes auriculatus,0.63,0.08,6.9,NA
+North California Current,California scorpionfish,Scorpaena guttata,0.31,0.08,6.9,41.31
+North California Current,Canary rockfish,Sebastes pinniger,0.07,0.08,6.9,37.93
+North California Current,Chilipepper,Sebastes goodei,0.15,0.08,6.9,25.18
+North California Current,China rockfish,Sebastes nebulosus,0.74,0.08,6.9,NA
+North California Current,China rockfish,Sebastes nebulosus,0.51,0.08,6.9,NA
+North California Current,China rockfish,Sebastes nebulosus,1.3,0.08,6.9,NA
+North California Current,Copper rockfish,Sebastes caurinus,0.24,0.08,6.9,NA
+North California Current,Cowcod,Sebastes levis,0,0.08,6.9,41.31
+North California Current,Darkblotched rockfish,Sebastes crameri,0.73,0.08,6.9,37.93
+North California Current,Dover sole,Microstomus pacificus,0.13,0.08,6.9,37.93
+North California Current,English sole,Parophrys vetulus,0.09,0.08,6.9,37.93
+North California Current,Greenspotted rockfish,Sebastes chlorostictus,0.01,0.08,6.9,26.41
+North California Current,Greenspotted rockfish,Sebastes chlorostictus,0.13,0.08,6.9,41.31
+North California Current,Greenstriped rockfish,Sebastes elongatus,0.01,0.08,6.9,41.31
+North California Current,Lingcod,Ophiodon elongatus,0.25,0.08,6.9,16.81
+North California Current,Lingcod,Ophiodon elongatus,0.09,0.08,6.9,31.76
+North California Current,Longspine thornyhead,Sebastolobus altivelis,0.29,0.08,6.9,41.31
+North California Current,Pacific hake,Merluccius productus,0.7,0.08,6.9,41.31
+North California Current,Pacific ocean perch,Sebastes alutus,0.31,0.08,6.9,41.31
+North California Current,Petrale sole,Eopsetta jordani,1.12,0.08,6.9,41.31
+North California Current,Rex sole,Glyptocephalus zachirus,0.26,0.08,6.9,NA
+North California Current,Sablefish,Anoplopoma fimbria,0.97,0.08,6.9,41.31
+North California Current,Sharpchin rockfish,Sebastes zacentrus,0.01,0.08,6.9,NA
+North California Current,Shortspine thornyhead,Sebastolobus alascanus,0.6,0.08,6.9,37.93
+North California Current,Splitnose Rockfish,Sebastes diploproa,0.06,0.08,6.9,37.93
+North California Current,Widow rockfish,Sebastes entomelas,0.04,0.08,6.9,37.93
+North California Current,Yelloweye rockfish,Sebastes ruberrimus,0.32,0.08,6.9,37.93
+North California Current,Yellowtail rockfish,Sebastes flavidus,0.2,0.08,6.9,16.08
+Aleutian Islands,Walleye pollock,Theragra chalcogramma,0.03,0.03,2.1,31.43
+Gulf of Alaska,Arrowtooth flounder,Atheresthes stomias,0.05,0.02,1.7,69.75
+Gulf of Alaska,Dusky rockfish,Sebastes variabilis,0.61,0.02,1.7,73.93
+Gulf of Alaska,Flathead sole,Hippoglossoides elassodon,0.04,0.02,1.7,73.93
+Gulf of Alaska,Northern rockfish,Sebastes polyspinis,0.38,0.02,1.7,71.82
+Gulf of Alaska,Pacific cod,Gadus macrocephalus,0.49,0.02,1.7,76.54
+Gulf of Alaska,Pacific ocean perch,Sebastes alutus,0.47,0.02,1.7,74.55
+Gulf of Alaska,Rex sole,Glyptocephalus zachirus,0.68,0.02,1.7,86.05
+Gulf of Alaska,Rougheye rockfish,Sebastes aleutianus,0.21,0.02,1.7,75.83
+Gulf of Alaska,Walleye pollock,Theragra chalcogramma,0.29,0.02,1.7,68.74
