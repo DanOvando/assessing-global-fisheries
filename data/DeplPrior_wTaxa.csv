@@ -1,0 +1,8 @@
+Country (Country),Species (ASFIS species),Class,Order,Family,Genus,Species,Fishing area (FAO major fishing area),DepletePrior,DepleteCV,InitialDepletePrior,InitialDepleteCV,Kprior,KCV
+Mexico,Pacific thread herring,Actinopterygii,Clupeiformes,Clupeidae,Opisthonema,libertate,"Pacific, Eastern Central",0.452,0.2,0.8,0.2,3,0.5
+Mexico,Yellowfin tuna,Actinopterygii,Perciformes,Scombridae,Thunnus,albacares,"Pacific, Eastern Central",0.488,0.2,0.8,0.2,5,0.5
+Mexico,California pilchard,Actinopterygii,Clupeiformes,Clupeidae,Sardinops,sagax,"Pacific, Eastern Central",0.416,0.2,0.1,0.2,3,0.5
+Mexico,Marine fishes nei,Actinopterygii,,,,,"Pacific, Eastern Central",0.15,0.2,0.8,0.2,5,0.5
+Mexico,Marine crabs nei,,,,,,"Pacific, Eastern Central",0.56,0.2,0.8,0.2,5,0.5
+Mexico,Penaeus shrimps nei,,,,,,"Atlantic, Western Central",0.28,0.2,0.8,0.2,3,0.5
+Mexico,Jumbo flying squid,Cephalopoda,Teuthida,Ommastrephidae,Dosidicus,gigas,"Pacific, Eastern Central",0.48,0.2,0.8,0.2,3,0.5

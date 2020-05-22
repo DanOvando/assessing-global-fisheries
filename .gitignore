@@ -1,7 +1,20 @@
 # Results
 
-results/
+results/*
+*.docx
+*.rds
+# Data
+*.pdf
+*.png
+sraplus_tmb.*
 
+*.zip
+
+data/ram/*
+
+data/FAO*
+
+data-raw/RAM*
 # History files
 .Rhistory
 .Rapp.history
