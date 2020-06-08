@@ -66,7 +66,7 @@ run_continent_examples <- FALSE
 
 run_ei_example <- FALSE
 
-run_sofia_comparison <- FALSE
+run_sofia_comparison <- TRUE
 
 engine = "stan"
 
@@ -1028,7 +1028,7 @@ fao_country_region_key <- fao %>%
   filter(ptc > 0.25) %>%
   ungroup()
 
-fmi$country <- countrycode::countrycode(fmi$country_rfmo, "country.name","fao.name")
+fmi$country <- countrycode::countrycode(fmi$country_rfmo, "country.name","un.name.en")
 
 
 
@@ -1129,7 +1129,7 @@ catch_status_plot <- fao2011 %>%
 load(here::here("data","PNAS-data","TBPdata.Rdata"))
 
 extra_sar <- readr::read_csv(here("data","sar.csv")) %>%
-  mutate(country = countrycode::countrycode(Country, "country.name",'fao.name')) %>%
+  mutate(country = countrycode::countrycode(Country, "country.name",'un.name.en')) %>%
   left_join(fao_country_region_key, by = "country") %>%
   filter(ptc > 0.5) %>%
   mutate(AreaKm2_0_200 = tc) %>%
@@ -1249,6 +1249,14 @@ ram_status_plot <- status_t %>%
 # link up generic effort to fao 2011
 
 
+rous_data <- read.csv(here("data", "MappedFAO.csv")) %>% 
+  na.omit() %>% 
+  as_tibble() %>% 
+  janitor::clean_names() %>% 
+  mutate(country = countrycode::countrycode(iso3, "iso3c", "un.name.en")) %>% 
+  filter(type2 == "I") %>% 
+  select(year,fao, effort_cell_reported_nom, country ) %>% 
+  rename(area = fao)
 
 rough_fao_region_effort <- effort_data %>%
   filter(effort_type == "nominal") %>%
@@ -1258,8 +1266,84 @@ rough_fao_region_effort <- effort_data %>%
   summarise(effort_index = sum(effort)) %>%
   ungroup()
 
-fao2011 <- fao2011 %>%
-  left_join(rough_fao_region_effort, by = c("year", "area" = "fao_area_code"))
+
+
+temp_fao <- fao2011 %>%
+  group_by(stockid) %>%
+  nest() %>%
+  ungroup()
+
+assign_effort <-
+  function(fao_stock,
+           data,
+           effort,
+           fao_catch,
+           scalar = 1000) {
+    # data <- temp_fao$data[[1]]
+    #
+    # fao_catch <- fao
+    #
+    # effort <- rous_data
+    #
+    # fao_stock <- "33-Miscellaneous coastal fishes_77_33"
+    
+    comm_name <-
+      str_split(fao_stock, pattern = '_')[[1]][1] %>% str_remove_all("(\\d)|(-)")
+    
+    isscp_number <-
+      as.numeric(str_split(fao_stock, pattern = '_')[[1]][3])
+    
+    fao_code <- str_split(fao_stock, pattern = '_')[[1]][2]
+    
+    fao_matches <- fao %>% {
+      if (any(.$common_name == comm_name)) {
+        filter(., common_name == comm_name & fao_area_code == fao_code)
+        
+      } else {
+        filter(.,
+               isscaap_number == isscp_number & fao_area_code == fao_code)
+        
+      }
+    }
+    
+    matched_effort <- effort %>%
+      filter(area == fao_code) %>%
+      filter(country %in% unique(fao_matches$country)) %>%
+      group_by(year, area) %>%
+      summarise(effort_index = sum(effort_cell_reported_nom) / scalar,
+                .groups = "drop") %>%
+      ungroup()
+    
+    data <- data %>%
+      left_join(matched_effort, by = c("year", "area"))
+    
+    
+  }
+
+
+temp_fao <- temp_fao %>%
+  mutate(
+    data = map2(
+      stockid,
+      data,
+      assign_effort,
+      fao_catch = fao,
+      effort = rous_data
+    )
+  )
+
+
+fao2011 <- temp_fao %>% 
+  unnest(cols = data)
+
+
+# fao2011 %>% 
+#   group_by(year, area) %>% 
+#   summarise(effort_index = unique(effort_index)) %>% 
+#   ggplot(aes(year, effort_index)) + 
+#   geom_line() + 
+#   facet_wrap(~area)
+
 
 fao2011 <- fao2011 %>%
   group_by(stockid) %>%
@@ -1281,7 +1365,6 @@ support_data <- list(mean_regional_isscaap_fmi = mean_regional_isscaap_fmi)
 areas <- c(67, 57, 37,71)
 
 areas <- unique(fao2011$area)
-
 # annnnnd try and run assessments
 if (run_sofia_comparison == TRUE) {
   # future::plan(future::multiprocess, workers = 4)
@@ -1291,11 +1374,11 @@ if (run_sofia_comparison == TRUE) {
   future::plan(multisession,workers = n_cores)
   
   fao2011_fits <- fao2011 %>%
-    # filter(area %in% 21) %>%
+    # filter(area %in% 67) %>%
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    # slice(2) %>% 
+    # sample_n(10) %>% 
     mutate(
       fits = future_map(
         data,
@@ -1454,6 +1537,7 @@ po_map_plot <- fao_area_status %>%
 
 po_map_plot
 
+ggsave("percent_overfished_by_region.pdf",po_map_plot)
 # ----save-plots----------------------------------------------------------
 
 plots <- ls()[str_detect(ls(), "_plot")]

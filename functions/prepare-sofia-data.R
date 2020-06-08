@@ -173,7 +173,7 @@ prepare_sofia_data <- function(min_years_catch = 20,
   
   # load prices
   
-  prices <<-
+  prices <-
     readr::read_csv(here::here("data", "Exvessel Price Database.csv")) %>%
     janitor::clean_names() %>%
     rename(scientificname = scientific_name) %>%
@@ -185,6 +185,8 @@ prepare_sofia_data <- function(min_years_catch = 20,
     summarise(exvessel = mean(exvessel, na.rm = TRUE)) %>%
     group_by(scientificname) %>%
     mutate(lag_exvessel = lag(exvessel))
+  
+  assign("prices", prices, envir = .GlobalEnv)
   
   ram_data <- ram_data %>%
     left_join(prices, by = c("scientificname", "year"))
@@ -295,9 +297,12 @@ prepare_sofia_data <- function(min_years_catch = 20,
     filter(!str_detect(country, "Totals"),
            isscaap_number < 60)
   
-  fao_species <<- fao %>%
+  fao_species <- fao %>%
     select(scientific_name, common_name, isscaap_group, isscaap_number) %>%
     unique()
+  
+  assign("fao_species", fao_species, envir = .GlobalEnv)
+  
   
   fao_genus <-
     str_split(fao_species$scientific_name, ' ', simplify = TRUE)[, 1]
@@ -313,7 +318,7 @@ prepare_sofia_data <- function(min_years_catch = 20,
   
   
   fao$fao_country_name <-
-    countrycode::countrycode(fao$country, "country.name", "fao.name")
+    countrycode::countrycode(fao$country, "country.name", "un.name.en")
   
   fao <- fao %>%
     mutate(country = case_when(is.na(fao_country_name) ~ country, TRUE ~ fao_country_name))
@@ -322,7 +327,7 @@ prepare_sofia_data <- function(min_years_catch = 20,
   fao$continent <-
     countrycode::countrycode(fao$country, "country.name", "continent")
   
-  fao_stock_lookup <<- fao %>%
+  fao_stock_lookup <- fao %>%
     select(scientific_name,
            common_name,
            country,
@@ -330,8 +335,13 @@ prepare_sofia_data <- function(min_years_catch = 20,
            fao_area_code) %>%
     unique()
   
-  fao <<- fao %>%
+  assign("fao_stock_lookup",fao_stock_lookup, envir = .GlobalEnv )
+  
+  fao <- fao %>%
     mutate(year = as.numeric(year))
+  
+  assign("fao",fao, envir = .GlobalEnv )
+  
   
   # load fmi data -----------------------------------------------------------
   
@@ -351,9 +361,12 @@ prepare_sofia_data <- function(min_years_catch = 20,
     janitor::clean_names() %>%
     rename(scientificname = scientificname_ram)
   
-  ram_data <<- ram_data %>%
+  ram_data <- ram_data %>%
     left_join(ram_species, by = "scientificname") %>%
     ungroup()
+  
+  assign("ram_data",ram_data, envir = .GlobalEnv )
+  
   
   
   ram_fmi_linkages <-
@@ -390,7 +403,7 @@ prepare_sofia_data <- function(min_years_catch = 20,
   
   
   fmi$fao_country_name <-
-    countrycode::countrycode(fmi$country_rfmo, "country.name", "fao.name")
+    countrycode::countrycode(fmi$country_rfmo, "country.name", "un.name.en")
   
   fmi$region <-
     countrycode::countrycode(fmi$country_rfmo, "country.name", "region")
@@ -473,7 +486,7 @@ prepare_sofia_data <- function(min_years_catch = 20,
     mutate(isscaap_group = ifelse(is.na(isscaap_group.x), isscaap_group.y, isscaap_group.x)) %>%
     select(-isscaap_group.x, -isscaap_group.y)
   
-  ram_v_fmi <<- ram_data %>%
+  ram_v_fmi <- ram_data %>%
     group_by(stockid) %>%
     mutate(
       c_maxc = catch / max(catch, na.rm = TRUE),
@@ -494,6 +507,8 @@ prepare_sofia_data <- function(min_years_catch = 20,
     unique() %>%
     na.omit() %>%
     mutate_at(c("research", "management", "enforcement", "socioeconomics"), ~ .x + 1e-6)
+  
+  assign("ram_v_fmi",ram_v_fmi, envir = .GlobalEnv )
   
   
   # load sar data -----------------------------------------------------------
@@ -545,7 +560,7 @@ prepare_sofia_data <- function(min_years_catch = 20,
   
   sar = sar_to_ram
   
-  ram_v_sar <<- sar_to_ram %>%
+  ram_v_sar <- sar_to_ram %>%
     gather(
       metric,
       value,
@@ -572,13 +587,15 @@ prepare_sofia_data <- function(min_years_catch = 20,
     select(-mean_stock_in_tbp) %>%
     na.omit()
   
+  assign("ram_v_sar",ram_v_sar, envir = .GlobalEnv )
+  
   
   # load effort data --------------------------------------------------------
   
   
   # load effort data
   
-  effort_data <<-
+  effort_data <-
     readr::read_csv(here::here("data", "rousseau-2019", "Data_Effort_CPUE_forRH.csv")) %>%
     janitor::clean_names() %>%
     select(year, region, sector, contains("_effort_")) %>%
@@ -587,14 +604,20 @@ prepare_sofia_data <- function(min_years_catch = 20,
                         names_pattern = "(.*)_effort_(.*)",
                         values_to = "effort")
   
-  effort_region_to_country <<-
+  assign("effort_data",effort_data, envir = .GlobalEnv )
+  
+  
+  effort_region_to_country <-
     readxl::read_xlsx(here::here("data", "rousseau-2019", "pnas.1820344116.sd01.xlsx")) %>%
     janitor::clean_names() %>%
     select(country, sociocult_region_for_results) %>%
     unique() %>%
     rename(region = sociocult_region_for_results) %>%
     na.omit() %>%
-    mutate(country =countrycode::countrycode(country, "country.name", "fao.name"))
+    mutate(country =countrycode::countrycode(country, "country.name", "un.name.en"))
+  
+  # assign("effort_region_to_country",effort_region_to_country, envir = .GlobalEnv )
+  
   
   # ugh. manual refactoring of region codes
   
@@ -613,10 +636,13 @@ prepare_sofia_data <- function(min_years_catch = 20,
   
   effort_region_to_country$region <- as.character(refactor_regions)
   
-  effort_region_to_country <<- effort_region_to_country %>%
+  effort_region_to_country <- effort_region_to_country %>%
     unique()
   
-  effort_region_to_country$country <- countrycode::countrycode( effort_region_to_country$country, "country.name", "fao.name")
+  assign("effort_region_to_country",effort_region_to_country, envir = .GlobalEnv )
+  
+  
+  effort_region_to_country$country <- countrycode::countrycode( effort_region_to_country$country, "country.name", "un.name.en")
   
   
   interpfoo <- function(data) {
@@ -632,13 +658,18 @@ prepare_sofia_data <- function(min_years_catch = 20,
     read_csv(here::here("data", "east-india-cpue.csv")) %>%
     janitor::clean_names()
   
-  ei_cpue <<- interpfoo(ei_cpue) %>%
+  ei_cpue <- interpfoo(ei_cpue) %>%
     rename(cpue = effort)
   
-  ei_capture <<-
+  assign("ei_cpue",ei_cpue, envir = .GlobalEnv )
+  
+  
+  ei_capture <-
     readxl::read_xlsx(here::here("data", "India East Only.xlsx")) %>%
     janitor::clean_names() %>%
     gather(year, capture, x1950:x2015) %>%
     mutate(year = as.numeric(str_replace_all(year, "\\D", "")))
+ 
+  assign("ei_capture",ei_capture, envir = .GlobalEnv )
   
 }

@@ -224,7 +224,7 @@ fit_fao <-
             estimate_qslope = estimate_qslope,
             workers = cores,
             refresh = refresh)
-
+      
       if (is.null(cpue_fit$error)){
         cpue_fit <- cpue_fit$result
       } else {
