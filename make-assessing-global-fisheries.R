@@ -39,7 +39,8 @@ draws <- 2500
 
 min_draws <- 2000 # minimum number of unique SIR draws
 
-n_cores <- 4 # number of cores for parallel processing
+n_cores <- 4
+# number of cores for parallel processing
 
 future::plan(multiprocess, workers = n_cores)
 
@@ -1374,21 +1375,21 @@ if (run_sofia_comparison == TRUE) {
   future::plan(multisession,workers = n_cores)
   
   fao2011_fits <- fao2011 %>%
-    # filter(area %in% 67) %>%
+    filter(area %in% 67) %>%
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    # sample_n(10) %>% 
+    sample_n(1) %>%
     mutate(
-      fits = future_map(
+      fits = map(
         data,
-        safely(fit_fao),
+        (fit_fao),
         support_data = support_data,
         min_effort_year = 1960,
         engine = "stan",
-        cores = 1,
-        .progress = TRUE,
-        .options = future_options(globals = support_data, packages = c("tidyverse","sraplus"))
+        cores = 1#,
+        # .progress = TRUE,
+        # .options = future_options(globals = support_data, packages = c("tidyverse","sraplus"))
       )
     )
   
@@ -1422,6 +1423,13 @@ faofits <- fao2011_fits %>%
   mutate(bin = cut(mean, breaks = breaks, labels = labels)) %>%
   separate(stockid,c("name","area","speciesgroup"), sep = '_')
 
+
+wtf <- faofits %>% 
+  filter(stockid == stockid[1],
+         str_detect(data, "cpue")) %>% 
+  ggplot(aes(year, mean, color = data)) + 
+  geom_line() + 
+  facet_wrap(~data)
 
 fao2011_data <- fao2011 %>%
   mutate(bin = dplyr::case_when(

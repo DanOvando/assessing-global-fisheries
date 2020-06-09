@@ -196,7 +196,7 @@ fit_fao <-
 
     if (any(is.na(data$effort_index) == FALSE)) {
       used_cpue <- TRUE
-
+      
       effort_years <-
         seq_along(years)[!is.na(data$effort_index) &
                            years >= min_effort_year]
@@ -225,8 +225,50 @@ fit_fao <-
             workers = cores,
             refresh = refresh)
       
+      nom_cpue_driors <-
+        format_driors(
+          taxa = scientific_name,
+          catch = catches,
+          years = seq_along(years),
+          effort = data$effort_index[effort_years],
+          effort_years = effort_years,
+          initial_state = basic_driors$initial_state,
+          initial_state_cv = 0.2,
+          isscaap_group = unique(data$isscaap_group),
+          q_slope_prior = 0
+        )
+      
+      nom_cpue_fit <-
+        sfs(driors = nom_cpue_driors,
+            include_fit = include_fit,
+            model = model,
+            engine = engine,
+            estimate_proc_error = estimate_proc_error,
+            estimate_qslope = estimate_qslope,
+            workers = cores,
+            refresh = refresh)
+      # browser()
+      # plot_sraplus(nom_cpue_fit$result)
+      # 
+      # 
+      # plot_prior_posterior(nom_cpue_fit$result, nom_cpue_driors)
+      # 
+      # plot_prior_posterior(cpue_fit$result, cpue_driors)
+      # 
+      # plot_sraplus(cpue_fit$result, nom_cpue_fit$result)
+      # 
+      # plot_driors(cpue_driors)
+      # 
+      # plot_driors(nom_cpue_driors)
+      # 
+      # nom_cpue_fit$result$fit
+      
+      
       if (is.null(cpue_fit$error)){
         cpue_fit <- cpue_fit$result
+        
+        nom_cpue_fit <- nom_cpue_fit$result
+        
       } else {
 
         # cpue_fit <-
@@ -249,12 +291,24 @@ fit_fao <-
           modify_at(c("mean", "lower", "upper"), exp) %>%
           mutate(data = "cpue") %>%
           mutate(variable = str_replace_all(variable, "log_", ""))
+        
+        nom_cpue_fit_results <- nom_cpue_fit$results %>%
+          filter(variable %in% c("log_b_div_bmsy", "log_u_div_umsy", "log_c_div_msy","log_depletion")) %>%
+          mutate(year = rep(years, 4)) %>%
+          modify_at(c("mean", "lower", "upper"), exp) %>%
+          mutate(data = "nominal-cpue") %>%
+          mutate(variable = str_replace_all(variable, "log_", ""))
       } else {
 
         cpue_fit_results <- cpue_fit$results %>%
           filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy","depletion")) %>%
           mutate(year = year - 1 + min(years)) %>%
           mutate(data = "cpue")
+        
+        nom_cpue_fit_results <- nom_cpue_fit$results %>%
+          filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy","depletion")) %>%
+          mutate(year = year - 1 + min(years)) %>%
+          mutate(data = "nominal-cpue")
 
       }
 
@@ -305,9 +359,40 @@ fit_fao <-
             estimate_qslope = estimate_qslope,
             workers = cores,
             refresh = refresh)
+      
+      nom_cpue_plus_driors <-
+        format_driors(
+          taxa = scientific_name,
+          catch = catches,
+          years = seq_along(years),
+          effort = data$effort_index[effort_years],
+          effort_years = effort_years,
+          initial_state = 1,
+          initial_state_cv = 0.2,
+          fmi = fmi,
+          f_ref_type = "fmsy" ,
+          fmi_cv = reg_cv,
+          sar = unique(data$sar),
+          isscaap_group = unique(data$isscaap_group),
+          q_slope_prior = 0
+        )
 
+      nom_cpue_plus_fit <-
+        sfs(driors = nom_cpue_plus_driors,
+            include_fit = include_fit,
+            model = model,
+            engine = engine,
+            estimate_proc_error = estimate_proc_error,
+            estimate_qslope = estimate_qslope,
+            workers = cores,
+            refresh = refresh)
+      
+      
       if (is.null(cpue_plus_fit$error)){
         cpue_plus_fit <- cpue_plus_fit$result
+        
+        nom_cpue_plus_fit <- nom_cpue_plus_fit$result
+        
       } else {
 
         # cpue_plus_fit <-
@@ -331,6 +416,14 @@ fit_fao <-
           modify_at(c("mean", "lower", "upper"), exp) %>%
           mutate(data = "cpue-plus") %>%
           mutate(variable = str_replace_all(variable, "log_", ""))
+        
+       nom_cpue_plus_fit_results <- nom_cpue_plus_fit$results %>%
+          filter(variable %in% c("log_b_div_bmsy", "log_u_div_umsy", "log_c_div_msy","log_depletion")) %>%
+          mutate(year = rep(years, 4)) %>%
+          modify_at(c("mean", "lower", "upper"), exp) %>%
+          mutate(data = "nominal-cpue-plus") %>%
+          mutate(variable = str_replace_all(variable, "log_", ""))
+        
       } else {
 
         cpue_plus_fit_results <- cpue_plus_fit$results %>%
@@ -338,6 +431,10 @@ fit_fao <-
           mutate(year = year - 1 + min(years)) %>%
           mutate(data = "cpue-plus")
 
+        nom_cpue_plus_fit_results <- nom_cpue_plus_fit$results %>%
+          filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy","depletion")) %>%
+          mutate(year = year - 1 + min(years)) %>%
+          mutate(data = "nominal-cpue-plus")
       }
 
     } else {
@@ -353,7 +450,8 @@ fit_fao <-
       }
     } %>% {
       if (used_cpue == TRUE) {
-        bind_rows(., cpue_fit_results)
+        bind_rows(., cpue_fit_results) %>% 
+          bind_rows(nom_cpue_fit_results)
       }
       else{
         .
@@ -375,7 +473,8 @@ fit_fao <-
         }
       } %>% {
         if (used_cpue_plus == TRUE) {
-          bind_rows(., cpue_plus_fit_results)
+          bind_rows(., cpue_plus_fit_results) %>% 
+            bind_rows(nom_cpue_plus_fit_results)
         }
         else{
           .
