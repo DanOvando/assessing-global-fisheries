@@ -13,7 +13,8 @@ fit_fao <-
            cores = 1,
            reg_cv = NA,
            draws = 2e6,
-           refresh = 0) {
+           refresh = 0,
+           thin_draws = TRUE) {
 #
 #     data <- test$data[[1]]
 
@@ -44,7 +45,8 @@ fit_fao <-
         include_fit = include_fit,
         model = model,
         engine = "sir",
-        draws = draws
+        draws = draws,
+        thin_draws = thin_draws
       )
 
     basic_fit_results <- basic_fit$results %>%
@@ -76,7 +78,9 @@ fit_fao <-
           include_fit = include_fit,
           model = model,
           engine = "sir",
-          draws = draws
+          draws = draws,
+          thin_draws = thin_draws
+
         )
 
       sar_fit_results <- sar_fit$results %>%
@@ -141,7 +145,9 @@ fit_fao <-
           include_fit = include_fit,
           model = model,
           engine = "sir",
-          draws = draws
+          draws = draws,
+          thin_draws = thin_draws
+          
         )
 
       fmi_fit_results <- fmi_fit$results %>%
@@ -178,8 +184,9 @@ fit_fao <-
           include_fit = include_fit,
           model = model,
           engine = "sir",
-          draws = draws
-        )
+          draws = draws,
+          thin_draws = thin_draws
+          )
 
 
       u_fit_results <- u_fit$results %>%
@@ -223,7 +230,9 @@ fit_fao <-
             estimate_proc_error = estimate_proc_error,
             estimate_qslope = estimate_qslope,
             workers = cores,
-            refresh = refresh)
+            refresh = refresh,
+            thin_draws = thin_draws
+        )
       
       nom_cpue_driors <-
         format_driors(
@@ -358,7 +367,9 @@ fit_fao <-
             estimate_proc_error = estimate_proc_error,
             estimate_qslope = estimate_qslope,
             workers = cores,
-            refresh = refresh)
+            refresh = refresh,
+            thin_draws = thin_draws
+        )
       
       nom_cpue_plus_driors <-
         format_driors(
@@ -385,7 +396,9 @@ fit_fao <-
             estimate_proc_error = estimate_proc_error,
             estimate_qslope = estimate_qslope,
             workers = cores,
-            refresh = refresh)
+            refresh = refresh,
+            thin_draws = thin_draws
+        )
       
       
       if (is.null(cpue_plus_fit$error)){
@@ -480,7 +493,7 @@ fit_fao <-
           .
         }
       }
-
+    
     # write(wtf,file = "wtf.txt", append = TRUE)
 
     # results %>%

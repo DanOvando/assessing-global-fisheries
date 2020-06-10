@@ -1379,20 +1379,19 @@ if (run_sofia_comparison == TRUE) {
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    sample_n(1) %>%
+    sample_n(10) %>%
     mutate(
-      fits = map(
+      fits = future_map(
         data,
-        (fit_fao),
+        safely(fit_fao),
         support_data = support_data,
         min_effort_year = 1960,
         engine = "stan",
-        cores = 1#,
-        # .progress = TRUE,
-        # .options = future_options(globals = support_data, packages = c("tidyverse","sraplus"))
+        cores = 1,
+        .progress = TRUE,
+        .options = future_options(globals = support_data, packages = c("tidyverse","sraplus"))
       )
     )
-  
   
   write_rds(fao2011_fits, path = file.path(results_path, "fao2011-fits.rds"))
   
@@ -1424,12 +1423,12 @@ faofits <- fao2011_fits %>%
   separate(stockid,c("name","area","speciesgroup"), sep = '_')
 
 
-wtf <- faofits %>% 
-  filter(stockid == stockid[1],
-         str_detect(data, "cpue")) %>% 
-  ggplot(aes(year, mean, color = data)) + 
-  geom_line() + 
-  facet_wrap(~data)
+# wtf <- faofits %>% 
+#   filter(stockid == stockid[1],
+#          str_detect(data, "cpue")) %>% 
+#   ggplot(aes(year, mean, color = data)) + 
+#   geom_line() + 
+#   facet_wrap(~data)
 
 fao2011_data <- fao2011 %>%
   mutate(bin = dplyr::case_when(
