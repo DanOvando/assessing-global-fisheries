@@ -1,4 +1,6 @@
 # Results
+data/fao-*
+data/fao_*
 
 results/*
 *.docx

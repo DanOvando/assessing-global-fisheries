@@ -16,7 +16,7 @@ prepare_sofia_data <- function(min_years_catch = 20,
     
     download.file("https://www.dropbox.com/s/jpgz0a5s5of3qev/RAM%20v4.491%20Files%20(1-14-20).zip?dl=1", destfile = here("data","ram.zip"))
     
-    unzip(here("data","ram.zip"), exdir = here("data"))
+    unzip(here("data","ram.zip"), exdir = here("data","ram"))
   }
   
   
