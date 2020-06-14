@@ -26,7 +26,7 @@ Sys.unsetenv("PKG_CXXFLAGS")
 
 rstan::rstan_options(auto_write = TRUE)
 
-
+sraplus::get_tmb_model()
 # options -----------------------------------------------------------------
 
 min_years_catch <- 20
@@ -67,7 +67,7 @@ run_continent_examples <- FALSE
 
 run_ei_example <- FALSE
 
-run_sofia_comparison <- TRUE
+run_sofia_comparison <- FALSE
 
 engine = "stan"
 
@@ -752,12 +752,19 @@ total_stocks <- fao %>%
   mutate(continent = tolower(continent)) %>%
   left_join(total_nominal_effort, by = c("year", "continent" = "region"))
 
+fao %>% 
+  group_by(year) %>% 
+  summarise(catch = sum(capture, na.rm = TRUE)) %>% 
+  ggplot(aes(year, catch)) + 
+  geom_line() + 
+  scale_y_continuous(labels = comma)
 
-# total_stocks %>%
-#   ggplot(aes(year, total_catch, color = scientific_name)) +
-#   geom_line(show.legend = FALSE) +
-#   facet_wrap(~continent) +
-#   scale_y_log10()
+
+total_stocks %>%
+  ggplot(aes(year, total_catch, color = scientific_name)) +
+  geom_line(show.legend = FALSE) +
+  facet_wrap(~continent) +
+  scale_y_log10()
 
 # future::plan(future::multiprocess, workers = 4)
 
@@ -1281,12 +1288,12 @@ assign_effort <-
            fao_catch,
            scalar = 1000) {
     # data <- temp_fao$data[[1]]
-    #
+    # 
     # fao_catch <- fao
-    #
+    # 
     # effort <- rous_data
-    #
-    # fao_stock <- "33-Miscellaneous coastal fishes_77_33"
+    # 
+    # fao_stock <- temp_fao$stockid[1]
     
     comm_name <-
       str_split(fao_stock, pattern = '_')[[1]][1] %>% str_remove_all("(\\d)|(-)")
@@ -1294,10 +1301,10 @@ assign_effort <-
     isscp_number <-
       as.numeric(str_split(fao_stock, pattern = '_')[[1]][3])
     
-    fao_code <- str_split(fao_stock, pattern = '_')[[1]][2]
+    fao_code <- as.numeric(str_split(fao_stock, pattern = '_')[[1]][2])
     
     fao_matches <- fao %>% {
-      if (any(.$common_name == comm_name)) {
+      if (any(.$common_name == comm_name,na.rm = TRUE)) {
         filter(., common_name == comm_name & fao_area_code == fao_code)
         
       } else {
@@ -1367,6 +1374,7 @@ areas <- c(67, 57, 37,71)
 
 areas <- unique(fao2011$area)
 # annnnnd try and run assessments
+
 if (run_sofia_comparison == TRUE) {
   # future::plan(future::multiprocess, workers = 4)
   
@@ -1375,11 +1383,11 @@ if (run_sofia_comparison == TRUE) {
   future::plan(multisession,workers = n_cores)
   
   fao2011_fits <- fao2011 %>%
-    filter(area %in% 67) %>%
+    # filter(area %in% 67) %>%
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    sample_n(10) %>%
+    # sample_n(4) %>%
     mutate(
       fits = future_map(
         data,
@@ -1392,6 +1400,27 @@ if (run_sofia_comparison == TRUE) {
         .options = future_options(globals = support_data, packages = c("tidyverse","sraplus"))
       )
     )
+  
+  # "Pink(=Humpback)salmon_67_23"
+  
+  # fao2011_fits <- fao2011 %>%
+  #   filter(area %in% 67) %>%
+  #   group_by(stockid) %>%
+  #   nest() %>%
+  #   ungroup() %>%
+  #   # sample_n(1) %>%
+  #   filter(stockid ==  "Pink(=Humpback)salmon_67_23") %>% 
+  #   mutate(
+  #     fits = map(
+  #       data,
+  #       (fit_fao),
+  #       support_data = support_data,
+  #       min_effort_year = 1960,
+  #       engine = "stan",
+  #       cores = 1
+  #     )
+  #   )
+  
   
   write_rds(fao2011_fits, path = file.path(results_path, "fao2011-fits.rds"))
   

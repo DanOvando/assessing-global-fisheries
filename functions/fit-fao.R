@@ -36,7 +36,7 @@ fit_fao <-
         years = seq_along(years),
         use_heuristics = TRUE,
         b_ref_type = "k",
-        isscaap_group = unique(data$isscaap_group)
+        isscaap_group = unique(data$isscaap_group)[1]
       )
 
     basic_fit <-
@@ -69,7 +69,7 @@ fit_fao <-
           initial_state_cv = basic_driors$initial_state_cv,
           sar = last(data$sar),
           sar_cv = reg_cv,
-          isscaap_group = unique(data$isscaap_group)
+          isscaap_group = unique(data$isscaap_group)[1]
         )
 
       sar_fit <-
@@ -87,6 +87,8 @@ fit_fao <-
         filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy","depletion")) %>%
         mutate(year = rep(years, each = 4)) %>%
         mutate(data = "sar")
+      
+      rm(sar_fit)
 
     } else {
       used_sar <- FALSE
@@ -94,10 +96,9 @@ fit_fao <-
 
 
     # fmi fit
-
     fmi_dat <- support_data$mean_regional_isscaap_fmi %>%
       filter(fao_area_code == unique(as.numeric(data$fao_area)),
-             isscaap_group == unique(data$isscaap_group))
+             isscaap_group == unique(data$isscaap_group)[1])
 
 
     fmi <- c(research = fmi_dat$research, management = fmi_dat$management, socioeconomics = fmi_dat$socioeconomics, enforcement = fmi_dat$enforcement)
@@ -137,7 +138,7 @@ fit_fao <-
           f_ref_type = "fmsy",
           fmi_cv = reg_cv,
           use_b_reg = FALSE,
-          isscaap_group = unique(data$isscaap_group)
+          isscaap_group = unique(data$isscaap_group)[1]
         )
       fmi_fit <-
         fit_sraplus(
@@ -154,6 +155,8 @@ fit_fao <-
         filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy","depletion")) %>%
         mutate(year = min(years) + year - 1) %>%
         mutate(data = "fmi")
+      
+      rm(fmi_fit)
 
       used_fmi <- TRUE
     } else {
@@ -175,7 +178,7 @@ fit_fao <-
           u_years = u_years,
           initial_state = basic_driors$initial_state,
           initial_state_cv = 0.2,
-          isscaap_group = unique(data$isscaap_group)
+          isscaap_group = unique(data$isscaap_group)[1]
         )
       
       u_fit <-
@@ -216,7 +219,7 @@ fit_fao <-
           effort_years = effort_years,
           initial_state = basic_driors$initial_state,
           initial_state_cv = 0.2,
-          isscaap_group = unique(data$isscaap_group),
+          isscaap_group = unique(data$isscaap_group)[1],
           q_slope_prior = q_slope_prior
         )
 
@@ -243,7 +246,7 @@ fit_fao <-
           effort_years = effort_years,
           initial_state = basic_driors$initial_state,
           initial_state_cv = 0.2,
-          isscaap_group = unique(data$isscaap_group),
+          isscaap_group = unique(data$isscaap_group)[1],
           q_slope_prior = 0
         )
       
@@ -301,12 +304,16 @@ fit_fao <-
           mutate(data = "cpue") %>%
           mutate(variable = str_replace_all(variable, "log_", ""))
         
+        rm(cpue_fit)
+        
         nom_cpue_fit_results <- nom_cpue_fit$results %>%
           filter(variable %in% c("log_b_div_bmsy", "log_u_div_umsy", "log_c_div_msy","log_depletion")) %>%
           mutate(year = rep(years, 4)) %>%
           modify_at(c("mean", "lower", "upper"), exp) %>%
           mutate(data = "nominal-cpue") %>%
           mutate(variable = str_replace_all(variable, "log_", ""))
+        
+        rm(nom_cpue_fit)
       } else {
 
         cpue_fit_results <- cpue_fit$results %>%
@@ -314,11 +321,15 @@ fit_fao <-
           mutate(year = year - 1 + min(years)) %>%
           mutate(data = "cpue")
         
+        rm(cpue_fit)
+        
         nom_cpue_fit_results <- nom_cpue_fit$results %>%
           filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy","depletion")) %>%
           mutate(year = year - 1 + min(years)) %>%
           mutate(data = "nominal-cpue")
 
+        rm(nom_cpue_fit)
+        
       }
 
     } else {
@@ -430,12 +441,16 @@ fit_fao <-
           mutate(data = "cpue-plus") %>%
           mutate(variable = str_replace_all(variable, "log_", ""))
         
+        rm(cpue_plus_fit)
+        
        nom_cpue_plus_fit_results <- nom_cpue_plus_fit$results %>%
           filter(variable %in% c("log_b_div_bmsy", "log_u_div_umsy", "log_c_div_msy","log_depletion")) %>%
           mutate(year = rep(years, 4)) %>%
           modify_at(c("mean", "lower", "upper"), exp) %>%
           mutate(data = "nominal-cpue-plus") %>%
           mutate(variable = str_replace_all(variable, "log_", ""))
+       
+       rm(nom_cpue_plus_fit)
         
       } else {
 
@@ -444,10 +459,15 @@ fit_fao <-
           mutate(year = year - 1 + min(years)) %>%
           mutate(data = "cpue-plus")
 
+        rm(cpue_plus_fit)
+        
         nom_cpue_plus_fit_results <- nom_cpue_plus_fit$results %>%
           filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy","depletion")) %>%
           mutate(year = year - 1 + min(years)) %>%
           mutate(data = "nominal-cpue-plus")
+        
+        rm(nom_cpue_plus_fit)
+        
       }
 
     } else {
@@ -501,7 +521,9 @@ fit_fao <-
     #   ggplot(aes(year, mean, color = data)) +
     #   geom_line() +
     #   facet_wrap(~variable, scales = "free_y")
-
+  
+    rm(list = ls()[!str_detect(ls(),"results")])
+    gc()
     return(results)
 
   }
