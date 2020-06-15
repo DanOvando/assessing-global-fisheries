@@ -357,18 +357,27 @@ prepare_sofia_data <- function(min_years_catch = 20,
   asfis <- read_delim(here("data","fao","ASFIS_sp_2020.txt"), delim = ",") %>% 
     janitor::clean_names() %>% 
     rename(isscaap_code = isscaap) %>% 
-    select(isscaap_code, scientific_name) %>% 
+    select(isscaap_code, scientific_name, taxocode) %>% 
     unique()
+  
+  # major issue with NEIs here. There is no database that has both isscaap group and isscaap code, so you need
+  # to do a complicated merge based on scientific name. 
+  # the problem there is that some "scientific names" 
   
   fao_capture <- read_csv(here("data","fao","TS_FI_CAPTURE.csv")) %>% 
     janitor::clean_names()
   
   sp_groups <- read_csv(here("data","fao","CL_FI_SPECIES_GROUPS.csv")) %>% 
     janitor::clean_names() %>% 
-    select(x3alpha_code:identifier, contains("_en"), scientific_name:cpc_group) %>% 
+    select(x3alpha_code:identifier, contains("_en"), author:cpc_group) %>% 
     rename(species_name_en = name_en) %>% 
-    left_join(asfis, by = "scientific_name")
+    left_join(asfis, by = c("taxonomic_code" = "taxocode"))
   
+  # sp_groups %>%
+  #   group_by(x3alpha_code) %>%
+  #   summarise(ni = n_distinct(isscaap_group)) %>%
+  #   arrange(desc(ni))
+
   country_groups <- read_csv(here("data","fao","CL_FI_COUNTRY_GROUPS.csv")) %>% 
     janitor::clean_names() %>% 
     mutate(un_code = as.numeric(un_code)) %>% 
@@ -386,6 +395,12 @@ prepare_sofia_data <- function(min_years_catch = 20,
   fao_capture <- fao_capture %>% 
     left_join(country_groups, by = c("country" = "un_code")) %>% 
     left_join(fao_areas, by = "fishing_area")
+  
+  # fao_capture %>%
+  #   group_by(species) %>%
+  #   summarise(ni = n_distinct(isscaap_group)) %>%
+  #   arrange(desc(ni))
+
   
   fao_to_effort <-
     read_csv(here::here("data", "fao-to-bell-region.csv")) %>%
@@ -454,6 +469,14 @@ prepare_sofia_data <- function(min_years_catch = 20,
   fao_species <- fao %>%
     select(scientific_name, common_name, isscaap_group, isscaap_number) %>%
     unique()
+  
+  # aha <- fao_species %>% 
+  #   group_by(common_name) %>% 
+  #   summarise(ni = n_distinct(isscaap_group)) %>% 
+  #   arrange(desc(ni))
+  # 
+  # a <- fao_species %>% 
+  #   filter(is.na(common_name))
   
   assign("fao_species", fao_species, envir = .GlobalEnv)
   

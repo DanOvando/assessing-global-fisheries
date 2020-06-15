@@ -39,7 +39,7 @@ draws <- 2500
 
 min_draws <- 2000 # minimum number of unique SIR draws
 
-n_cores <- 4
+n_cores <- 6
 # number of cores for parallel processing
 
 future::plan(multiprocess, workers = n_cores)
@@ -1095,7 +1095,8 @@ fao2011 <-
     year = as.numeric(year),
     area = as.numeric(area)
   ) %>%
-  filter(!is.na(area))
+  filter(!is.na(area),
+         !is.na(name))
 
 
 n_status_plot <- fao2011 %>%
@@ -1287,14 +1288,14 @@ assign_effort <-
            effort,
            fao_catch,
            scalar = 1000) {
-    # data <- temp_fao$data[[1]]
-    # 
+    # data <- temp_fao$data[[which(temp_fao$stockid == huh)]]
+
     # fao_catch <- fao
-    # 
+
     # effort <- rous_data
-    # 
-    # fao_stock <- temp_fao$stockid[1]
-    
+
+    # fao_stock <- temp_fao$stockid[which(temp_fao$stockid == huh)]
+
     comm_name <-
       str_split(fao_stock, pattern = '_')[[1]][1] %>% str_remove_all("(\\d)|(-)")
     
@@ -1352,6 +1353,17 @@ fao2011 <- temp_fao %>%
 #   geom_line() + 
 #   facet_wrap(~area)
 
+# temp <- fao2011 %>%
+#   # filter(area %in% 67) %>%
+#   group_by(stockid) %>%
+#   nest() %>%
+#   ungroup()
+# 
+# huh <- temp$stockid[4]
+# 
+# wtf <- fao2011 %>% 
+#   filter(stockid == huh)
+
 
 fao2011 <- fao2011 %>%
   group_by(stockid) %>%
@@ -1387,7 +1399,7 @@ if (run_sofia_comparison == TRUE) {
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    # sample_n(4) %>%
+    # sample_n(25) %>%
     mutate(
       fits = future_map(
         data,
@@ -1401,15 +1413,16 @@ if (run_sofia_comparison == TRUE) {
       )
     )
   
+
   # "Pink(=Humpback)salmon_67_23"
-  
-  # fao2011_fits <- fao2011 %>%
-  #   filter(area %in% 67) %>%
+  # 
+  # temp <- fao2011 %>%
   #   group_by(stockid) %>%
   #   nest() %>%
   #   ungroup() %>%
   #   # sample_n(1) %>%
-  #   filter(stockid ==  "Pink(=Humpback)salmon_67_23") %>% 
+  #   # filter(stockid ==  "Pink(=Humpback)salmon_67_23") %>%
+  #   slice(141) %>% 
   #   mutate(
   #     fits = map(
   #       data,
@@ -1420,7 +1433,7 @@ if (run_sofia_comparison == TRUE) {
   #       cores = 1
   #     )
   #   )
-  
+  # 
   
   write_rds(fao2011_fits, path = file.path(results_path, "fao2011-fits.rds"))
   
@@ -1431,9 +1444,9 @@ if (run_sofia_comparison == TRUE) {
 }
 reserve <- fao2011_fits
 
-# ugh <- map_dbl(fao2011$data, ~unique(.x$area)) == 67
+ugh <- map_dbl(fao2011$data, ~unique(.x$area)) == 67
 #
-# fao_worked <- map(fao2011$fits, "error")[ugh]
+fao_worked <- map(fao2011_fits$fits, "error")
 
 
 fao_worked <- map(fao2011_fits$fits, "error") %>% map_lgl(is.null)
