@@ -172,25 +172,25 @@ prepare_sofia_data <- function(min_years_catch = 20,
   # load other data ---------------------------------------------------------
   
   # load prices
+  # 
+  # prices <-
+  #   readr::read_csv(here::here("data", "Exvessel Price Database.csv")) %>%
+  #   janitor::clean_names() %>%
+  #   rename(scientificname = scientific_name) %>%
+  #   mutate(log_exvessel = log(exvessel)) %>%
+  #   group_by(asfis_species, pooled_commodity, group_for_pairing) %>%
+  #   mutate(lag_exvessel = lag(exvessel)) %>%
+  #   ungroup() %>%
+  #   group_by(scientificname, year) %>%
+  #   summarise(exvessel = mean(exvessel, na.rm = TRUE)) %>%
+  #   group_by(scientificname) %>%
+  #   mutate(lag_exvessel = lag(exvessel))
+  # 
+  # assign("prices", prices, envir = .GlobalEnv)
   
-  prices <-
-    readr::read_csv(here::here("data", "Exvessel Price Database.csv")) %>%
-    janitor::clean_names() %>%
-    rename(scientificname = scientific_name) %>%
-    mutate(log_exvessel = log(exvessel)) %>%
-    group_by(asfis_species, pooled_commodity, group_for_pairing) %>%
-    mutate(lag_exvessel = lag(exvessel)) %>%
-    ungroup() %>%
-    group_by(scientificname, year) %>%
-    summarise(exvessel = mean(exvessel, na.rm = TRUE)) %>%
-    group_by(scientificname) %>%
-    mutate(lag_exvessel = lag(exvessel))
-  
-  assign("prices", prices, envir = .GlobalEnv)
-  
-  ram_data <- ram_data %>%
-    left_join(prices, by = c("scientificname", "year"))
-  
+  # ram_data <- ram_data %>%
+  #   left_join(prices, by = c("scientificname", "year"))
+  # 
   # fao and effort data
   
   # this is going to take some done, you are here
