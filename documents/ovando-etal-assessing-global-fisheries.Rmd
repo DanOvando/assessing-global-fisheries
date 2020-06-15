@@ -9,11 +9,11 @@ author:
   - James Thorson
   - Yimin Ye
 date: "`r Sys.Date()`"
-bibliography: ["references.bib"]
+bibliography: ["../references.bib"]
 csl: nature.csl
 output: 
-  bookdown::word_document2: default
   bookdown::pdf_document2: default
+  bookdown::word_document2: default
 abstract: Assessments of the global state of fisheries play an important role in shaping the public narrative around ocean health, motivating future directions of research and funding, and tracking large-scale objectives such as the United Nations Sustainable Development Goals. Numerous high-profile publications have produced estimates of the global status of fisheries, but limited quantity and quality of data, conflicting results, and methodological concerns mean that our understanding of global fisheries is still highly uncertain, especially in critical areas such as Southeast Asia and Africa. We present an evaluation of the past and future of global fishery assessments. Global assessments have typically involved aggregating best-available stock assessments where possible with various data-limited assessments for regions lacking formal evaluations of stock status. The data-limited methods used have ranged from simple catch heuristics to super-ensemble modeling. Despite attempts at model improvement, there have been discrepancies both among global fishery assessments and between the data-limited components of these methods and more data-rich models,demonstrating that our understanding of global data-limited fisheries remains limited. How then can we most efficiently move forward? We utilize a flexible assessment model together with the RAM Legacy Stock Assessment Database not strictly as a stock assessment tool, but to assess the value of different kinds, quantities, and quality of data in improving estimates of fishery stock status. We then explore avenues for obtaining potentially impactful data, including through the use of local expert opinion and increasingly available but historically underutilized data such as trawl footprints. These data are then used to illustrate how different types of information paint starkly different pictures of the state of fisheries around the world. We close by discussing priority areas for future data collection. Our results make the case that improving our understanding of global fisheries depends not on better models, but on better data.
 ---
 

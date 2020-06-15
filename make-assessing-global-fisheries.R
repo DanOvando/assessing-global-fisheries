@@ -26,7 +26,7 @@ Sys.unsetenv("PKG_CXXFLAGS")
 
 rstan::rstan_options(auto_write = TRUE)
 
-
+sraplus::get_tmb_model()
 # options -----------------------------------------------------------------
 
 min_years_catch <- 20
@@ -39,7 +39,8 @@ draws <- 2500
 
 min_draws <- 2000 # minimum number of unique SIR draws
 
-n_cores <- 4 # number of cores for parallel processing
+n_cores <- 6
+# number of cores for parallel processing
 
 future::plan(multiprocess, workers = n_cores)
 
@@ -751,12 +752,19 @@ total_stocks <- fao %>%
   mutate(continent = tolower(continent)) %>%
   left_join(total_nominal_effort, by = c("year", "continent" = "region"))
 
+fao %>% 
+  group_by(year) %>% 
+  summarise(catch = sum(capture, na.rm = TRUE)) %>% 
+  ggplot(aes(year, catch)) + 
+  geom_line() + 
+  scale_y_continuous(labels = comma)
 
-# total_stocks %>%
-#   ggplot(aes(year, total_catch, color = scientific_name)) +
-#   geom_line(show.legend = FALSE) +
-#   facet_wrap(~continent) +
-#   scale_y_log10()
+
+total_stocks %>%
+  ggplot(aes(year, total_catch, color = scientific_name)) +
+  geom_line(show.legend = FALSE) +
+  facet_wrap(~continent) +
+  scale_y_log10()
 
 # future::plan(future::multiprocess, workers = 4)
 
@@ -1028,7 +1036,7 @@ fao_country_region_key <- fao %>%
   filter(ptc > 0.25) %>%
   ungroup()
 
-fmi$country <- countrycode::countrycode(fmi$country_rfmo, "country.name","fao.name")
+fmi$country <- countrycode::countrycode(fmi$country_rfmo, "country.name","un.name.en")
 
 
 
@@ -1087,7 +1095,8 @@ fao2011 <-
     year = as.numeric(year),
     area = as.numeric(area)
   ) %>%
-  filter(!is.na(area))
+  filter(!is.na(area),
+         !is.na(name))
 
 
 n_status_plot <- fao2011 %>%
@@ -1129,7 +1138,7 @@ catch_status_plot <- fao2011 %>%
 load(here::here("data","PNAS-data","TBPdata.Rdata"))
 
 extra_sar <- readr::read_csv(here("data","sar.csv")) %>%
-  mutate(country = countrycode::countrycode(Country, "country.name",'fao.name')) %>%
+  mutate(country = countrycode::countrycode(Country, "country.name",'un.name.en')) %>%
   left_join(fao_country_region_key, by = "country") %>%
   filter(ptc > 0.5) %>%
   mutate(AreaKm2_0_200 = tc) %>%
@@ -1249,6 +1258,14 @@ ram_status_plot <- status_t %>%
 # link up generic effort to fao 2011
 
 
+rous_data <- read.csv(here("data", "MappedFAO.csv")) %>% 
+  na.omit() %>% 
+  as_tibble() %>% 
+  janitor::clean_names() %>% 
+  mutate(country = countrycode::countrycode(iso3, "iso3c", "un.name.en")) %>% 
+  filter(type2 == "I") %>% 
+  select(year,fao, effort_cell_reported_nom, country ) %>% 
+  rename(area = fao)
 
 rough_fao_region_effort <- effort_data %>%
   filter(effort_type == "nominal") %>%
@@ -1258,8 +1275,95 @@ rough_fao_region_effort <- effort_data %>%
   summarise(effort_index = sum(effort)) %>%
   ungroup()
 
-fao2011 <- fao2011 %>%
-  left_join(rough_fao_region_effort, by = c("year", "area" = "fao_area_code"))
+
+
+temp_fao <- fao2011 %>%
+  group_by(stockid) %>%
+  nest() %>%
+  ungroup()
+
+assign_effort <-
+  function(fao_stock,
+           data,
+           effort,
+           fao_catch,
+           scalar = 1000) {
+    # data <- temp_fao$data[[which(temp_fao$stockid == huh)]]
+
+    # fao_catch <- fao
+
+    # effort <- rous_data
+
+    # fao_stock <- temp_fao$stockid[which(temp_fao$stockid == huh)]
+
+    comm_name <-
+      str_split(fao_stock, pattern = '_')[[1]][1] %>% str_remove_all("(\\d)|(-)")
+    
+    isscp_number <-
+      as.numeric(str_split(fao_stock, pattern = '_')[[1]][3])
+    
+    fao_code <- as.numeric(str_split(fao_stock, pattern = '_')[[1]][2])
+    
+    fao_matches <- fao %>% {
+      if (any(.$common_name == comm_name,na.rm = TRUE)) {
+        filter(., common_name == comm_name & fao_area_code == fao_code)
+        
+      } else {
+        filter(.,
+               isscaap_number == isscp_number & fao_area_code == fao_code)
+        
+      }
+    }
+    
+    matched_effort <- effort %>%
+      filter(area == fao_code) %>%
+      filter(country %in% unique(fao_matches$country)) %>%
+      group_by(year, area) %>%
+      summarise(effort_index = sum(effort_cell_reported_nom) / scalar,
+                .groups = "drop") %>%
+      ungroup()
+    
+    data <- data %>%
+      left_join(matched_effort, by = c("year", "area"))
+    
+    
+  }
+
+
+temp_fao <- temp_fao %>%
+  mutate(
+    data = map2(
+      stockid,
+      data,
+      assign_effort,
+      fao_catch = fao,
+      effort = rous_data
+    )
+  )
+
+
+fao2011 <- temp_fao %>% 
+  unnest(cols = data)
+
+
+# fao2011 %>% 
+#   group_by(year, area) %>% 
+#   summarise(effort_index = unique(effort_index)) %>% 
+#   ggplot(aes(year, effort_index)) + 
+#   geom_line() + 
+#   facet_wrap(~area)
+
+# temp <- fao2011 %>%
+#   # filter(area %in% 67) %>%
+#   group_by(stockid) %>%
+#   nest() %>%
+#   ungroup()
+# 
+# huh <- temp$stockid[4]
+# 
+# wtf <- fao2011 %>% 
+#   filter(stockid == huh)
+
 
 fao2011 <- fao2011 %>%
   group_by(stockid) %>%
@@ -1281,8 +1385,8 @@ support_data <- list(mean_regional_isscaap_fmi = mean_regional_isscaap_fmi)
 areas <- c(67, 57, 37,71)
 
 areas <- unique(fao2011$area)
-
 # annnnnd try and run assessments
+
 if (run_sofia_comparison == TRUE) {
   # future::plan(future::multiprocess, workers = 4)
   
@@ -1291,11 +1395,11 @@ if (run_sofia_comparison == TRUE) {
   future::plan(multisession,workers = n_cores)
   
   fao2011_fits <- fao2011 %>%
-    # filter(area %in% 21) %>%
+    # filter(area %in% 67) %>%
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    # slice(2) %>% 
+    # sample_n(25) %>%
     mutate(
       fits = future_map(
         data,
@@ -1309,6 +1413,27 @@ if (run_sofia_comparison == TRUE) {
       )
     )
   
+
+  # "Pink(=Humpback)salmon_67_23"
+  # 
+  # temp <- fao2011 %>%
+  #   group_by(stockid) %>%
+  #   nest() %>%
+  #   ungroup() %>%
+  #   # sample_n(1) %>%
+  #   # filter(stockid ==  "Pink(=Humpback)salmon_67_23") %>%
+  #   slice(141) %>% 
+  #   mutate(
+  #     fits = map(
+  #       data,
+  #       (fit_fao),
+  #       support_data = support_data,
+  #       min_effort_year = 1960,
+  #       engine = "stan",
+  #       cores = 1
+  #     )
+  #   )
+  # 
   
   write_rds(fao2011_fits, path = file.path(results_path, "fao2011-fits.rds"))
   
@@ -1319,9 +1444,9 @@ if (run_sofia_comparison == TRUE) {
 }
 reserve <- fao2011_fits
 
-# ugh <- map_dbl(fao2011$data, ~unique(.x$area)) == 67
+ugh <- map_dbl(fao2011$data, ~unique(.x$area)) == 67
 #
-# fao_worked <- map(fao2011$fits, "error")[ugh]
+fao_worked <- map(fao2011_fits$fits, "error")
 
 
 fao_worked <- map(fao2011_fits$fits, "error") %>% map_lgl(is.null)
@@ -1339,6 +1464,13 @@ faofits <- fao2011_fits %>%
   mutate(bin = cut(mean, breaks = breaks, labels = labels)) %>%
   separate(stockid,c("name","area","speciesgroup"), sep = '_')
 
+
+# wtf <- faofits %>% 
+#   filter(stockid == stockid[1],
+#          str_detect(data, "cpue")) %>% 
+#   ggplot(aes(year, mean, color = data)) + 
+#   geom_line() + 
+#   facet_wrap(~data)
 
 fao2011_data <- fao2011 %>%
   mutate(bin = dplyr::case_when(
@@ -1454,6 +1586,7 @@ po_map_plot <- fao_area_status %>%
 
 po_map_plot
 
+ggsave("percent_overfished_by_region.pdf",po_map_plot)
 # ----save-plots----------------------------------------------------------
 
 plots <- ls()[str_detect(ls(), "_plot")]
