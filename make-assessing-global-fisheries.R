@@ -39,7 +39,7 @@ draws <- 2500
 
 min_draws <- 2000 # minimum number of unique SIR draws
 
-n_cores <- 6
+n_cores <- 3
 # number of cores for parallel processing
 
 future::plan(multiprocess, workers = n_cores)
@@ -67,7 +67,7 @@ run_continent_examples <- FALSE
 
 run_ei_example <- FALSE
 
-run_sofia_comparison <- FALSE
+run_sofia_comparison <- TRUE
 
 engine = "stan"
 
@@ -1422,7 +1422,7 @@ if (run_sofia_comparison == TRUE) {
   #   ungroup() %>%
   #   # sample_n(1) %>%
   #   # filter(stockid ==  "Pink(=Humpback)salmon_67_23") %>%
-  #   slice(141) %>% 
+  #   slice(141) %>%
   #   mutate(
   #     fits = map(
   #       data,
@@ -1433,7 +1433,7 @@ if (run_sofia_comparison == TRUE) {
   #       cores = 1
   #     )
   #   )
-  # 
+
   
   write_rds(fao2011_fits, path = file.path(results_path, "fao2011-fits.rds"))
   

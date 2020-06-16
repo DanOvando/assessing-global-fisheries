@@ -9,7 +9,7 @@ fit_fao <-
            q_slope_prior = 0.025,
            estimate_proc_error = TRUE,
            estimate_qslope = FALSE,
-           default_initial_state = 1,
+           default_initial_state = NA,
            default_initial_state_cv = 0.2,
            chains = 1,
            cores = 1,
@@ -249,7 +249,6 @@ fit_fao <-
           isscaap_group = unique(data$isscaap_group),
           q_slope_prior = q_slope_prior
         )
-      
       sfs <- safely(fit_sraplus)
       
       cpue_fit <-
