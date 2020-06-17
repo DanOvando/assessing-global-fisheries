@@ -109,11 +109,12 @@ prepare_sofia_data <- function(min_years_catch = 20,
   
   # filter data -------------------------------------------------------------
   
-  
+  #ACMACKSARG	
   # for now, only include continuous catch series
   
   ram_data <- ram_data %>%
     filter(is.na(catch) == FALSE) %>%
+    # filter(stockid == "ATBTUNAEATL") %>% 
     group_by(stockid) %>%
     mutate(delta_year = year - lag(year)) %>%
     mutate(delta_year = case_when(year == min(year) ~ as.integer(1),
@@ -128,7 +129,7 @@ prepare_sofia_data <- function(min_years_catch = 20,
     group_by(stockid) %>%
     mutate(
       has_tb0 = !all(is.na(TB0)),
-      has_tb = !all(is.na(total_biomass)),
+      has_tb = all(!is.na(total_biomass)),
       first_catch_year = year[which(catch > 0)[1]]
     ) %>%
     filter(year >= first_catch_year) %>%
@@ -140,11 +141,11 @@ prepare_sofia_data <- function(min_years_catch = 20,
       b_rel = dplyr::case_when(
         has_tb0 ~ total_biomass / max(TB0),
         has_tb ~ total_biomass / max(total_biomass),
-        TRUE ~ b_v_bmsy / 2
+        TRUE ~ b_v_bmsy / 2.5
       )
     ) %>%
     mutate(approx_cpue = pmin(quantile(approx_cpue, 0.9, na.rm = TRUE), approx_cpue)) %>%
-    ungroup()
+    ungroup() 
   
   ram_b_plot <- ram_data %>%
     ggplot(aes(x = year, y = b_v_bmsy)) +

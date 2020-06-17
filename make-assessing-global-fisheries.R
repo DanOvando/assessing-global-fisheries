@@ -24,6 +24,8 @@ library(rstanarm)
 library(sf)
 Sys.unsetenv("PKG_CXXFLAGS")
 
+options(dplyr.summarise.inform = FALSE)
+
 rstan::rstan_options(auto_write = TRUE)
 
 sraplus::get_tmb_model()
@@ -39,7 +41,7 @@ draws <- 2500
 
 min_draws <- 2000 # minimum number of unique SIR draws
 
-n_cores <- 3
+n_cores <- 2
 # number of cores for parallel processing
 
 future::plan(multiprocess, workers = n_cores)
@@ -50,24 +52,24 @@ future::plan(multiprocess, workers = n_cores)
 results_name <- "v0.5"
 
 
-results_description <- "publication version of results"
+results_description <- "publication version of results updated VOI from version 0.5 "
 
-run_voi_models <- FALSE
+run_voi_models <- TRUE
 # sub options for run_voi_models
 fit_models <- FALSE
 
-write_results <- FALSE
+write_results <- TRUE
 
 process_fits <- FALSE
 
 # other things
-run_case_studies <- FALSE
+run_case_studies <- TRUE
 
-run_continent_examples <- FALSE
+run_continent_examples <- TRUE
 
-run_ei_example <- FALSE
+run_ei_example <- TRUE
 
-run_sofia_comparison <- TRUE
+run_sofia_comparison <- FALSE
 
 engine = "stan"
 
@@ -109,8 +111,9 @@ prepare_sofia_data(lookup_fmi_names = FALSE)
 
 has_total_biomass = ram_data %>%
   group_by(stockid) %>%
-  summarise(hastb = any(!is.na(total_biomass))) %>%
-  filter(hastb)
+  summarise(hastb = !any(is.na(total_biomass)),
+            hasb = !any(is.na(b_v_bmsy))) %>%
+  filter(hastb & hasb)
 
 ram_data <- ram_data %>%
   filter(stockid %in% has_total_biomass$stockid) %>%
@@ -126,8 +129,7 @@ ram_data <- ram_data %>%
   group_by(stockid) %>%
   mutate(n = length(catch)) %>%
   filter(n >= min_years_catch) %>%
-  ungroup()
-
+  ungroup() 
 
 # fit voi models --------------------------------------------------------------
 
@@ -136,30 +138,60 @@ if (run_voi_models == TRUE){
   
   
   stress_tests <- data_frame(
-    use_index = sample(c(TRUE,FALSE),  draws, replace = TRUE),
+    use_index = sample(c(TRUE, FALSE),  draws, replace = TRUE),
     index_type = sample(c("survey"), draws, replace = TRUE),
-    use_initial_state = sample(c(TRUE, FALSE),  draws, replace = TRUE),
-    use_heuristics = sample(c(TRUE, FALSE),  draws, replace = TRUE),
+    initial_state_type = sample(c("unfished", "known", "prior","heuristic"), draws, replace = TRUE),
     initial_state_cv =  runif(draws, 0.05, 0.2),
-    use_terminal_state = sample(c(TRUE,FALSE),  draws, replace = TRUE),
+    use_terminal_state = sample(c(TRUE, FALSE),  draws, replace = TRUE),
     terminal_state_cv = runif(draws, 0.05, 0.2),
-    error_cv = sample(c(0,1),draws,replace = TRUE),
+    error_cv = sample(c(0, 1), draws, replace = TRUE),
     stockid = sample(unique(ram_data$stockid), draws, replace = TRUE),
     use_u_priors =  sample(c(TRUE, FALSE),  draws, replace = TRUE),
-    use_terminal_u = sample(c(TRUE, FALSE),  draws, replace = TRUE),
     u_cv = runif(draws, 0.05, 0.2),
-    index_window = sample(c(1, .5), draws, replace = TRUE),
-    index_freq = sample(c(1, 3, 5), draws, replace = TRUE),
-    u_window = sample(c(1,0.5), draws, replace = TRUE),
-    u_freq = sample(c(1, 3, 5), draws, replace = TRUE),
+    index_window = sample(c(1, 0.25, .5), draws, replace = TRUE),
+    index_freq = sample(c(1, 2), draws, replace = TRUE),
+    u_window = sample(c("snapshot", "recent", "complete"), draws, replace = TRUE),
     b_ref_type = sample(c("k", "b"),  draws, replace = TRUE),
     f_ref_type = sample(c("f", "fmsy"),  draws, replace = TRUE),
     estimate_shape = sample(c(FALSE, TRUE), draws, replace = TRUE),
-    estimate_proc_error = sample(c(FALSE,TRUE), draws, replace = TRUE)
+    estimate_proc_error = sample(c(FALSE, TRUE), draws, replace = TRUE)
   ) %>%
-    mutate(use_u_priors = ifelse(use_u_priors == FALSE &
-                                   use_terminal_u == TRUE, TRUE, use_u_priors)) %>%
-    mutate(error_cv = map_dbl(error_cv, ~ ifelse(.x == 0, 1e-6, runif(1,0.01,.25))))
+    mutate(error_cv = map_dbl(error_cv, ~ ifelse(.x == 0, 1e-6, runif(1, 0.01, .25)))) %>%
+    mutate(
+      b_ref_type = ifelse(
+        initial_state_type == "prior",
+        "b",
+        b_ref_type
+      )
+    )
+  
+  # stress_tests <- data_frame(
+  #   use_index = sample(c(FALSE),  draws, replace = TRUE),
+  #   index_type = sample(c("survey"), draws, replace = TRUE),
+  #   initial_state_type = sample(c("unfished", "known", "prior","heuristic"), draws, replace = TRUE),
+  #   initial_state_cv =  runif(draws, 0.05, 0.2),
+  #   use_terminal_state = sample(c(TRUE),  draws, replace = TRUE),
+  #   terminal_state_cv = runif(draws, 0.05, 0.2),
+  #   error_cv = sample(c(0, 1), draws, replace = TRUE),
+  #   stockid = sample(unique(ram_data$stockid), draws, replace = TRUE),
+  #   use_u_priors =  sample(c(FALSE),  draws, replace = TRUE),
+  #   u_cv = runif(draws, 0.05, 0.2),
+  #   index_window = sample(c(1, 0.25, .5), draws, replace = TRUE),
+  #   index_freq = sample(c(1, 2), draws, replace = TRUE),
+  #   u_window = sample(c("snapshot", "recent", "complete"), draws, replace = TRUE),
+  #   b_ref_type = sample(c("k", "b"),  draws, replace = TRUE),
+  #   f_ref_type = sample(c("f", "fmsy"),  draws, replace = TRUE),
+  #   estimate_shape = sample(c(FALSE, TRUE), draws, replace = TRUE),
+  #   estimate_proc_error = sample(c(FALSE, TRUE), draws, replace = TRUE)
+  # ) %>%
+  #   mutate(error_cv = map_dbl(error_cv, ~ ifelse(.x == 0, 1e-6, runif(1, 0.01, .25)))) %>%
+  #   mutate(
+  #     b_ref_type = ifelse(
+  #       initial_state_type == "prior",
+  #       "b",
+  #       b_ref_type
+  #     )
+  #   )
   
   
   if (fit_models == TRUE) {
@@ -174,7 +206,7 @@ if (run_voi_models == TRUE){
           dat = data,
           use_index = use_index,
           index_type = index_type,
-          use_initial_state = use_initial_state,
+          initial_state_type = initial_state_type,
           initial_state_cv =  initial_state_cv,
           use_terminal_state = use_terminal_state,
           terminal_state_cv = terminal_state_cv,
@@ -184,10 +216,7 @@ if (run_voi_models == TRUE){
           f_ref_type = f_ref_type,
           index_window = index_window,
           index_freq = index_freq,
-          u_window = u_window,
-          u_freq = u_freq,
-          use_terminal_u = use_terminal_u,
-          use_heuristics = use_heuristics
+          u_window = u_window
         ),
         generate_priors,
         q = catchability
@@ -203,12 +232,18 @@ if (run_voi_models == TRUE){
     #   rstan::stan_model(file = here::here("src", "biosra.stan"))
     #
     ram_fits <- ram_fits %>%
+      # filter(initial_state_type == "unfished",
+      #        u_window == "snapshot",
+      #        use_index == TRUE,
+      #        use_u_priors == TRUE,
+      #        estimate_shape == FALSE) %>% 
       # filter(use_u_priors == FALSE,
       #        use_index == TRUE,
       #        index_window == 1) %>%
       # mutate(sciname = map_chr(data,~unique(.x$"scientificname"))) %>%
       # filter(sciname == "Ophiodon elongatus") %>%
       # sample_n(20) %>%
+      # slice(6) %>% 
       mutate(
         fits = future_pmap(
           list(
@@ -216,7 +251,8 @@ if (run_voi_models == TRUE){
             priors = priors,
             experiment = experiment,
             estimate_shape = estimate_shape,
-            estimate_proc_error = estimate_proc_error
+            estimate_proc_error = estimate_proc_error,
+            estimate_initial_state = !initial_state_type == "unfished"
           ),
           safely(run_assessments),
           assessments = c("cmsy","sraplus"),
@@ -224,7 +260,7 @@ if (run_voi_models == TRUE){
           results_name = results_name,
           write_results = write_results,
           engine = engine,
-          keep = 2500,
+          keep = 2000,
           .progress = TRUE
         )
       )
@@ -335,7 +371,7 @@ if (run_voi_models == TRUE){
       summary_plot = map(fit, "summary_plot"),
       summary = map(fit, "fit_summary")
     )
-  
+  browser()
   # test <- test %>%
   #   mutate(
   #     summary_plot = map_plot(fit_performance, "summary_plot"),
@@ -369,18 +405,60 @@ if (run_voi_models == TRUE){
   # why infinite RMSE
   
   
+  fits$initial_state_type <- forcats::fct_relevel(fits$initial_state_type,"heuristic")
+  
+  fits$u_window[fits$use_u_priors == FALSE] <- "none"
+  
+  fits$u_window <- forcats::fct_relevel(fits$u_window,"none")
+  
+  
+  wtf <- fits %>% 
+    filter(use_terminal_state == TRUE,
+           metric == "b_v_bmsy",
+           b_ref_type == "b") %>% 
+    arrange(desc(rmse))
+  
+  View(wtf)
+  
+  i <- 2
+  
+  huh <- read_rds(file.path(results_path, "experiments", paste0("experiment-", wtf$experiment[i],".rds")))
+  
+  driors <- ram_fits$priors[ram_fits$experiment == wtf$experiment[i]][[1]]
+  
+  data <- ram_fits$data[ram_fits$experiment == wtf$experiment[i]][[1]]
+  
+  plot_sraplus(huh$sirplus)
+  
+  plot_prior_posterior(huh$sraplus, driors)
+  
+  
   # plot diagnostics --------------------------------------------------------
   
   noerror_data <- fits %>%
     filter(error_cv == min(error_cv),
-           fit_name != "cmsy",
-           use_heuristics == FALSE)
+           fit_name != 'cmsy')
   
   
   voi_data <- fits %>%
-    filter(fit_name != "cmsy",
-           use_heuristics == FALSE)
+    filter(fit_name != "cmsy")
   
+  
+  voi_data %>% 
+    filter(use_index == FALSE, 
+           metric == "b_v_bmsy", 
+           b_ref_type == "b") %>% 
+    ggplot(aes(rmse, fill = use_terminal_state)) + 
+    geom_density(position = "dodge")
+  
+  
+  
+  noerror_data %>% 
+    filter(use_index == FALSE, 
+           metric == "b_v_bmsy", 
+           b_ref_type == "b") %>% 
+    ggplot(aes(observed, predicted, color = use_terminal_state)) + 
+    geom_point()
   
   obs_v_pred_plot <- noerror_data %>%
     filter(metric == "b_v_bmsy") %>%
@@ -409,7 +487,7 @@ if (run_voi_models == TRUE){
   
   overall_rmse_plot <- noerror_data %>%
     filter(is.finite(rmse)) %>%
-    ggplot(aes(rmse, metric, fill = use_terminal_u)) +
+    ggplot(aes(rmse, metric, fill = u_window)) +
     geom_density_ridges(alpha = 0.5) +
     scale_x_continuous(limits = c(0,2)) +
     facet_wrap(~use_index)
@@ -469,7 +547,7 @@ if (run_voi_models == TRUE){
   # value of information analyses
   
   # how does the comparison stack up when you have more data?
-  
+  browser()
   rmse_bias_plot <- noerror_data %>%
     ggplot(aes(rmse, bias)) +
     geom_hex(aes(fill = ..density..), binwidth = c(0.1, 0.1)) +
@@ -504,7 +582,7 @@ if (run_voi_models == TRUE){
   
   b_voi_fit <-
     rstanarm::stan_glmer(
-      rmse ~  use_initial_state  + use_index  + use_u_priors+ use_terminal_u + estimate_shape + (1|stockid) ,
+      rmse ~  initial_state_type  + use_index*u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1|stockid),
       data = voi_data %>% filter(metric == "b_v_bmsy"),
       cores = 4,
       family = Gamma(link = "log")
@@ -513,7 +591,7 @@ if (run_voi_models == TRUE){
   
   b_voi_plot <- bayesplot::mcmc_areas(
     as.array(b_voi_fit),
-    regex_pars = c("use", "state", "estimate","index"),
+    regex_pars = c("use", "state", "estimate","index","u_"),
     prob = 0.8,
     # 80% intervals
     prob_outer = 0.95,
@@ -525,7 +603,7 @@ if (run_voi_models == TRUE){
   
   u_voi_fit <-
     rstanarm::stan_glmer(
-      (rmse) ~  use_initial_state  + use_heuristics + use_u_priors*use_terminal_u + estimate_shape + (1|stockid) ,
+      rmse ~  initial_state_type  + use_index  + use_u_priors+ u_window + estimate_shape + use_terminal_state + (1|stockid),
       data = voi_data %>% filter(metric == "u_v_umsy", is.finite(rmse)),
       cores = 4,
       family = Gamma(link = "log")
@@ -1069,6 +1147,63 @@ mean_regional_isscaap_fmi <- fmi %>%
   pivot_wider(names_from = metric, values_from = mean_value)
 
 # pull in fao classification data
+
+sofia_status <-
+  read_csv(here("data", "StockSTatus_FAOSofia.csv")) %>%
+  janitor::clean_names() %>%
+  select(area, sp_group, name, species, x2017) %>%
+  rename(
+    status = x2017,
+    bad_fao_code = area,
+    isscaap_number = sp_group,
+    common_name = name,
+    scientific_name = species
+  ) %>%
+  filter(!is.na(status)) %>% 
+  mutate(fao_area_code = as.numeric(bad_fao_code)) %>% 
+  mutate(stock_complex = paste(common_name, isscaap_number, fao_area_code, sep = '_'))
+
+
+# merge with fao data
+
+fao_status <- fao %>% 
+  group_by(year, fao_area, fao_area_code, isscaap_group, isscaap_number, common_name, 
+           scientific_name) %>% 
+  summarise(catch = sum(capture), .groups = "drop") %>% 
+  left_join(sofia_status, by = c("fao_area_code", "isscaap_number", "common_name", "scientific_name")) %>% 
+  filter(!is.na(status)) %>% 
+  mutate(stockid = paste(common_name, isscaap_number, fao_area_code, sep = '_')) %>% 
+  group_by(stockid) %>%
+  mutate(
+    first_year = year[catch > 0 & !is.na(catch)][1],
+    last_year = last(year[catch >= 0 & !is.na(catch)])
+  ) %>%
+  filter(year >= first_year, year <= last_year) %>%
+  mutate(interp_catch = zoo::na.approx(catch, na.rm = FALSE)) %>%
+  mutate(catch = dplyr::case_when(
+    is.na(catch) ~ interp_catch,
+    TRUE ~ catch
+  )) %>%
+  filter(!is.na(catch)) %>%
+  select(-first_year, -last_year, -interp_catch) %>%
+  filter(!is.na(fao_area_code),
+         !is.na(common_name))
+
+
+n_status_plot <- fao_status %>%
+  group_by(year, status) %>%
+  summarise(n = length(catch), total_catch = sum(catch)) %>%
+  ggplot() +
+  geom_area(aes(year, n, fill = status), color = "black", alpha = 0.75) +
+  labs(x = "Year", y = "Number of Stocks") +
+  scale_fill_viridis_d() +
+  scale_x_continuous(limits = c(min(fao2011$year), max(fao2011$year)), expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0))
+# made it here
+
+huh <- fao_status %>% 
+  filter(fao_a)
+
 fao2011 <-
   readxl::read_xlsx(here("data", "FAO SOFIA Stock status table.xlsx"), sheet = "Status2011") %>%
   janitor::clean_names() %>%

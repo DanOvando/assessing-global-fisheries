@@ -2,13 +2,10 @@ generate_priors <-
   function(dat,
            use_index = FALSE,
            index_type = "survey",
-           use_initial_state = TRUE,
+           initial_state_type,
            initial_state_cv = 0.1,
            use_terminal_state = TRUE,
            terminal_state_cv = 0.1,
-           use_terminal_u = FALSE,
-           terminal_u = NA,
-           terminal_u_cv = 0.1,
            known_carry  = FALSE,
            carry_cv = 0.25,
            use_u_priors = FALSE,
@@ -20,18 +17,21 @@ generate_priors <-
            index_window = 1,
            effort_window = 1,
            u_window = 1,
-           u_freq = 1,
            u_cv = 0.1,
            index_freq = 1,
-           effort_freq = 1,
-           use_heuristics = FALSE) {
-    if (use_initial_state == TRUE) {
+           effort_freq = 1) {
+    if (initial_state_type == "known") {
       initial_state = dplyr::case_when(b_ref_type == "k" ~ dat$b_rel[1],
                                        TRUE ~ dat$b_v_bmsy[1])
 
+    } else if (initial_state_type == "unfished"){
+      initial_state <- dplyr::case_when(b_ref_type == "k" ~ 1,
+                                        TRUE ~ 2.5)
     } else {
+      
       initial_state <- NA
-    }
+    
+      }
 
     if (use_terminal_state == TRUE) {
       terminal_state = dplyr::case_when(b_ref_type == "k" ~ last(dat$b_rel),
@@ -40,27 +40,6 @@ generate_priors <-
     } else {
       terminal_state <- NA
     }
-
-    if (use_heuristics == TRUE) {
-      temp <-
-        if (dat$catch[1] / max(dat$catch, na.rm = TRUE) < 0.2) {
-          0.7
-        } else {
-          0.4
-        }
-
-      initial_state = dplyr::case_when(b_ref_type == "k" ~ temp,
-                                       TRUE ~ temp * 2)
-
-
-      temp_terminal <-
-        ifelse((last(dat$catch) / max(dat$catch)) > 0.5, 0.6, 0.2)
-
-      terminal_state = dplyr::case_when(b_ref_type == "k" ~ temp_terminal,
-                                        TRUE ~ temp_terminal * 2)
-
-
-    } # close if use heuristics
 
 
     if (known_carry == TRUE) {
@@ -107,40 +86,39 @@ generate_priors <-
 
     }
 
+    terminal_u <-  NA
+    
+    u_years <-  NA
+    
     if (use_u_priors == TRUE) {
-      if (f_ref_type == "fmsy") {
-        u_years <-
-          seq((length(dat$u_v_umsy) - floor(u_window * length(dat$u_v_umsy)) + 1), length(dat$u_v_umsy), by = u_freq)
+        # u_years <-
+        #   seq((length(dat$u_v_umsy) - floor(u_window * length(dat$u_v_umsy)) + 1), length(dat$u_v_umsy), by = u_freq)
 
-      } else {
-        u_years <-
-          seq((
-            length(dat$exploitation_rate) - floor(u_window * length(dat$exploitation_rate)) + 1
-          ), length(dat$exploitation_rate), by = u_freq)
-
-      }
-
-
-
-      if (use_terminal_u == TRUE) {
-
-        u_years <-  NA
-
-        if (f_ref_type == "fmsy") {
-          terminal_u <-  dplyr::last(dat$u_v_umsy)
-
+        if (u_window == "snapshot"){
+          
+          
+          if (f_ref_type == "fmsy") {
+            terminal_u <-  dplyr::last(dat$u_v_umsy)
+            
+          } else {
+            terminal_u <-   dplyr::last(dat$exploitation_rate)
+            
+          }
+          
+        } else if (u_window == "recent"){
+          
+          u_years <- (length(dat$catch) - 5):length(dat$catch)
+          
+          u_years <- u_years[u_years > 0]
+          
         } else {
-          terminal_u <-   dplyr::last(dat$exploitation_rate)
-
+          
+          u_years <- seq_along(dat$catch)
         }
+        
 
-      }
-
-    }  else {
-      u_years <- seq_along(dat$catch)
-
-    }
-
+    }  
+    
     if (fit_effort == TRUE) {
       temp <- dat$u_v_umsy[effort_years]
 
@@ -151,7 +129,7 @@ generate_priors <-
 
     }
 
-    if (use_u_priors == TRUE & use_terminal_u == FALSE) {
+    if (use_u_priors == TRUE & u_window != "snapshot") {
       if (f_ref_type == "fmsy") {
         u <-  dat$u_v_umsy[u_years]
 
@@ -162,6 +140,35 @@ generate_priors <-
     } else {
       u <-  NA
     }
+    
+    
+    if (initial_state_type == "heuristic") {
+      
+      temp <-
+        if (dat$catch[1] / max(dat$catch, na.rm = TRUE) < 0.2) {
+          0.7
+        } else {
+          0.4
+        }
+      
+      initial_state = dplyr::case_when(b_ref_type == "k" ~ temp,
+                                       TRUE ~ temp * 2.5)
+      
+    }
+    
+    
+    if (use_index == FALSE & use_u_priors == FALSE & use_terminal_state == FALSE) { # if there's absolutely nothing else, use heuristics
+     
+      
+      temp_terminal <-
+        ifelse((last(dat$catch) / max(dat$catch)) > 0.5, 0.6, 0.2)
+      
+      terminal_state = dplyr::case_when(b_ref_type == "k" ~ temp_terminal,
+                                        TRUE ~ temp_terminal * 2.5)
+      
+      
+    } # close if use heuristics
+    
     priors <-
       list(
         carry = carry,

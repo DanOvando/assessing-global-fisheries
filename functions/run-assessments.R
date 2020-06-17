@@ -19,6 +19,7 @@ run_assessments <-
            Kscale = NA,
            estimate_shape = FALSE,
            estimate_proc_error = TRUE,
+           estimate_initial_state = TRUE,
            max_time = Inf,
            refresh = 0) {
     # fits <- vector("list", length(assessments))
@@ -26,7 +27,7 @@ run_assessments <-
     # names(fits) <- assessments
 
     fits <- list()
-
+    
     if ("sraplus" %in% assessments) {
       driors <-
         sraplus::format_driors(
@@ -63,6 +64,7 @@ run_assessments <-
           n_keep = keep,
           estimate_proc_error = estimate_proc_error,
           estimate_shape = estimate_shape,
+          estimate_initial_state = estimate_initial_state,
           refresh = refresh
         )
 
@@ -76,9 +78,10 @@ run_assessments <-
           draws = draws,
           n_keep = keep,
           estimate_proc_error = estimate_proc_error,
-          estimate_shape = estimate_shape
+          estimate_shape = estimate_shape,
+          estimate_initial_state = estimate_initial_state
         )
-
+        
 
       }
 
