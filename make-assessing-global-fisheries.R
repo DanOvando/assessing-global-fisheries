@@ -56,11 +56,11 @@ results_description <- "publication version of results updated VOI from version 
 
 run_voi_models <- TRUE
 # sub options for run_voi_models
-fit_models <- TRUE
+fit_models <- FALSE
 
 write_results <- TRUE
 
-process_fits <- TRUE
+process_fits <- FALSE
 
 # other things
 run_case_studies <- TRUE
@@ -415,7 +415,9 @@ if (run_voi_models == TRUE){
   wtf <- fits %>% 
     filter(use_terminal_state == TRUE,
            metric == "b_v_bmsy",
-           b_ref_type == "b") %>% 
+           b_ref_type == "b",
+           error_cv == min(error_cv),
+           use_index == FALSE) %>% 
     arrange(desc(rmse))
   
   View(wtf)
@@ -603,7 +605,7 @@ if (run_voi_models == TRUE){
   
   u_voi_fit <-
     rstanarm::stan_glmer(
-      rmse ~  initial_state_type  + use_index  + use_u_priors+ u_window + estimate_shape + use_terminal_state + (1|stockid),
+      rmse ~  initial_state_type  + use_index*u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1|stockid),
       data = voi_data %>% filter(metric == "u_v_umsy", is.finite(rmse)),
       cores = 4,
       family = Gamma(link = "log")
@@ -611,7 +613,7 @@ if (run_voi_models == TRUE){
   
   u_voi_plot <- bayesplot::mcmc_areas(
     as.array(u_voi_fit),
-    regex_pars = c("use", "state", "estimate"),
+    regex_pars = c("use", "state", "estimate","index","u_"),
     prob = 0.8,
     # 80% intervals
     prob_outer = 0.95,
@@ -655,7 +657,7 @@ if (run_voi_models == TRUE){
   
   acc_voi_fit <-
     rstanarm::stan_glmer(
-      bin_acc ~  use_initial_state + use_index + use_u_priors+ use_terminal_u + estimate_shape + (1|stockid) ,
+      bin_acc ~  initial_state_type  + use_index*u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1|stockid),
       data = acc_data,
       cores = 4,
       family = binomial()
@@ -664,7 +666,7 @@ if (run_voi_models == TRUE){
   
   acc_voi_plot <- bayesplot::mcmc_areas(
     as.array(acc_voi_fit),
-    regex_pars = c("use", "state", "estimate"),
+    regex_pars = c("use", "state", "estimate","index","u_"),
     prob = 0.8,
     # 80% intervals
     prob_outer = 0.95,
@@ -676,7 +678,7 @@ if (run_voi_models == TRUE){
   
   acc_index_voi_fit <-
     rstanarm::stan_glmer(
-      bin_acc ~  factor(index_freq) + factor(index_window) + use_initial_state + use_heuristics + use_u_priors+ use_terminal_u + estimate_shape + (1|stockid) ,
+      bin_acc ~  factor(index_freq) + factor(index_window) + (1|stockid),
       data = acc_data %>% filter(use_index == TRUE),
       cores = 4,
       family = binomial()
@@ -718,6 +720,10 @@ if (run_voi_models == TRUE){
     geom_smooth(method = "lm") +
     scale_x_log10() +
     scale_y_log10()
+  
+  flist <- ls()[str_detect(ls(), "_fit")]
+  
+  save(list = flist, file = file.path(results_path, "voi_fits.RData"))
   
   # voi_data %>%
   #   ggplot(aes((index_rmse), (rmse))) +
