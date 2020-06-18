@@ -81,7 +81,6 @@ run_assessments <-
           estimate_shape = estimate_shape,
           estimate_initial_state = estimate_initial_state
         )
-        
 
       }
 

@@ -41,7 +41,7 @@ draws <- 2500
 
 min_draws <- 2000 # minimum number of unique SIR draws
 
-n_cores <- 2
+n_cores <- 3
 # number of cores for parallel processing
 
 future::plan(multiprocess, workers = n_cores)
@@ -56,11 +56,11 @@ results_description <- "publication version of results updated VOI from version 
 
 run_voi_models <- TRUE
 # sub options for run_voi_models
-fit_models <- FALSE
+fit_models <- TRUE
 
 write_results <- TRUE
 
-process_fits <- FALSE
+process_fits <- TRUE
 
 # other things
 run_case_studies <- TRUE
@@ -156,7 +156,7 @@ if (run_voi_models == TRUE){
     estimate_shape = sample(c(FALSE, TRUE), draws, replace = TRUE),
     estimate_proc_error = sample(c(FALSE, TRUE), draws, replace = TRUE)
   ) %>%
-    mutate(error_cv = map_dbl(error_cv, ~ ifelse(.x == 0, 1e-6, runif(1, 0.01, .25)))) %>%
+    mutate(error_cv = map_dbl(error_cv, ~ ifelse(.x == 0, 1e-6, runif(1, 0.05, 0.2)))) %>%
     mutate(
       b_ref_type = ifelse(
         initial_state_type == "prior",
@@ -179,12 +179,12 @@ if (run_voi_models == TRUE){
   #   index_window = sample(c(1, 0.25, .5), draws, replace = TRUE),
   #   index_freq = sample(c(1, 2), draws, replace = TRUE),
   #   u_window = sample(c("snapshot", "recent", "complete"), draws, replace = TRUE),
-  #   b_ref_type = sample(c("k", "b"),  draws, replace = TRUE),
+  #   b_ref_type = sample(c("b"),  draws, replace = TRUE),
   #   f_ref_type = sample(c("f", "fmsy"),  draws, replace = TRUE),
   #   estimate_shape = sample(c(FALSE, TRUE), draws, replace = TRUE),
   #   estimate_proc_error = sample(c(FALSE, TRUE), draws, replace = TRUE)
   # ) %>%
-  #   mutate(error_cv = map_dbl(error_cv, ~ ifelse(.x == 0, 1e-6, runif(1, 0.01, .25)))) %>%
+  #   mutate(error_cv = map_dbl(error_cv, ~ ifelse(.x == 0, 1e-6, runif(1, 0.05, 0.2)))) %>%
   #   mutate(
   #     b_ref_type = ifelse(
   #       initial_state_type == "prior",
@@ -192,7 +192,7 @@ if (run_voi_models == TRUE){
   #       b_ref_type
   #     )
   #   )
-  
+
   
   if (fit_models == TRUE) {
     ram_fits <- stress_tests %>%
