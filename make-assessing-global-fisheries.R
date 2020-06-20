@@ -54,7 +54,7 @@ results_name <- "v0.5"
 
 results_description <- "publication version of results updated VOI from version 0.5 "
 
-run_voi_models <- TRUE
+run_voi_models <- FALSE
 # sub options for run_voi_models
 fit_models <- FALSE
 
@@ -63,13 +63,13 @@ write_results <- TRUE
 process_fits <- FALSE
 
 # other things
-run_case_studies <- TRUE
+run_case_studies <- FALSE
 
-run_continent_examples <- TRUE
+run_continent_examples <- FALSE
 
-run_ei_example <- TRUE
+run_ei_example <- FALSE
 
-run_sofia_comparison <- FALSE
+run_sofia_comparison <- TRUE
 
 engine = "stan"
 
@@ -1165,15 +1165,42 @@ sofia_status <-
     common_name = name,
     scientific_name = species
   ) %>%
-  filter(!is.na(status)) %>% 
   mutate(fao_area_code = as.numeric(bad_fao_code)) %>% 
-  mutate(stock_complex = paste(common_name, isscaap_number, fao_area_code, sep = '_'))
+  filter(!is.na(status), status != "?", !is.na(fao_area_code)) %>% 
+  mutate(stock_complex = paste(common_name, isscaap_number, fao_area_code, sep = '_'),
+         full_status = status)
 
+stats <- str_trim(str_split(sofia_status$status, pattern = "[[:punct:]]", simplify = TRUE)[,1])
+
+
+sofia_status$status <- stats
+  
+# replicate rows for multiple status
+
+# tmp <- sofia_status %>% 
+#   group_by(stock_complex) %>% 
+#   nest() %>% 
+#   ungroup()
+# 
+# repfoo <- function(x){
+#   
+#   statusi <- str_trim(str_split(x$status, pattern = "[[:punct:]]", simplify = TRUE))
+#   
+#   out <- map_df(statusi, ~ x) %>% 
+#     mutate(status = statusi)
+#   
+# }
+# ogss <- sofia_status
+# 
+# sofia_status <- tmp %>% 
+#   mutate(data = map(data, repfoo)) %>% 
+#   unnest(cols = data)
 
 # merge with fao data
 
+
 fao_status <- fao %>% 
-  group_by(year, fao_area, fao_area_code, isscaap_group, isscaap_number, common_name, 
+group_by(year, fao_area, fao_area_code, isscaap_group, isscaap_number, common_name, 
            scientific_name) %>% 
   summarise(catch = sum(capture), .groups = "drop") %>% 
   left_join(sofia_status, by = c("fao_area_code", "isscaap_number", "common_name", "scientific_name")) %>% 
@@ -1193,7 +1220,9 @@ fao_status <- fao %>%
   filter(!is.na(catch)) %>%
   select(-first_year, -last_year, -interp_catch) %>%
   filter(!is.na(fao_area_code),
-         !is.na(common_name))
+         !is.na(common_name),
+         status != 'N') %>% 
+  mutate(status = forcats::fct_relevel(status,c("O","F","U")))
 
 
 n_status_plot <- fao_status %>%
@@ -1203,74 +1232,31 @@ n_status_plot <- fao_status %>%
   geom_area(aes(year, n, fill = status), color = "black", alpha = 0.75) +
   labs(x = "Year", y = "Number of Stocks") +
   scale_fill_viridis_d() +
-  scale_x_continuous(limits = c(min(fao2011$year), max(fao2011$year)), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(min(fao_status$year), max(fao_status$year)), expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0))
 # made it here
 
-huh <- fao_status %>% 
-  filter(fao_a)
-
-fao2011 <-
-  readxl::read_xlsx(here("data", "FAO SOFIA Stock status table.xlsx"), sheet = "Status2011") %>%
-  janitor::clean_names() %>%
-  mutate(stockid = paste(name, area, sp_group, sep = "_")) %>%
-  select(stockid, everything()) %>%
-  filter(!is.na(short)) %>%
-  gather(year, catch, contains("x")) %>%
-  mutate(year = as.numeric(str_replace(year, "\\D", ""))) %>%
-  arrange(stockid, year) %>%
-  group_by(stockid) %>%
-  mutate(
-    first_year = year[catch > 0 & !is.na(catch)][1],
-    last_year = last(year[catch >= 0 & !is.na(catch)])
-  ) %>%
-  filter(year >= first_year, year <= last_year) %>%
-  mutate(interp_catch = zoo::na.approx(catch, na.rm = FALSE)) %>%
-  mutate(catch = dplyr::case_when(
-    is.na(catch) ~ interp_catch,
-    TRUE ~ catch
-  )) %>%
-  filter(!is.na(catch)) %>%
-  select(-first_year, -last_year, -interp_catch) %>%
-  mutate(
-    year = as.numeric(year),
-    area = as.numeric(area)
-  ) %>%
-  filter(!is.na(area),
-         !is.na(name))
-
-
-n_status_plot <- fao2011 %>%
-  group_by(year, short) %>%
+n_region_status_plot <- fao_status %>%
+  group_by(year,fao_area, status) %>%
   summarise(n = length(catch), total_catch = sum(catch)) %>%
-  ggplot() +
-  geom_area(aes(year, n, fill = short), color = "black", alpha = 0.75) +
-  labs(x = "Year", y = "Number of Stocks") +
-  scale_fill_viridis_d() +
-  scale_x_continuous(limits = c(min(fao2011$year), max(fao2011$year)), expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0))
-
-n_region_status_plot <- fao2011 %>%
-  group_by(year,area, short) %>%
-  summarise(n = length(catch), total_catch = sum(catch)) %>%
-  group_by(year, area) %>%
+  group_by(year, fao_area) %>%
   mutate(pn = n / sum(n)) %>%
   ggplot() +
-  geom_area(aes(year, pn, fill = short), color = "black", alpha = 0.75) +
+  geom_area(aes(year, pn, fill = status), color = "black", alpha = 0.75) +
   labs(x = "Year", y = "Number of Stocks") +
   scale_fill_viridis_d() +
-  scale_x_continuous(limits = c(min(fao2011$year), max(fao2011$year)), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(min(fao_status$year), max(fao_status$year)), expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
-  facet_wrap(~area)
+  facet_wrap(~fao_area)
 
-catch_status_plot <- fao2011 %>%
-  group_by(year, short) %>%
+catch_status_plot <- fao_status %>%
+  group_by(year, status) %>%
   summarise(n = length(catch), total_catch = sum(catch)) %>%
   ggplot() +
-  geom_area(aes(year, total_catch, fill = short), color = "black", alpha = 0.75) +
+  geom_area(aes(year, total_catch, fill = status), color = "black", alpha = 0.75) +
   labs(x = "Year") +
   scale_fill_viridis_d() +
-  scale_x_continuous(limits = c(min(fao2011$year), max(fao2011$year)), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(min(fao_status$year), max(fao_status$year)), expand = c(0, 0)) +
   scale_y_comma(name = "Total Capture (mt)")
 
 
@@ -1371,13 +1357,13 @@ state_space_results <- readxl::read_xlsx(here("data", "state_space_results_08_28
   janitor::clean_names()
 
 
-fao2011 <- fao2011 %>%
-  left_join(fao_area_to_ram, by = "area") %>%
+fao_status <- fao_status %>%
+  left_join(fao_area_to_ram %>% select(-fao_area), by = c("fao_area_code" = "area")) %>%
   left_join(state_space_results %>% filter(variable == "UvU"), by = c("year", "state_space_region" = "region")) %>%
-  left_join(approx_sar_by_fao_region, by = c("area" = "fao_area_code")) %>%
+  left_join(approx_sar_by_fao_region, by = c("fao_area_code" = "fao_area_code")) %>%
   rename(mean_u_umsy = dlm_geomean)
 
-fao_ram_u_plot <- fao2011 %>%
+fao_ram_u_plot <- fao_status %>%
   ggplot(aes(
     year,
     (mean_u_umsy)
@@ -1393,7 +1379,7 @@ ram_status_plot <- status_t %>%
   geom_area(aes(year, n, fill = bin), color = "black", alpha = 0.75) +
   labs(x = "Year", y = "Number of Stocks") +
   scale_fill_viridis_d() +
-  scale_x_continuous(limits = c(min(fao2011$year), max(fao2011$year)), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(min(fao_status$year), max(fao_status$year)), expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0))
 
 # link up generic effort to fao 2011
@@ -1418,7 +1404,7 @@ rough_fao_region_effort <- effort_data %>%
 
 
 
-temp_fao <- fao2011 %>%
+temp_fao <- fao_status %>%
   group_by(stockid) %>%
   nest() %>%
   ungroup()
@@ -1429,25 +1415,27 @@ assign_effort <-
            effort,
            fao_catch,
            scalar = 1000) {
-    # data <- temp_fao$data[[which(temp_fao$stockid == huh)]]
-
-    # fao_catch <- fao
-
-    # effort <- rous_data
-
-    # fao_stock <- temp_fao$stockid[which(temp_fao$stockid == huh)]
+     # data <- temp_fao$data[[which(temp_fao$stockid == huh)]]
+     # 
+     # fao_catch <- fao
+     # 
+     # effort <- rous_data
+     # 
+     # fao_stock <- temp_fao$stockid[which(temp_fao$stockid == huh)]
 
     comm_name <-
       str_split(fao_stock, pattern = '_')[[1]][1] %>% str_remove_all("(\\d)|(-)")
     
     isscp_number <-
-      as.numeric(str_split(fao_stock, pattern = '_')[[1]][3])
+      as.numeric(str_split(fao_stock, pattern = '_')[[1]][2])
     
-    fao_code <- as.numeric(str_split(fao_stock, pattern = '_')[[1]][2])
+    fao_code <- as.numeric(str_split(fao_stock, pattern = '_')[[1]][3])
     
-    fao_matches <- fao %>% {
+    fao_matches <- fao_catch %>% {
       if (any(.$common_name == comm_name,na.rm = TRUE)) {
         filter(., common_name == comm_name & fao_area_code == fao_code)
+        # filter(fao, common_name == comm_name & fao_area_code == fao_code)
+        # 
         
       } else {
         filter(.,
@@ -1455,7 +1443,6 @@ assign_effort <-
         
       }
     }
-    
     matched_effort <- effort %>%
       filter(area == fao_code) %>%
       filter(country %in% unique(fao_matches$country)) %>%
@@ -1465,7 +1452,7 @@ assign_effort <-
       ungroup()
     
     data <- data %>%
-      left_join(matched_effort, by = c("year", "area"))
+      left_join(matched_effort, by = c("year", "fao_area_code" =  "area"))
     
     
   }
@@ -1483,18 +1470,18 @@ temp_fao <- temp_fao %>%
   )
 
 
-fao2011 <- temp_fao %>% 
+fao_status <- temp_fao %>% 
   unnest(cols = data)
 
 
-# fao2011 %>% 
+# fao_status %>% 
 #   group_by(year, area) %>% 
 #   summarise(effort_index = unique(effort_index)) %>% 
 #   ggplot(aes(year, effort_index)) + 
 #   geom_line() + 
 #   facet_wrap(~area)
 
-# temp <- fao2011 %>%
+# temp <- fao_status %>%
 #   # filter(area %in% 67) %>%
 #   group_by(stockid) %>%
 #   nest() %>%
@@ -1502,11 +1489,11 @@ fao2011 <- temp_fao %>%
 # 
 # huh <- temp$stockid[4]
 # 
-# wtf <- fao2011 %>% 
+# wtf <- fao_status %>% 
 #   filter(stockid == huh)
 
 
-fao2011 <- fao2011 %>%
+fao_status <- fao_status %>%
   group_by(stockid) %>%
   mutate(lifetime_catch = sum(catch, na.rm = TRUE),
          min_catch = min(catch, na.rm = TRUE),
@@ -1515,17 +1502,18 @@ fao2011 <- fao2011 %>%
   filter(lifetime_catch > 50000,
          min_catch > 0,
          nas == 0,
-         !is.na(species)) %>%
+         !is.na(common_name)) %>%
   ungroup() %>%
-  mutate(sp_group = as.numeric(sp_group)) %>%
-  left_join(fao_species %>% select(isscaap_group, isscaap_number) %>% unique(), by = c("sp_group" = "isscaap_number"))
+  mutate(sp_group = isscaap_number) %>%
+  # left_join(fao_species %>% select(isscaap_group, isscaap_number) %>% unique(), by = c("sp_group" = "isscaap_number")) %>% 
+  mutate(species = scientific_name)
 
 
 support_data <- list(mean_regional_isscaap_fmi = mean_regional_isscaap_fmi)
 
 areas <- c(67, 57, 37,71)
 
-areas <- unique(fao2011$area)
+areas <- unique(fao_status$fao_area_code)
 # annnnnd try and run assessments
 
 if (run_sofia_comparison == TRUE) {
@@ -1535,17 +1523,18 @@ if (run_sofia_comparison == TRUE) {
   
   future::plan(multisession,workers = n_cores)
   
-  fao2011_fits <- fao2011 %>%
+  fao_status_fits <- fao_status %>%
     # filter(area %in% 67) %>%
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    # sample_n(25) %>%
+    # sample_n(3) %>% 
     mutate(
       fits = future_map(
         data,
         safely(fit_fao),
         support_data = support_data,
+        default_initial_state = 1,
         min_effort_year = 1960,
         engine = "stan",
         cores = 1,
@@ -1557,7 +1546,7 @@ if (run_sofia_comparison == TRUE) {
 
   # "Pink(=Humpback)salmon_67_23"
   # 
-  # temp <- fao2011 %>%
+  # temp <- fao_status %>%
   #   group_by(stockid) %>%
   #   nest() %>%
   #   ungroup() %>%
@@ -1576,34 +1565,35 @@ if (run_sofia_comparison == TRUE) {
   #   )
 
   
-  write_rds(fao2011_fits, path = file.path(results_path, "fao2011-fits.rds"))
+  write_rds(fao_status_fits, path = file.path(results_path, "fao_status_fits.rds"))
   
 } else {
-  fao2011_fits <-   read_rds(path = file.path(results_path, "fao2011-fits.rds"))
+  fao_status_fits <-   read_rds(path = file.path(results_path, "fao_status_fits.rds"))
   
 
 }
-reserve <- fao2011_fits
+reserve <- fao_status_fits
 
-ugh <- map_dbl(fao2011$data, ~unique(.x$area)) == 67
+ugh <- map_dbl(fao_status$data, ~unique(.x$area)) == 67
 #
-fao_worked <- map(fao2011_fits$fits, "error")
+fao_worked <- map(fao_status_fits$fits, "error")
 
 
-fao_worked <- map(fao2011_fits$fits, "error") %>% map_lgl(is.null)
+fao_worked <- map(fao_status_fits$fits, "error") %>% map_lgl(is.null)
 
-fao2011_fits <- fao2011_fits %>%
+fao_status_fits <- fao_status_fits %>%
   filter(fao_worked)
 
-fao2011_fits <- fao2011_fits %>%
+fao_status_fits <- fao_status_fits %>%
   mutate(fits = map(fits, "result"))
 
-faofits <- fao2011_fits %>%
+faofits <- fao_status_fits %>%
   select(-data) %>%
   unnest(cols = fits) %>%
   filter(variable == "b_div_bmsy") %>%
   mutate(bin = cut(mean, breaks = breaks, labels = labels)) %>%
-  separate(stockid,c("name","area","speciesgroup"), sep = '_')
+  separate(stockid,c("name","speciesgroup","area"), sep = '_') %>% 
+  mutate(fao_area_code = as.numeric(area))
 
 
 # wtf <- faofits %>% 
@@ -1613,40 +1603,38 @@ faofits <- fao2011_fits %>%
 #   geom_line() + 
 #   facet_wrap(~data)
 
-fao2011_data <- fao2011 %>%
+fao_status_data <- fao_status %>%
   mutate(bin = dplyr::case_when(
-    short == "F" ~ "fully",
-    short == "U" ~ "under",
-    short == "O" ~ "over",
+    status == "F" ~ "fully",
+    status == "U" ~ "under",
+    status == "O" ~ "over",
     TRUE ~ "unknown"
   )) %>%
   mutate(
     data = "FAO Report 569",
     mean = rep(1, nrow(.))
   ) %>%
-  select(area, year, bin, data, mean) %>%
-  mutate(area = as.numeric(as.character(area)))
+  select(fao_area_code, year, bin, data, mean) 
 
 
 fao_regions_key <- read_csv(here("data", "fao_regions_key.csv"))
 
 temp <- faofits %>%
-  mutate(area = as.numeric(area)) %>%
-  select(area, year, bin, data, mean) %>%
-  bind_rows(fao2011_data) %>%
+  select(fao_area_code, year, bin, data, mean) %>%
+  bind_rows(fao_status_data) %>%
   filter(
-    !is.na(area), !area %in% c(88, 48),
+    !is.na(fao_area_code), !fao_area_code %in% c(88, 48),
     !bin == "unknown"
   ) %>%
-  left_join(fao_regions_key, by = c("area" = "fao_region_num")) %>%
-  group_by(fao_region_name,area, year, bin, data) %>%
+  left_join(fao_regions_key, by = c("fao_area_code" = "fao_region_num")) %>%
+  group_by(fao_region_name,fao_area_code, year, bin, data) %>%
   summarise(n = length(mean)) %>%
-  group_by(fao_region_name,area, data, year) %>%
+  group_by(fao_region_name,fao_area_code, data, year) %>%
   mutate(pn = round(n / sum(n), 2)) %>%
-  group_by(fao_region_name, area,data) %>%
+  group_by(fao_region_name, fao_area_code,data) %>%
   filter(year == max(year)) %>%
   ungroup() %>%
-  tidyr::complete(bin, nesting(fao_region_name, area, year, data),
+  tidyr::complete(bin, nesting(fao_region_name, fao_area_code, year, data),
                   fill = list(n = 0, pn = 0)
   ) %>%
   filter(bin == "over") %>%
@@ -1656,7 +1644,7 @@ temp <- faofits %>%
 # temp$pn[temp$fao_region_name == "Pacific, Northeast" & temp$bin == "over" & temp$data == "FAO Report 569"] <- 0.09
 
 
-fao2011_plot <- temp %>%
+fao_status_plot <- temp %>%
   ggplot(aes(data, pn, fill = fao_region_name)) +
   geom_col(size = 1, alpha = 1, size = 1, show.legend = FALSE, color = "black") +
   coord_flip() +
@@ -1669,7 +1657,7 @@ fao2011_plot <- temp %>%
   ) +
   scale_fill_discrete(name = "FAO Category")
 
-fao2011_plot
+fao_status_plot
 
 
 if (!dir.exists(here("data","FAO_AREAS_NOCOASTLINE"))){
@@ -1697,7 +1685,7 @@ fao_areas = fao_areas %>%
   sf::st_simplify()
 
 fao_area_status <- fao_areas %>% 
-  left_join(temp %>% mutate(f_area = as.character(area)), by = "f_area") %>% 
+  left_join(temp %>% mutate(f_area = as.character(fao_area_code)), by = "f_area") %>% 
   filter(!is.na(data))
 
 

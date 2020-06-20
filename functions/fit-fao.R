@@ -100,7 +100,7 @@ fit_fao <-
     # fmi fit
     fmi_dat <- support_data$mean_regional_isscaap_fmi %>%
       filter(
-        fao_area_code == unique(as.numeric(data$fao_area)),
+        fao_area_code == unique(as.numeric(data$fao_area_code)),
         isscaap_group == unique(data$isscaap_group)
       )
     
