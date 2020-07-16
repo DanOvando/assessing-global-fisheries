@@ -69,7 +69,7 @@ run_continent_examples <- FALSE
 
 run_ei_example <- FALSE
 
-run_sofia_comparison <- TRUE
+run_sofia_comparison <- FALSE
 
 engine = "stan"
 
