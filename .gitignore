@@ -1,7 +1,7 @@
 # Results
 data/fao-*
 data/fao_*
-
+data/fao/*
 results/*
 *.docx
 *.rds

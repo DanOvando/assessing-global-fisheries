@@ -30,14 +30,14 @@ calc_error <- function(data, priors,index_type, q = 1e-6) {
   ref_b <-
     dplyr::case_when(priors$b_ref_type == "k" ~ first(data$b_rel),
                      TRUE ~ first(data$b_v_bmsy))
-
   initial_b_rmse = sqrt((ref_b - priors$initial_state) ^ 2)
 
   outs <- ls()[str_detect(ls(), "rmse")]
 
-  out <- map_dfc(outs, ~ data_frame(.x = get(.x))) %>%
-    set_names(outs)
-
+  outs <- setNames(outs, outs)
+  
+  out <- map_dfc(outs, ~ get(.x)) 
+  
   return(out)
 
 }
