@@ -1511,11 +1511,21 @@ fao_status <- fao_status %>%
 
 support_data <- list(mean_regional_isscaap_fmi = mean_regional_isscaap_fmi)
 
-areas <- c(67, 57, 37,71)
+# areas <- c(67, 57, 37,71)
 
 areas <- unique(fao_status$fao_area_code)
-# annnnnd try and run assessments
 
+# fao_status %>% 
+#   filter(year == max(year)) %>% 
+#   summarise(catch = sum(catch))
+# 
+# fao %>% 
+#   filter(year == max(year)) %>% 
+#   summarise(catch = sum(capture))
+
+
+# annnnnd try and run assessments
+# browser()
 if (run_sofia_comparison == TRUE) {
   # future::plan(future::multiprocess, workers = 4)
   
@@ -1528,14 +1538,14 @@ if (run_sofia_comparison == TRUE) {
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    # sample_n(3) %>% 
+    # sample_n(3) %>%
     mutate(
       fits = future_map(
         data,
         safely(fit_fao),
         support_data = support_data,
         default_initial_state = 1,
-        min_effort_year = 1960,
+        min_effort_year = 1975,
         engine = "stan",
         cores = 1,
         .progress = TRUE,
@@ -1572,10 +1582,11 @@ if (run_sofia_comparison == TRUE) {
   
 
 }
+
 reserve <- fao_status_fits
 
 ugh <- map_dbl(fao_status$data, ~unique(.x$area)) == 67
-#
+
 fao_worked <- map(fao_status_fits$fits, "error")
 
 

@@ -57,6 +57,37 @@ fit_fao <-
       mutate(data = "heuristic")
     
     
+    # catch only fit
+    
+    com_driors <-
+      format_driors(
+        taxa = scientific_name,
+        catch = catches,
+        years = seq_along(years),
+        use_heuristics = FALSE,
+        initial_state = NA,
+        initial_state_cv = NA,
+        b_ref_type = "k",
+        isscaap_group = unique(data$isscaap_group),
+        use_catch_prior = TRUE
+      )
+    
+    com_fit <-
+      fit_sraplus(
+        driors = com_driors,
+        include_fit = include_fit,
+        model = model,
+        engine = "sir",
+        draws = draws,
+        thin_draws = thin_draws
+      )
+    
+    com_fit_results <- com_fit$results %>%
+      filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy", "depletion")) %>%
+      mutate(year = rep(years, each = 4)) %>%
+      mutate(data = "catch_only")
+    
+    
     # sar fit
     
     if (!is.na(last(data$sar))) {
@@ -528,7 +559,8 @@ fit_fao <-
       used_cpue_plus <- FALSE
     }
     
-    results <- basic_fit_results %>% {
+    results <- basic_fit_results %>% 
+      bind_rows(com_fit_results) %>% {
       if (used_sar == TRUE) {
         bind_rows(., sar_fit_results)
       }
