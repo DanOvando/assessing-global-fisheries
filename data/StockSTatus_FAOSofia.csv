@@ -1,0 +1,756 @@
+Area,Sp.group,Name,Species,2009,2011,2013,2015,2017,U2009,U2011,U2013,U2015,U2017
+21,31,Amer. plaice(=Long rough dab),Hippoglossoides platessoides,O,O,O,O,O,L,L,L,L,L
+21,31,Flatfishes nei,Pleuronectiformes,, , ,, ,,,,N/A,N/A
+21,31,Greenland halibut,Reinhardtius hippoglossoides,F,F,F,F,F,L,L,L,M,M
+21,31,Summer flounder,Paralichthys dentatus,F,F,F,F,F,L,L,L,L,L
+21,31,Winter flounder,Pseudopleuronectes americanus,,O,O,O,F,,M,M,L,L
+21,31,Witch flounder,Glyptocephalus cynoglossus,O,O,O,O,O,L,L,L,L,L
+21,31,Yellowtail flounder,Limanda ferruginea,F/U,U/F,U/F,O,O,L,L,L,L,L
+21,31,"Other Flounders, halibuts, soles",,F,F,F,F,O,L,L,L,N/A,N/A
+21,31,"31-Flounders, halibuts, soles",,,, ,, ,,,,,
+21,32,Atlantic cod,Gadus morhua,F,O,O,O,O-F,L,L,L,L,L
+21,32,Haddock,Melanogrammus aeglefinus,U/F,F,F,F,O,L,L,L,L,L
+21,32,Saithe(=Pollock),Pollachius virens,F,F,F,F,U-F,L,L,L,L,L
+21,32,Silver hake,Merluccius bilinearis,F,F,F,F,U,L,L,L,L,L
+21,32,Tusk(=Cusk),Brosme brosme,O,O,O,O,F,L,L,M,,
+21,32,White hake,Urophycis tenuis,O,O,O,F,O,L,L,L,L,L
+21,32,"Other Cods, hakes, haddocks",,F, , ,,O,L,,, , 
+21,32,"32-Cods, hakes, haddocks",,,,,, ,,,,,
+21,33,33-Miscellaneous coastal fishes,,,,,, ,,,, , 
+21,34,American angler,Lophius americanus,F,F,F,N,F,L,L,M,L,L
+21,34,Atlantic redfishes nei,Sebastes spp,O,F/O,F/O,F,U,L,L,L,L,L
+21,34,Other Miscellaneous demersal fishes,,,F,,, ,,L,L,N/A,N/A
+21,34,34-Miscellaneous demersal fishes,,,,,, ,,,,,
+21,35,Atlantic herring,Clupea harengus,F,F,F,N,O,L,L,L,L,L
+21,35,Atlantic menhaden,Brevoortia tyrannus,F,F,F,F,F,L,L,L,,
+21,35,"Other Herrings, sardines, anchovies",,,,,, ,,,,N/A,N/A
+21,35,"35-Herrings, sardines, anchovies",,,,,, ,,,,,
+21,37,Atlantic mackerel,Scomber scombrus,F,O,O,F,O,L,M,M,,
+21,37,Capelin,Mallotus villosus,F,F,F,F,O,L,L,L,,
+21,37,Other Miscellaneous pelagic fishes,,,,,, ,,,,N/A,N/A
+21,37,37-Miscellaneous pelagic fishes,,,,,, ,,,,,
+21,43,American lobster,Homarus americanus,F,F,F,F,F,L,L,L,,
+21,45,"45-Shrimps, prawns",,,,,, ,,,,N/A,N/A
+21,45,Pandalus shrimps nei,Pandalus spp,F,F,F,F,O,L,L,L,,
+21,45,"Other Shrimps, prawns",,F,,,, ,L,,,,
+21,55,American sea scallop,Placopecten magellanicus,F,F,F,F,U-F,L,M,L,L,L
+21,55,Atlantic bay scallop,Argopecten irradians,,,O,O,O,,,H,,
+21,55,Iceland scallop,Chlamys islandica,F,U,U,N,F-O,L,M,M,,
+21,55,"55-Scallops, pectens",,,,,, ,,,,,
+21,56,Atlantic surf clam,Spisula solidissima,F,F,F,F,F,L,L,L,L,L
+21,56,Northern quahog(=Hard clam),Mercenaria mercenaria,F, ,,, ,L, ,,,
+21,56,Ocean quahog,Arctica islandica,F,U,U,N,U,L,L,H,L,L
+21,56,Sand gaper,Mya arenaria,F,F,F,F,F,M,M,H,,
+21,56,"Other Clams, cockles, arkshells",,,, ,, ,,,,N/A,N/A
+21,56,"56-Clams, cockles, arkshells",,,, ,, , , ,,,
+27,23,Atlantic salmon,Salmo salar,O,F,F,O,F,L,L,L ,H,H
+27,23,"Other Salmons, trouts, smelts",,O,O,O,O,O,L,L,L,H,H
+27,23,"23-Salmons, trouts, smelts",,,,,, ,,,,,
+27,31,European plaice,Pleuronectes platessa,F,N,F,F,F,L,L,L,H,H
+27,31,"Other Flounders, halibuts, soles",,O,F,O,O,F-O,L,L,M,H,H
+27,31,"31-Flounders, halibuts, soles",,,,,,,,,,,
+27,32,Atlantic cod,Gadus morhua,F,F,F-O,F,F-O,L,L,L-M,H,H
+27,32,Blue whiting(=Poutassou),Micromesistius poutassou,F,F,F,F,F,L,L,L,H,H
+27,32,Haddock,Melanogrammus aeglefinus,F,F,F,F,F,L,L,L,H,H
+27,32,Norway pout,Trisopterus esmarkii,F,F,F,F,F,L,L,L,H,H
+27,32,Polar cod,Boreogadus saida,U,N,U ,U,U,M,M,H,L,L
+27,32,Saithe(=Pollock),Pollachius virens,F,F,F,F,F,L,L,L,H,H
+27,32,Whiting,Merlangius merlangus,O,O,F-O,F,O,L,L,M,H,H
+27,32,"Other Cods, hakes, haddocks",,F,F,F,O,F,L,L,M,H,H
+27,32,"32-Cods, hakes, haddocks",,,,,, ,,,,,
+27,33,Sandeels(=Sandlances) nei,Ammodytes spp,O,O,O,F,F,L,L,L,H,H
+27,33,Other Miscellaneous coastal fishes,,F,F,O,F,F,M,M,M,H,H
+27,33,33-Miscellaneous coastal fishes,,,,,, ,,,,,
+27,34,Atlantic redfishes nei,Sebastes spp,O,O,F,F,F,L,L,M,M,M
+27,34,Other Miscellaneous demersal fishes,,F,F,F,F,F,L,L,M,H,H
+27,34,34-Miscellaneous demersal fishes,,,,,, ,,,,,
+27,35,Atlantic herring,Clupea harengus,F,F,F,F,F,L,L,L,M,M
+27,35,European pilchard(=Sardine),Sardina pilchardus,F,F,F,F,O,L,L,L,M,M
+27,35,European sprat,Sprattus sprattus,F,F,F,F,F,L,L,L,M,M
+27,35,"Other Herrings, sardines, anchovies",,O,F,F,O,F,L,L,L,H,H
+27,35,"35-Herrings, sardines, anchovies",,,,,, ,,,,,
+27,37,Atlantic horse mackerel,Trachurus trachurus,F,F,F,O,O,L,L,L,H,H
+27,37,Atlantic mackerel,Scomber scombrus,F,F,F,F,F,L,L,L,H,H
+27,37,Capelin,Mallotus villosus,O,F,F,O,F,L,L,L,H,H
+27,37,Other Miscellaneous pelagic fishes,,F,F,F,F,F,H,H,H,H,H
+27,37,37-Miscellaneous pelagic fishes,,,,,, ,,,,,
+27,45,Northern prawn,Pandalus borealis,U,N,U,F,F,L,L,L,H,H
+27,45,"Other Shrimps, prawns",,F,F,F,F,F,L,L,L,H,H
+27,45,"45-Shrimps, prawns",,,,,,F,,,,,
+27,54,Blue mussel,Mytilus edulis,?,?,,?,?,,,,?,
+27,54,Other Mussels,,?,?,,-,?,,,,-,
+27,54,54-Mussels,,,,,,,,,,,
+31,33,Flathead grey mullet,Mugil cephalus,F/O,F/O,F/O,"F,F, O","F,F,O",M,M,M,M,M
+31,33,Groupers,,O,F/O,O,O,F/O,M,M,M,L,L
+31,33,"Grunts, sweetlips nei",Haemulidae (=Pomadasyidae),F/O,F/O,F/O,"O, F",F/O,M,M,M,H,H
+31,33,Mullets nei,Mugilidae,?,O,?,"O, F",F/O,,H,M,H,H
+31,33,Sciaenids,,F/O,F/O,F/O,"F, O",F/O,M,M,M,M,M
+31,33,Snappers,,O,F/O,O,"O, F, O",F/O,M,M,M,M,M
+31,33,Other Miscellaneous coastal fishes,,,,,"F, O",F/O,,,,H,H
+31,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+31,34,34-Miscellaneous demersal fishes,,,,,F,F,,,,M,M
+31,35,Atlantic menhaden,Brevoortia tyrannus,F/O,F,F,F,F,L,L,L,L,L
+31,35,Atlantic thread herring,Opisthonema oglinum,?,?,?,O,F,,,,H,H 
+31,35,Gulf menhaden,Brevoortia patronus,F,F,F,F,F,L,L,L,L,L
+31,35,Round sardinella,Sardinella aurita,O,O,O,F,F,L,L,M,M,H
+31,35,"Other Herrings, sardines, anchovies",,,,,"O, F","O,F",,,,H,H
+31,35,"35-Herrings, sardines, anchovies",,,,,, ,,,,, 
+31,36,Albacore,Thunnus alalunga,,,,F,F,,,,M,L
+31,36,Atlantic bonito,Sarda sarda,?,?,?,F,F/O,,,,H,H
+31,36,Atlantic Spanish mackerel,Scomberomorus maculatus,?,F,F/O,F,F,,H,M,M,M
+31,36,Cero,Scomberomorus regalis,?,?,?,O,?,,,,H, 
+31,36,King mackerel,Scomberomorus cavalla,"O,O",F,F/O,F,F,H,H,M,M,M
+31,36,Serra Spanish mackerel,Scomberomorus brasiliensis,?,F,?,O,O,,H,,H,H
+31,36,Skipjack tuna,,,,,F,F,,,,L,M
+31,36,Yellowfin tuna,,,,,F,O,,,,L,L
+31,36,"Other Tunas, bonitos, billfishes",,,,,"O, F","O,F",,,,L,M
+31,36,"36-Tunas, bonitos, billfishes",,,,,, ,,,,, 
+31,38,"38-Sharks, rays, chimaeras",,?, ,?,"F,F, O",F/O,,,,M,M
+31,39,39-Marine fishes not identified,,,,,F,F,,,,H,H
+31,42,"42-Crabs, sea-spiders",,,,,O,F/O,,,,M,M
+31,43,Caribbean spiny lobster,Panulirus argus,F/O,F/O,F/O,F,F,L,L,M,L,H
+31,43,"Other Lobsters, spiny-rock lobsters",,,,,,,,,,,
+31,43,"43-Lobsters, spiny-rock lobsters",,,,,, ,,,,, 
+31,45,Atlantic seabob,Xiphopenaeus kroyeri,F,F,F,F,F,L,L,L,L,M
+31,45,Northern brown shrimp,Penaeus aztecus,F,N,F,F,F,L,L,L,L,L
+31,45,Northern pink shrimp,Penaeus duorarum,O,F,"F, O","F,F, O",F/ O,M,L,M,M,M
+31,45,Northern white shrimp,Penaeus setiferus,?,N,U,F,F,,L,M,L,L
+31,45,Penaeus shrimps nei,Penaeus spp,?,F/O,?,"F,O",F/O,,H,,H,H
+31,45,Redspotted shrimp,Penaeus brasiliensis,O,O,O,O,O,H,H,H,H,H
+31,45,Rock shrimp,Sicyonia brevirostris,,F,?,O,O,,H,,H,H
+31,45,Royal red shrimp,Pleoticus robustus,?,F,?,F,F,,H,,H,H
+31,45,"Other Shrimps, prawns",,,,,F,F,,,,H,H
+31,45,"45-Shrimps, prawns",,,,,, ,,,,, 
+31,52,Stromboid conchs nei,Strombus spp,F/O,F/O,F/O,F,F/O,L,M,L,M,H
+31,52,"Other Abalones, winkles, conchs",,,,,F,F,,,,H,H
+31,52,"52-Abalones, winkles, conchs",,,,,,,,,,,
+31,53,American cupped oyster,Crassostrea virginica,"U, F",,"U, F","O, F",F/O,H,H,H,M,M
+31,53,Other Oysters,,,,,O,O,,,,H,H
+31,53,53-Oysters,,,,,, ,,,,, 
+31,55,Calico scallop,Argopecten gibbus,?, ,,O,?,,,,H,
+31,55,"Other Scallops, pectens",,,,,"O,F","O,F",,,,M,M
+31,55,"55-Scallops, pectens",,,,,,,,,,,
+34,31,Common sole,Solea solea,O,O,O,O,O,H,H,H,H,H
+34,31,Flatfishes nei,Pleuronectiformes,O,O,O,O,O,H,H,H,H,H
+34,31,Tonguefishes,Cynoglossidae,O,O,O,O,F,H,H,H,H,H
+34,31,"Other Flounders, halibuts, soles",,O,O,O,,,H,H,,,
+34,31,"31-Flounders, halibuts, soles",,,,,,,,,,,
+34,32,European hake,Merluccius merluccius,O,O,O,O,O,L,L,M,L,L
+34,32,Senegalese hake,Merluccius senegalensis,F,N,N,F,F,L,L,M,L,L
+34,32,"Other Cods, hakes, haddocks",,?,F,F,F,F,,L,,M,M
+34,32,"32-Cods, hakes, haddocks",,,,,,,,,,,
+34,33,Bigeye grunt,Brachydeuterus auritus,F,O,O,O,O,L,L,H,L,L
+34,33,Bobo croaker,Pseudotolithus elongatus,O,F,F,F,F,L,L,H,L,L
+34,33,Common dentex,Dentex dentex,F,F,F,?,?,M,M,H,L,H
+34,33,"Croakers, drums nei",Sciaenidae,,F-O,F-O,F-O,F/O,,M,H,L,L
+34,33,Mullets nei,Mugilidae,,F,F,F/O,F/O,,L,H,L,L
+34,33,"Threadfins, tasselfishes nei",Polynemidae,,O,O,?,O,,M,,,
+34,33,Other Miscellaneous coastal fishes,,,,,,,,,,,
+34,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+34,34,Largehead hairtail,Trichiurus lepturus,,F,F,F,F,,L,,L,H
+34,34,Other Miscellaneous demersal fishes,,,,,,,,,,,
+34,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+34,35,Bonga shad,Ethmalosa fimbriata,F,O,O,F-O,F-O,L,H,M,M,M
+34,35,European anchovy,Engraulis encrasicolus,F,F,F-O,F-F,F-F,L,L,H,M,L
+34,35,European pilchard(=Sardine),Sardina pilchardus,U-F,N-O,U-F,U,U,L,L,M,L,L
+34,35,Madeiran sardinella,Sardinella maderensis,F,F,F-O,F/O,O/F/U,L,L,H,M,M
+34,35,Round sardinella,Sardinella aurita,O,O,O,F/O,O,L,L,M,M,H
+34,35,"Other Herrings, sardines, anchovies",,F,F,F,F/O,F/O,M,M,,M,M
+34,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+34,36,Atlantic bonito,Sarda sarda,,,,,,,,,,
+34,36,Bigeye tuna,Thunnus obesus,,,,,,,,,,
+34,36,Frigate and bullet tunas,"Auxis thazard, A. rochei",,,,,,,,,,
+34,36,Little tunny(=Atl.black skipj),Euthynnus alletteratus,,,,,,,,,,
+34,36,Skipjack tuna,Katsuwonus pelamis,,,,,,,,,,
+34,36,Swordfish,Xiphias gladius,,,,,,,,,,
+34,36,Tuna-like fishes nei,Scombroidei,,,,,,,,,,
+34,36,Yellowfin tuna,Thunnus albacares,,,,,,,,,,
+34,36,"Other Tunas, bonitos, billfishes",,,,,,,,,,,
+34,36,"36-Tunas, bonitos, billfishes",,,,,,,,,,,
+34,37,Atlantic horse mackerel,Trachurus trachurus,O,F,F,O,O,L,L,M,L,L
+34,37,Barracudas nei,Sphyraena spp,F,F,F,F,F,M,M,H,H,H
+34,37,Atlantic chub mackerel,Scomber japonicus,F,F,F,F,F,L,L,M,L,H
+34,37,False scad,Caranx rhonchus,F-O,F-O,F-O,F/O,O/F,M,M,,H,H
+34,37,Jack and horse mackerels nei,Trachurus spp,O,O,O,O,F,L,L,M,L,L
+34,37,Other Miscellaneous pelagic fishes,,,,,,,,,,,
+34,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+34,38,"38-Sharks, rays, chimaeras",,,F,,,,,L,,,
+34,39,39-Marine fishes not identified,,,,,,,,,,,
+34,43,European lobster,Homarus gammarus,,,,,,,,,,
+34,43,Norway lobster,Nephrops norvegicus,,,,,,,,,,
+34,43,Palinurid spiny lobsters nei,Palinurus spp,O,O,O,O,O,H,H,H,H,L
+34,43,Tropical spiny lobsters nei,Panulirus spp,F,F,F,F,F,H,H,H,H,H
+34,43,"Other Lobsters, spiny-rock lobsters",,,,,,,,,,,
+34,43,"43-Lobsters, spiny-rock lobsters",,,,,,,,,,,
+34,45,Deep-water rose shrimp,Parapenaeus longirostris,F,O/N/F,U-F,U-F-O,U-F-O,L,L,,L,L
+34,45,Natantian decapods nei,Natantia,,F,F,F,F,,L,M,H,H
+34,45,Penaeus shrimps nei,Penaeus spp,O,O ,O,F/O,F/O,L,L,,M,M
+34,45,Southern pink shrimp,Penaeus notialis,O,O/F,F-O,F-O,F-O,L,L,H,M,M
+34,45,"Other Shrimps, prawns",,,,,, ,,,M,,H
+34,45,"45-Shrimps, prawns",,,,,,,,,,,
+34,57,Common octopus,Octopus vulgaris,O,O,O,F-O,F-O,L,M,,M,M
+34,57,Common squids nei,Loligo spp,,U,U-F,U-F,F-O,,L,M,M,H
+34,57,"Cuttlefish, bobtail squids nei","Sepiidae, Sepiolidae",O,O,O,F-O-N,O-U,L,L,,M,M
+34,57,"Octopuses, etc. nei",Octopodidae,O,O,O,F-O,F-O,L,L,M,M,M
+34,57,Various squids nei,"Loliginidae, Ommastrephidae",,, ,,,,,H,,
+34,57,"Other Squids, cuttlefishes, octopuses",,,,,,,,,H,,
+34,57,"57-Squids, cuttlefishes, octopuses",,,,,,,,,,,
+37,24,Black and Caspian Sea sprat,Clupeonella cultriventris,O,O,O,O,O,L,L,L,M,M
+37,24,Pontic shad,Alosa pontica,O,O,O,O,O,L,L,L,M,M
+37,24,Other Shads,,,,,,,,,,,
+37,24,24-Shads,,,,,,,,,,,
+37,31,Common sole,Solea solea,O,O,O,O,O,L,L,L,L,L
+37,31,"Other Flounders, halibuts, soles",,,,,,O,,,,L,L
+37,31,"31-Flounders, halibuts, soles",,,,,,,,,,,
+37,32,European hake,Merluccius merluccius,O,O,O,O,O,L,L,L,L,L
+37,32,Whiting,Merlangius merlangus,F,F,F-O,O,O,M,M,L,L,L
+37,32,"Other Cods, hakes, haddocks",,,,,,,,,,,
+37,32,"32-Cods, hakes, haddocks",,,,,,,,,,,
+37,33,Bogue,Boops boops,F,F,O,O,,L,L,L,,
+37,33,Common dentex,Dentex dentex,,,,,,,,,,
+37,33,Common pandora,Pagellus erythrinus,O,O,O,F-O,F-O,L,L,L,M,M
+37,33,Dusky grouper,Epinephelus marginatus,O,O,O,O,O,L,L,M,M,M
+37,33,European seabass,Dicentrarchus labrax,O,O,O,O,O,M,M,M,L,H
+37,33,Flathead grey mullet,Mugil cephalus,F,F,F,F-O,F-O,M,M,M,H,H
+37,33,Gilthead seabream,Sparus aurata,O,O,O,O,O,L,L,M,M,H
+37,33,Mullets nei,Mugilidae,,,,,,,,,,
+37,33,Picarels nei,Spicara spp,,,F,F,F,,,L,L,M
+37,33,"Porgies, seabreams nei",Sparidae,O,O,O,O,,L,L,M,,
+37,33,Red mullet,Mullus barbatus,O,O,O,F-O,F-O,L,L,L,L,H
+37,33,Surmullets(=Red mullets) nei,Mullus spp,,,O,O,O,,,L,L,L
+37,33,Other Miscellaneous coastal fishes,,,,,,,,,,,
+37,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+37,34,34-Miscellaneous demersal fishes,,,,,,,,,,,L
+37,35,European anchovy,Engraulis encrasicolus,F,F,O,O,F-O,L,L,L,L,L
+37,35,European pilchard(=Sardine),Sardina pilchardus,F,F,F-O,F-O,F-O,L,L,L,L,M
+37,35,European sprat,Sprattus sprattus,O,O,F,F,F,M,M,L,L,M
+37,35,Sardinellas nei,Sardinella spp,U,U,F-O,F-O,F-O,L,L,M,M,
+37,35,"Other Herrings, sardines, anchovies",,,,,,,,,,,
+37,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+37,36,Albacore,Thunnus alalunga, ,,,,,,,,,
+37,36,Atlantic bluefin tuna,Thunnus thynnus,,O,,,,,L,,,
+37,36,Atlantic bonito,Sarda sarda,,,,,,,,,,
+37,36,Plain bonito,Orcynopsis unicolor,,,,,,,,,,
+37,36,Swordfish,Xiphias gladius,,,,,,,,,,
+37,36,"Other Tunas, bonitos, billfishes",,,,,,,,,,,
+37,36,"36-Tunas, bonitos, billfishes",,,,,,,,,,,M
+37,37,Chub mackerel,Scomber japonicus,F,F,F,F-O,O,M,M,M,M,M
+37,37,Jack and horse mackerels nei,Trachurus spp,F,F,F,O,O,M,M,M,M,
+37,37,Silversides(=Sand smelts) nei,Atherinidae,U,F,F,F-O,F-O,M,M,M,M,M
+37,37,Other Miscellaneous pelagic fishes,,,,,,,,,,M,
+37,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+37,45,Common prawn,Palaemon serratus,,,,,,,,,,L
+37,45,Deep-water rose shrimp,Parapenaeus longirostris,O,O,O,F-O,F-O,L,L,L,L-M,L
+37,45,"Other Shrimps, prawns",,,,,O,O,,,,L,
+37,45,"45-Shrimps, prawns",,,,,,,,,,,
+37,54,Mediterranean mussel,Mytilus galloprovincialis,,,,,,,,,,
+37,54,54-Mussels,,,,,,,,,,,
+37,56,Striped venus,Chamelea gallina,,,F-O,F,N-F-O,,,M,L-M,
+37,56,"Other Clams, cockles, arkshells",,,,,,,,,,,
+37,56,"56-Clams, cockles, arkshells",,,,,,,,,,,
+37,57,Common cuttlefish,Sepia officinalis,U,N,U,F,F-O,L,L,M,M,M
+37,57,Common octopus,Octopus vulgaris,F,F,F-O,F-O,F-O,M,M,M,M,M
+37,57,Common squids nei,Loligo spp,U,N,U,F,F-O,M,M,M,M,M
+37,57,"Other Squids, cuttlefishes, octopuses",,,,,,,,,,,
+37,57,"57-Squids, cuttlefishes, octopuses",,,,,,,,,,,
+41,31,Species or species groups,Scientific Name,,,,,,,,,,
+41,31,"31-Flounders, halibuts, soles",,,,,,,,,,,
+41,32,,,,,,,,,,,,
+41,32,Argentine hake,Merluccius hubbsi,O,O,"F,O","O, O","O, O",L,L,L,L,L
+41,32,Patagonian grenadier,Macruronus magellanicus,U,F,U,F,F,L,L,L,L,L
+41,32,Southern blue whiting,Micromesistius australis,O,O,O,O,O,L,L,M,M,L
+41,32,Southern hake,Merluccius australis,F-O,F-O,F-O,F-O,O,M,M,M,M,M
+41,32,"Other Cods, hakes, haddocks",,,,,,, ,,,,
+41,32,"32-Cods, hakes, haddocks, etc.",,,,,,,,,,,
+41,33,,,,,,,,,,,,
+41,33,Argentine croaker,Umbrina canosai,F-O,O,F-O,O,O,M,M,M,M,H
+41,33,Striped weakfish,Cynoscion striatus,F-O,O,F-O,F,F,L,L,L,L,L
+41,33,Weakfishes nei,Cynoscion spp,,, ,,, ,,,,L
+41,33,Whitemouth croaker,Micropogonias furnieri,F-O,F-O,F-O,O,O,L,L,L,L,L
+41,33,Other Miscellaneous coastal fishes,,,, ,,,,,,,
+41,33,33-Miscellaneous coastal fishes,,,, ,,,,,,,
+41,34,,,,, ,,,,,,,
+41,34,Patagonian toothfish,Dissostichus eleginoides,O,F-O,O,O,O,L,L,M,M,L
+41,34,Pink cusk-eel,Genypterus blacodes,O,O,O,O,O,L,L,M,M,L
+41,34,Other Miscellaneous demersal fishes,,,,,,,,,,,
+41,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+41,35,,,,,,,,,,,,
+41,35,Argentine anchovy,Engraulis anchoita,f,N,N,U,U,L,L,L,L,H
+41,35,Brazilian sardinella,Sardinella brasiliensis,O,O,O,O,F,L,L,H,H,M
+41,35,"Other Herrings, sardines, anchovies",,,,,,,,,,,
+41,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+41,36,,,,,,,,,,,,
+41,36,Albacore,Thunnus alalunga,,,,,,,,,,
+41,36,Bigeye tuna,Thunnus obesus,,,,,,,,,,
+41,36,Skipjack tuna,Katsuwonus pelamis,,,,,,,,,,
+41,36,Swordfish,Xiphias gladius,,,,,,,,,,
+41,36,Yellowfin tuna,Thunnus albacares,,,,,,,,,,
+41,36,"Other Tunas, bonitos, billfishes",,,,,,,,,,,
+41,36,"36-Tunas, bonitos, billfishes, etc.",,,,,,,,,,,
+41,37,,,,,,,,,,,,
+41,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+41,38,,,,,,,,,,,,
+41,38,"38-Sharks, rays, chimaeras",,,,,,,,,,,
+41,39,,,,,,,,,,,,
+41,39,39-Marine fishes not identified,Osteichthyes,,,,,,,,,,
+41,42,,,,,,,,,,,,
+41,42,"42-Crabs, sea-spiders",,,,,,,,,,,
+41,43,,,,,,,,,,,,
+41,43,"43-Lobsters, spinyrock lobsters",,,,,,,,,,,
+41,45,,,,,,,,,,,,
+41,45,Argentine red shrimp,Pleoticus muelleri,F,F,F,F,F,L,M,,M,
+41,45,"Other Shrimps, prawns",,F-O,F-O,,,,M,M,,,
+41,45,"45-Shrimps, prawns, etc.",,,,,,,,,,,
+41,57,,,,,,,,,,,,
+41,57,Argentine shortfin squid,Illex argentinus,F-O,F-O,F-O,F-O,F,M,M,,M,M
+41,57,Patagonian squid,Loligo gahi,F,F,F,F,F,M,M,,L,L
+41,57,Various squids nei,"Loliginidae, Ommastrephidae",F, ,,,,M,,,,
+41,57,"Other squid, cuttlefish, octopuses",,,,,,,,,,,
+41,57,"57-Squid, cuttlefish, octopuses",,,,,,,,,,,
+47,32,Cape hakes,"Merluccius capensis, M.paradoxus","F,O","F,O","F,F","F,F","F,F",M,M,L,L,L
+47,32,"Other Cods, hakes, haddocks",,,,F,F,F,,,H,H,H
+47,32,"32-Cods, hakes, haddocks, etc.",,,,,,,,,,,
+47,33,Geelbek croaker,Atractoscion aequidens,O,O,O,O,O,L,L,L,L,L
+47,33,Panga seabream,Pterogymnus laniarius,,,,,F,,,,,H
+47,33,Red steenbras,Petrus rupestris,O,O,O,O,O,L,L,L,L,L
+47,33,Other Miscellaneous coastal fishes,,"O,O,F","O,O,F","O,O,F","O,O,F","O,O,F",,M,H,H,H
+47,33,33-Miscellaneous costal fishes,,,,,,,,,,,
+47,34,Devil anglerfish,Lophius vomerinus,O,O,O,F,F,H,H,L,L,L
+47,34,Kingklip,Genypterus capensis,O,O,F,F,F,,M,M,M,M
+47,34,Snoek,Thyrsites atun,F,F,F,F,F,M,M,L,L,L
+47,34,Other Miscellaneous demersal fishes,,,,"O,O,F","O,O,F","O,O,F",,,M,M,M
+47,34,34-Misccelleneous demersal fishes,,,,,,,,,,,
+47,35,Sardinellas nei,Sardinella spp,U/F,N/F,"U,F","U,F","U,F",L,L,L,L,L
+47,35,Southern African anchovy,Engraulis capensis,F,F,U,U,F,L,L,L,L,L
+47,35,Southern African pilchard,Sardinops ocellatus,F/O,F/O,F,O,O,M,M,L,L,L
+47,35,Whitehead's round herring,Etrumeus whiteheadi,U,N,U,U,F,L,L,L,L,L
+47,35,"Other Herrings, sardines, anchovies",,,, ,F,F,,, ,H,H
+47,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+47,36,Albacore,Thunnus alalunga,,,,F,F,,,,L,L
+47,36,Bigeye tuna,Thunnus obesus,,,,F,O,,,,L,L
+47,36,Southern bluefin tuna,Thunnus maccoyii,,,,O,O,,,,L,L
+47,36,"Other Tunas, bonitos, billfishes",,,,,F,F,,,,H,H
+47,36,"36-Tunas, bonitos, billfishes, etc.",,,,,,,,,,,
+47,37,Cape horse mackerel,Trachurus capensis,F,F,F,F,F,M,L,L,L,L
+47,37,Cunene horse mackerel,Trachurus trecae,O,O,O,O,O,L,L,M,M,M
+47,37,Other Miscellaneous pelagic fishes,,,, ,F,F,,, ,H,H
+47,37,37-Miscelleneous pelagic fishes,,,,,,,,,,,
+47,42,,,,,,,,,,,,
+47,42,West African geryon,Chaceon maritae,O,O,O,F,F,M,M,M,M,M
+47,42,"Other sea-spiders, crabs, etc. ",,,,,,,,,,,
+47,42,"42-Sea-spiders, crabs, et.",,,,,,,,,,,
+47,43,Cape rock lobster,Jasus lalandii,O,O,O,F/O,F,L,L,L,L,L
+47,43,Southern spiny lobster,Palinurus gilchristi,F,F,F,F,F,L,L,L,L,L
+47,43,"Other Lobsters, spiny-rock lobsters",,,,,,,,,,,
+47,43,"43-Lobsters, spinyrock lobsters",,,,,,,,,,,
+47,45,"45-Shrimps, prawns",,F/O,F/O,F-O,,,M,M,M,,
+47,53,Perlemoen abalone,Haliotis midae,O,O,O,O,O,L,L,L,L,L
+47,53,53-Oysters,,,,,,,,,,,
+47,57,Cape Hope squid,Loligo reynaudi,F,F,F,F,F,L,L,L,L,L
+47,57,"Other Squids, cuttlefishes, octopuses",,F,F,F,F,F,M,M,M,M,M
+47,57,"57-Squid, cuttlefish,octopuses",,,,,,,,,,,
+48,33,"Antarctic rockcods, noties nei",Nototheniidae,,,,,,,,,,
+48,33,Humped rockcod,Notothenia gibberifrons,,,,O,O,,,,H,H
+48,33,Marbled rockcod,Notothenia rossii,,O,,O,O,,,,H,H
+48,33,Other Miscellaneous coastal fishes,,,,,,,,,,,
+48,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+48,34,Blackfin icefish,Chaenocephalus aceratus,,,,?,,,,,,
+48,34,Lanternfishes nei,Myctophidae,U,N/F,,,,M,M,,,
+48,34,Mackerel icefish,Champsocephalus gunnari,O,O,,F,F,M,M,,H,H
+48,34,Patagonian toothfish,Dissostichus eleginoides,F,F,F,F,F,M,M,H,H,H
+48,34,South Georgia icefish,Pseudochaenichthys georgianus,,,,,,,,,,
+48,34,Other Miscellaneous demersal fishes,,,,,,,,,,,
+48,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+48,46,Antarctic krill,Euphausia superba,U,F,U-F,F,F,M,M,H,H,L
+48,46,"46-Krill, planktonic crustaceans",,,,,,,,,,,
+51,33,Bombay-duck,Harpadon nehereus,F,F,F,F/O,F/O,M,M,M,M,M
+51,33,"Croakers, drums nei",Sciaenidae,F,F,F,F,F,H,H,H,F,H
+51,33,Emperors(=Scavengers) nei,Lethrinidae,F,F,F,F,F,L,L,L,L,L
+51,33,Lizardfishes nei,Synodontidae,,,,,,,,,,
+51,33,Mullets nei,Mugilidae,,,"F,F","F,F","F,F",,,M,M,M
+51,33,Sea catfishes nei,Ariidae,,,,,,,,,,
+51,33,Other Miscellaneous coastal fishes,,,,,,,,,,,
+51,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+51,34,Demersal percomorphs nei,Perciformes,F,F,F,F,F,M,M,M,M,M
+51,34,"Hairtails, scabbardfishes nei",Trichiuridae,,,F,F,F,,,H,H,H
+51,34,Largehead hairtail,Trichiurus lepturus,,,F,F,F,,,H,H,H
+51,34,Other Miscellaneous demersal fishes,,,,"O,O,O","O,O,O","O,O,O",,,H,H,H
+51,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+51,35,"Anchovies, etc. nei",Engraulidae,F,F,F,F,F,L,L,H,H,H
+51,35,Clupeoids nei,Clupeoidei,,,F/O,F/O,"F,F,F",,,H,H,"M, M, M"
+51,35,Dorab wolf-herring,Chirocentrus dorab,,,,,,,,,,
+51,35,Indian oil sardine,Sardinella longiceps,U,N,F,F,"F,O",L,L,M,M,M
+51,35,Sardinellas nei,Sardinella spp,,,F,F,F,,,H,H,H
+51,35,Stolephorus anchovies,Stolephorus spp,,,F,,,,,H,,
+51,35,Wolf-herrings nei,Chirocentrus spp,,,F,F,F,,,H,H,H
+51,35,"Other Herrings, sardines, anchovies",,,,,F,F,,,,H,M
+51,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+51,36,Bigeye tuna,Thunnus obesus,,F,,F,F,,L,,L,L
+51,36,Kawakawa,Euthynnus affinis,,,,F,F,,,,M,L
+51,36,Narrow-barred Spanish mackerel,Scomberomorus commerson,F-O,F-O,F-O,"F,O",O,H,H,,M,L
+51,36,Skipjack tuna,Katsuwonus pelamis,,F,,F/O,F,,M,,H,H
+51,36,Tuna-like fishes nei,Scombroidei,,,,F,F/O,,,,H,M
+51,36,Yellowfin tuna,Thunnus albacares,,F,,F,O,,L,,L,L
+51,36,"Other Tunas, bonitos, billfishes",,,,,,,,,,,
+51,36,"36-Tunas, bonitos, billfishes",,,,,,,,,,,
+51,37,Barracudas nei,Sphyraena spp,F,F,F,F,F,L,L,L,L,L
+51,37,"Butterfishes, pomfrets nei",Stromateidae,O,O,O,O,F,L,L,L,L,L
+51,37,Carangids nei,Carangidae,,,F,F,F,,,H,H,H
+51,37,Pacific chub mackerel,Scomber japonicus,,,F,,,,,H,,
+51,37,Indian mackerel,Rastrelliger kanagurta,F,F,F,F,F,M,M,M,M,M
+51,37,Indian mackerels nei,Rastrelliger spp,F,F,F,F,F,L,L,L,L,L
+51,37,"Jacks, crevalles nei",Caranx spp,,,,,,,,,,
+51,37,Mackerels nei,Scombridae,,,,,,,,,,
+51,37,Pelagic percomorphs nei,Perciformes,,,,,,,,,,
+51,37,Pompanos nei,Trachinotus spp,,,,,,,,,,
+51,37,Other Miscellaneous pelagic fishes,,,,,,,,,,,
+51,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+51,39,39-Marine fishes not identified,,,,,,,,,,,
+51,45,Indian white prawn,Penaeus indicus,O,O,O,O,O,M,M,M,M,M
+51,45,Jack-knife shrimp,Haliporoides sibogae,O,O,O,O,O,L,M,M,M,M
+51,45,Knife shrimp,Haliporoides triarthrus,O,O,O,O,F,M,M,M,M,M
+51,45,Natantian decapods nei,Natantia,F,F,F,F,F/O,H,H,H,H,H
+51,45,Penaeus shrimps nei,Penaeus spp,F,F,O,O,O,H,H,H,H,H
+51,45,"Other Shrimps, prawns",,,,F/O,F/O,F/O,,,H,H,H
+51,45,"45-Shrimps, prawns",,,,,,,,,,,
+57,24,Chacunda gizzard shad,Anodontostoma chacunda,U,N,U,N-F,N-F,H,H,H,M,H
+57,24,Diadromous clupeoids nei,Clupeoidei,,,F,F,F,,,H,L,H
+57,24,Hilsa shad,Tenualosa ilisha,U,N,F,F,F,H,H,H,M,M
+57,24,Indian pellona,Pellona ditchela,,,F,F,N-F,,,H,M,H
+57,24,Kelee shad,Hilsa kelee,O,,F,,,M,,H,,
+57,24,Toli shad,Tenualosa toli,,F,F,O,O,,H,H,H,H
+57,24,24-Shads,,,,,,,,,,, 
+57,33,"Croakers, drums nei",Sciaenidae,,,, ,,H,,,M, 
+57,33,Mullets nei,Mugilidae,F,F,F,F-O,F-O,,H,H,M,H
+57,33,Percoids nei,Percoidei,,,F,F-O,,,,H,M,H
+57,33,Ponyfishes(=Slipmouths) nei,Leiognathidae,F,F,F,F,F-O,H,H,H,L,H
+57,33,Sea catfishes nei,Ariidae,F,F,F,F,F-O,H,H,H,M,M
+57,33,Threadfin breams nei,Nemipterus spp,F,F,F,F-O,F-O,H,H,H,M,M
+57,33,Other Miscellaneous coastal fishes,,,, ,, ,,, ,,
+57,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+57,34,"Hairtails, scabbardfishes nei",Trichiuridae,F,F,U,F,F-O,H,H,H,L,M
+57,34,Largehead hairtail,Trichiurus lepturus,F,F,O,O,O,H,H,H,M,M
+57,34,Snoek,Thyrsites atun,,, ,,F,,, ,,M
+57,34,Other Miscellaneous demersal fishes,,,, ,,,,, ,,
+57,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+57,35,"Anchovies, etc. nei",Engraulidae,F,F,U,N,F,H,H,H,M,H
+57,35,Clupeoids nei,Clupeoidei,U-F,F,U,N-F,F,H,H,H,M,H
+57,35,Indian oil sardine,Sardinella longiceps,O,F,F,F,O,M,H,H,L,M
+57,35,Sardinellas nei,Sardinella spp,O,O,O,O,O,M,H,H,M,M
+57,35,Stolephorus anchovies nei,Stolephorus spp,F,F,F,F,N-F,H,H,H,M,H
+57,35,"Other Herrings, sardines, anchovies",,,,F/O,F-O,,,,H,M,
+57,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+57,36,Kawakawa,Euthynnus affinis,U,F,,F,F,H,H,,M,L
+57,36,Narrow-barred Spanish mackerel,Scomberomorus commerson,U,N,,"F,O",O,H,H,,M,L
+57,36,Seerfishes nei,Scomberomorus spp,F,F,,F,F,H,H,,M,H
+57,36,Skipjack tuna,Katsuwonus pelamis,,F,,,,,H,,,
+57,36,Tuna-like fishes nei,Scombroidei,,,,,,,,,,
+57,36,Yellowfin tuna,Thunnus albacares,,F,,,,,H,,,
+57,36,"Other Tunas, bonitos, billfishes",,F,F,,,,H,H,,,
+57,36,"36-Tunas, bonitos, billfishes",,,,,,,,,,,
+57,37,"Butterfishes, pomfrets nei",Stromateidae,F,F,U/F,F,F-O,H,H,H,M,M
+57,37,Carangids nei,Carangidae,F,F,U/F,"N,F,O",F,H,H,H,L,H
+57,37,Indian mackerel,Rastrelliger kanagurta,F,F,U/F,N,F,H,H,H,M,M
+57,37,Indian mackerels nei,Rastrelliger spp,F,F,F,F,F,H,H,H,M,H
+57,37,Indian scad,Decapterus russelli,F,F,F,F,F,H,H,H,M,H
+57,37,"Jacks, crevalles nei",Caranx spp,F,F,U/F,N,F-O,H,H,H,M,H
+57,37,Scads nei,Decapterus spp,F,F,U/F,F,F,H,H,H,M,M
+57,37,Torpedo scad,Megalaspis cordyla,,, ,,F,,,,,H
+57,37,Other Miscellaneous pelagic fishes,,,, ,,,,,,,
+57,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+57,38,"Rays, stingrays, mantas nei",Rajiformes,O,O,O,O,O,M,H,H,M,L
+57,38,Silky shark,Carcharhinus falciformis,O,O,O,O,O,M,H,H,M,M
+57,38,"Other Sharks, rays, chimaeras",,,, ,,,,, ,,
+57,38,"38-Sharks, rays, chimaeras",,,,,,,,,,,
+57,39,39-Marine fishes not identified,,U-F,F,U/F,,,H,H,H,,
+57,45,Banana prawn,Penaeus merguiensis,F,F,F,F,F,H,H,H,M,L
+57,45,Giant tiger prawn,Penaeus monodon,F,F,F,F,F,H,H,H,M,M
+57,45,Natantian decapods nei,Natantia,,,F,,,,,H,,
+57,45,Penaeus shrimps nei,Penaeus spp,F,F,O,"F,O",F-O,H,H,H,M,M
+57,45,Sergestid shrimps nei,Sergestidae,O,F,F,F,F,H,H,H,H,H
+57,45,"45-Shrimps, prawns",,,,,,,,, ,,
+57,57,Cephalopods nei,Cephalopoda,O,F,F,F,,H,H,H,M,
+57,57,Common squids nei,Loligo spp,F,F,F,F,N-F,H,H,H,M,H
+57,57,"Cuttlefish, bobtail squids nei","Sepiidae, Sepiolidae",F,O,F,F,F,H,H,H,M,H
+57,57,"Octopuses, etc. nei",Octopodidae,O,F,O,O,F-O,M,H,H,M,M
+57,57,Various squids nei,"Loliginidae, Ommastrephidae",F,F,F,F,F,H,H,H,M,H
+57,57,"57-Squids, cuttlefishes, octopuses",,,,,,,,,,,
+58,32,Ridge scaled rattail,Macrourus carinatus,,,,,,,,,,
+58,33,Antarctic silverfish,Pleuragramma antarcticum,N,,,,,M,,,,
+58,33,Marbled rockcod,Notothenia rossii,,,,,,,,,,
+58,33,Other Miscellaneous coastal fishes,,,,,?,,,,,,
+58,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+58,34,Mackerel icefish,Champsocephalus gunnari,O,O,U-F,F,F,M,M,H,,H
+58,34,Patagonian toothfish,Dissostichus eleginoides,F,F,F,F,F,M,M,H,H,H
+58,34,Other Miscellaneous demersal fishes,,,,,,,,,,,
+58,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+58,46,Antarctic krill,Euphausia superba,U,F,,?,,M,M,H,,
+61,23,Chum(=Keta=Dog)salmon,Oncorhynchus keta,F,F,F,F,O,L,L,L,L,L
+61,23,Pink(=Humpback)salmon,Oncorhynchus gorbuscha,F,N,U ,F,O,L,L,L,L,L
+61,23,"Other Salmons, trouts, smelts",,F,F,F,,,H,H,H,,
+61,23,"23-Salmons, trouts, smelts",,,,,,,,,,,
+61,32,Alaska pollock(=Walleye poll.),Theragra chalcogramma,"F,F,O","F, F, O","F, F, O, U","F, F, O","O,O,F",M,M,M,M,M
+61,32,Pacific cod,Gadus macrocephalus,F,F,F,"F, F, F","F,F,F",H,H,H,M,M
+61,32,"Other Cods, hakes, haddocks",,F,F,F,,,H,H,H,,
+61,32,"32-Cods, hakes, haddocks",,,,,,,,,,,
+61,33,Yellow croaker,Larimichthys polyactis,F,F,F,F,F,H,H,H,H,H
+61,33,Other Miscellaneous coastal fishes,,,,,,,,,,,
+61,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+61,34,Largehead hairtail,Trichiurus lepturus,O,O,O,F,F,M,M,M,H,H
+61,34,Other Miscellaneous demersal fishes,,,,,,,,,,,
+61,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+61,35,Japanese anchovy,Engraulis japonicus,F,F,F,"O, O, F","O,O,F",M,M,M,M,L
+61,35,Japanese pilchard,Sardinops melanostictus,"?, O",O,O,O,"F,F",L,L,L,M,L
+61,35,Pacific herring,Clupea pallasii,F,F,U,F,F,H,H,H,H,H
+61,35,"Other Herrings, sardines, anchovies",,,,,,,,,,,
+61,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+61,36,Seerfishes nei,Scomberomorus spp,,,,,,,,,,
+61,36,"36-Tunas, bonitos, billfishes",,,,,,,,,,,
+61,37,Pacific chub mackerel,Scomber japonicus,F,F,O,O,"F,F",L,L,L,M,L
+61,37,Japanese jack mackerel,Trachurus japonicus,F,O,"U, O","O, F",F,L,L,L,M,L
+61,37,Pacific saury,Cololabis saira,U,N,F,F,"F,O",M,M,M,H,L
+61,37,Other Miscellaneous pelagic fishes,,,,,,,,,,,
+61,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+61,38,"38-Sharks, rays, chimaeras",,,,,,O,,,,,
+61,39,39-Marine fishes not identified,,,,,,,,,,,
+61,42,Gazami crab,Portunus trituberculatus,F,N,U,F,F,H,H,H,H,H
+61,42,"Other Crabs, sea-spiders",,,,,,,,,,,
+61,42,"42-Crabs, sea-spiders",,,,,,,,,,,
+61,45,Akiami paste shrimp,Acetes japonicus,,,,,,,,,,
+61,45,"Other Shrimps, prawns",,,,,,,,,,,
+61,45,"45-Shrimps, prawns",,,,,,,,,,,
+61,55,Yesso scallop,Patinopecten yessoensis,,,,,,,,,,
+61,55,"55-Scallops, pectens",,,,,,,,,,,
+61,56,Japanese carpet shell,Ruditapes philippinarum,,,,,,,,,,
+61,56,"Other Clams, cockles, arkshells",,,,,,,,,,,
+61,56,"56-Clams, cockles, arkshells",,,,,,,,,,,
+61,57,Japanese flying squid,Todarodes pacificus,U,N,F,"F, F","O,F",L,L,L,M,H
+61,57,Various squids nei,"Loliginidae, Ommastrephidae",F,F,F,F,F,H,H,H,H,M
+61,57,,,,,,,,,,,,
+61,57,"Other Squids, cuttlefishes, octopuses",,,,,,,,,,,
+61,57,"57-Squids, cuttlefishes, octopuses",,,,,,,,,,,
+67,23,Chinook(=Spring=King)salmon,Oncorhynchus tshawytscha ,F-O,F-O,F-O,O,F/O,L,L,L,L,L
+67,23,Chum(=Keta=Dog)salmon,Oncorhynchus keta ,F,F,F,O,F/O,L,L,L,L,M
+67,23,Coho(=Silver)salmon,Oncorhynch Kisutch,F-O,F-O,F-O,F,F/O,L,L,L,L,L
+67,23,Pink(=Humpback)salmon,Oncorhynch gorbuska,F,F,F,F,F/O,L,L,L,L,L
+67,23,Sockeye(=Red)salmon,Oncorhynch nerka,F,F,F,"F,O",F/O,L,L,L,L,L
+67,23,"Other Salmons, trouts, smelts, etc. ",Oncorhynch sp.,,,,,,,,, ,
+67,23,"23-Salmons, trouts, smelts, etc. ",,,,,,,,,,,
+67,31,,,,,,,,,,,,
+67,31,Pacific halibut,Hippoglossus Stenolepis,F,F,F,F,F,L,L,L,L,L
+67,31,Yellowfin sole,Lamanda aspera,U,N-F,U-F,N,U,L,L,L,L,L
+67,31,Other flounder halibut and sole,,F-U,F,F,F,U,L,L,L, ,L
+67,31,31-Flounders,,,,,,,,,,, 
+67,32,,,,,,,,,,,,
+67,32,Alaska pollock (-walleye pollock),Teragra chalcogramma,F,F,F,N-F,F,L,L,L,L,L
+67,32,North Pacific hake,Merluccius productus,F,F,F,F,U,L,L,L,L,L
+67,32,Pacific cod,Gadus macrocephalus,F,F,F,N,U,L,L,L,L,L
+67,32,Ling cod,Ophiodon elogatus,,,F,F,F-U,,,L,L,L
+67,32,Rockfish,Sabastes Species,,,F-O-R,"O,F,N",F-U,,,L,L,M
+67,32,Sablefish,Anoploma fimbria,,,F,F,F-U,,,L,L,M
+67,32,"Other cos, hakes, haddocks, etc.",,,,,,,,,,,
+67,32,32-Cods hakes and haddocks,,,,,,,,,,,
+67,35,Pacific Herring,Clupia pallasii,,F,F,N,F-U,L,L,L,,L
+67,35,"Other herring, sardine, anchovy, ",,,F,F,F,F,L,L,L,N/A,L
+67,35,,,,, ,,,,,,, 
+67,35,"35-Herrings, sardines, achovies",,,,,,,,,,,
+67,37,,,,,,,,,,,,
+67,37,Pacific chub mackerel,Scomber japonicus,F,F,F,F,F,L,L,L,L,L
+67,37,Other miscellaneous pelegic fishes,,,F,F,F,F, , , ,,L
+67,37,37-Miscellaneous pelagic fishes,,,F,F,F,F,,,,,L
+67,42,,,,,,,,,,,,
+67,42,,,,,,,,,,,,
+67,42,Dungeness Crab,Cancer magister,F,F-O,F,N,F,M,M,M,,L
+67,42,Pacific rock crab,Cancer porductus,F,F,F,N, ,L,L,L,,L
+67,42,"Other sea-spiders, crabs, etc.",,F,F,F,F,,L,L,L,,
+67,42,"42-Sea-spiders, crabs, etc.",,,,,,,,,,,
+67,45,,,,,,,,,,,,
+67,45,Pacific shrimp,Pandalus sp.,F,F,F,F,F,M,M,M,,L
+67,45,"Other shrimps, prawns, etc.",,F,F,F,F,F,M,M,M,,L
+67,45,"45-Shrimps, prawns, etc.",,,,,,,,,,,
+71,24,Chacunda gizzard shad,Anodontostoma chacunda,,,F,F,F,,,H,H,H
+71,24,Diadromous clupeoids nei,Clupeoidei,,,F,F,F,,,H,H,H
+71,24,Indian pellona,Pellona ditchela,,,F,F,F,,,H,H,H
+71,24,Toli shad,Tenualosa toli,U,F,O,O,O,H,H,H,M,M
+71,24,24-Shads,,,,,,,,,,,
+71,33,Bigeyes nei,Priacanthus spp,,,F,F,F,,,H,H,H
+71,33,Lizardfishes nei,Synodontidae,F,F,O,F,O,H,H,H,M,M
+71,33,Mullets nei,Mugilidae,F,F,F,F,F,H,H,H,H,H
+71,33,Percoids nei,Percoidei,,,O,O,O,,,H,M,M
+71,33,Ponyfishes(=Slipmouths),Leiognathus spp,,,O,O,O,,,H,H,H
+71,33,Ponyfishes(=Slipmouths) nei,Leiognathidae,F,F,F,F,F,H,H,H,H,H
+71,33,Sea catfishes nei,Ariidae,F,F,F,F,F,H,H,H,H,H
+71,33,Threadfin breams nei,Nemipterus spp,F,F,F,F,F,H,H,H,H,H
+71,33,Other Miscellaneous coastal fishes,,,,,,,,,,,
+71,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+71,34,"Hairtails, scabbardfishes nei",Trichiuridae,U,F,F,F,F,H,H,H,M,M
+71,34,Largehead hairtail,Trichiurus lepturus,F,F,F,F,F,H,H,H,M,M
+71,34,Other Miscellaneous demersal fishes,,,, ,F,F,,,,M,M
+71,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+71,35,"Anchovies, etc. nei",Engraulidae,F,F,F,F,F,H,H,H,M,M
+71,35,Bali sardinella,Sardinella lemuru,F, ,O,O,O,H,,H,M,M
+71,35,Goldstripe sardinella,Sardinella gibbosa,F,F,F,F,O,H,H,H,M,M
+71,35,Sardinellas nei,Sardinella spp,F,F,F,F,F,H,H,H,M,M
+71,35,Stolephorus anchovies nei,Stolephorus spp,F,F,F,F,F,H,H,H,H,H
+71,35,"Other Herrings, sardines, anchovies",,,, ,F,F,,,,M,M
+71,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+71,36,Frigate and bullet tunas,"Auxis thazard, A. rochei",F,F,,F,F,M,H,H,M,M
+71,36,Kawakawa,Euthynnus affinis,F,F,,F,F,H,M,M,M,M
+71,36,Skipjack tuna,Katsuwonus pelamis,,F,,U/F,F,,M,M,H,H
+71,36,Tuna-like fishes nei,Scombroidei,O,O,,O,O,H,M,M,H,H
+71,36,Yellowfin tuna,Thunnus albacares,,F,,F,,,M,M,H,H
+71,36,"Other Tunas, bonitos, billfishes",,F,F,,F,F,M,M,M,H,H
+71,36,"36-Tunas, bonitos, billfishes",,,,,,,,,,,
+71,37,Bigeye scad,Selar crumenophthalmus,F,F,F,F,F,H,H,H,M,M
+71,37,Carangids nei,Carangidae,,F,F,F,F,,H,H,M,M
+71,37,Flyingfishes nei,Exocoetidae,F,F,F,F,F,H,H,H,H,H
+71,37,Indian mackerel,Rastrelliger kanagurta,F,F,F,F,F,H,H,H,H,H
+71,37,Indian mackerels nei,Rastrelliger spp,F,F,F,F,O,H,H,H,H,H
+71,37,Indian scad,Decapterus russelli,F,F,F/O,F/O,F,H,H,H,H,H
+71,37,Short mackerel,Rastrelliger brachysoma,U,N,F,F,F,H,H,H,H,H
+71,37,Other Miscellaneous pelagic fishes,,O,O,F,F,F,H,H,H,H,H
+71,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+71,38,"Rays, stingrays, mantas nei",Rajiformes,O,O,O,O,O,M,H,H,M,M
+71,38,"Sharks, rays, skates, etc. nei",Elasmobranchii,O,O,O,O,O,M,H,H,M,M
+71,38,"Other Sharks, rays, chimaeras",,,, ,F,F,,,,H,H
+71,38,"38-Sharks, rays, chimaeras",,,,,,,,,,,
+71,39,Marine fishes nei,Osteichthyes,F,F,F,F,F,H,H,H,H,H
+71,39,39-Marine fishes not identified,,,,,,,,,,,
+71,45,Banana prawn,Penaeus merguiensis,F,F,F,F,F,H,H,H,H,H
+71,45,Giant tiger prawn,Penaeus monodon,F,F,F,F,F,H,H,H,H,H
+71,45,Natantian decapods nei,Natantia,,,F,F,F,,,,H,H
+71,45,Penaeus shrimps nei,Penaeus spp,O,O,O,O,O,H,H,H,H,H
+71,45,Sergestid shrimps nei,Sergestidae,F,F,F,F,F,H,H,H,H,H
+71,45,"Other Shrimps, prawns",,,, ,F,F,,,,H,H
+71,45,"45-Shrimps, prawns",,,,,,,,,,,
+71,57,Common squids nei,Loligo spp,F,F,F,F,F,H,H,H,H,H
+71,57,"Cuttlefish, bobtail squids nei","Sepiidae, Sepiolidae",F,F,F,F,F,H,H,H,M,M
+71,57,"Octopuses, etc. nei",Octopodidae,F,F,F,F,F,H,H ,H,M,M
+71,57,Various squids nei,"Loliginidae, Ommastrephidae",,,F,F,F,,,H,H,H
+71,57,"Other Squids, cuttlefishes, octopuses",,,, ,F,F,,,,H,H
+71,57,"57-Squids, cuttlefishes, octopuses",,,,,,,,,,,
+77,32,"32-Cods, hakes, haddocks",,,,,F,F,,,,L,L
+77,33,33-Miscellaneous coastal fishes,,F,F,F,F-O,F-O,H,H,H,H,L
+77,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+77,35,California pilchard,Sardinops caeruleus,F,F,F,F,F,L,L,L,L,M
+77,35,Californian anchovy,Engraulis mordax,F,F,F,F,F,L,L,L,M,M
+77,35,Pacific anchoveta,Cetengraulis mysticetus,F,F,F,F,F,M,M,M,M,M
+77,35,Pacific thread herring,Opisthonema libertate,F,F,F,F,F,H,H,H,M,L
+77,35,"Other Herrings, sardines, anchovies",,,,,,,,,,,
+77,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+77,36,Albacore,Thunnus alalunga,,,,,,,,,,
+77,36,Bigeye tuna,Thunnus obesus,,,,,,,,,,
+77,36,Pacific bluefin tuna,Thunnus orientalis,,,,,,,,,,
+77,36,Skipjack tuna,Katsuwonus pelamis,,,,,,,,,,
+77,36,Yellowfin tuna,Thunnus albacares,,,,,,,,,,
+77,36,"Other Tunas, bonitos, billfishes",,,,,,,,,,,
+77,36,"36-Tunas, bonitos, billfishes",,,,,,,,,,,
+77,37,Pacific chub mackerel,Scomber japonicus,U,N,U,"U,F",N,L,L,L,"L,M",M
+77,37,Pacific jack mackerel,Trachurus symmetricus,U,F,U,U ,N-F,L,L,L,M,M
+77,37,Other Miscellaneous pelagic fishes,,,,,,,,,,,
+77,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+77,39,39-Marine fishes not identified,,,,,,,,,,,
+77,42,Dungeness crab,Cancer magister,,,,F,F,,,,M,M
+77,42,"Other Crabs, sea-spiders",,,,,,,,,,,
+77,42,"42-Crabs, sea-spiders",,,,,,,,,,,
+77,45,"45-Shrimps, prawns",,F/O,F/O,F-O,F-O,F-O,H,H,H,H,H
+77,53,53-Oysters,,, ,,,,,,,,
+77,57,Jumbo flying squid,Dosidicus gigas,U,N,U,F,F,M,M,M,L,H
+77,57,"Octopuses, etc. nei",Octopodidae,, ,,,,, ,,,
+77,57,Opalescent inshore squid,Loligo opalescens,U,N,F,F,F,M,M,M,M,M
+77,57,Various squids nei,"Loliginidae, Ommastrephidae",,,,,,,,,,
+77,57,"57-Squids, cuttlefishes, octopuses",,,,,,,,,,, 
+81,32,Blue grenadier,Macruronus novaezelandiae,F,F,F,F,F,M,M,L,L,L
+81,32,Gadiformes nei,Gadiformes,F,F,F,F,F,L,L,M,M,M
+81,32,Red codling,Pseudophycis bachus,,,,,,,,,,
+81,32,Southern blue whiting,Micromesistius australis,F,F,F,F,F,H,H,L,L,L
+81,32,Southern hake,Merluccius australis,F,F,F,F,F,M,M,L,L,L
+81,32,"Other Cods, hakes, haddocks",,,,,,,,,,,
+81,32,"32-Cods, hakes, haddocks",,,,,,,,,,,
+81,33,Mullets nei,Mugilidae,F,F,F,F,F,L,L,L,L,L
+81,33,Silver seabream,Pagrus auratus,F,F,F,O,F,L,L,M,M,M
+81,33,Other Miscellaneous coastal fishes,,F,F,F,F,F,H,H,M,M,M
+81,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+81,34,Demersal percomorphs nei,Perciformes,,,,,O,,,,,
+81,34,"Hairtails, scabbardfishes nei",Trichiuridae,,,,,,,,,,
+81,34,Orange roughy,Hoplostethus atlanticus,O,O,O,O,O,M,M,L,L,L
+81,34,Oreo dories nei,Oreosomatidae,"F,O","F,O",F,O,F,H,H,L,L,L
+81,34,Pink cusk-eel,Genypterus blacodes,F,F,F,F,F,M,M,L,L,L
+81,34,Silver gemfish,Rexea solandri,"F,O","F,O",F,F,F,H,H,L,L,L
+81,34,Silver scabbardfish,Lepidopus caudatus,,,,,F,,,,,
+81,34,Snoek,Thyrsites atun,U,N,F,F,F,H,H,L,L,L
+81,34,Warehou nei,Seriolella spp,F,O,O,O,O,M,M,L,L,L
+81,34,Other Miscellaneous demersal fishes,,N,N,U,U,F,H,H,H,H,H
+81,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+81,37,Barracudas nei,Sphyraena spp,F,F,F,F,F,L,L,M,M,M
+81,37,Blue mackerel,Scomber australasicus,U,N,F,F,F,M,M,L,L,L
+81,37,"Butterfishes, pomfrets nei",Stromateidae,,,,,,,,,,
+81,37,Greenback horse mackerel,Trachurus declivis,F,F,F,F,F,M,M,H,H,H
+81,37,Jack and horse mackerels nei,Trachurus spp,F,F,F,F,F,H,H,H,H,H
+81,37,Mackerels nei,Scombridae,U,N,F,F,F,M,M,L,L,L
+81,37,White trevally,Pseudocaranx dentex,F,F,"F,O",F,"F,O",M,M,M,M,M
+81,37,Other Miscellaneous pelagic fishes,,,,,,,,,,,
+81,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+81,57,"Cuttlefish, bobtail squids nei","Sepiidae, Sepiolidae",,,,,,,,,,
+81,57,"Octopuses, etc. nei",Octopodidae,U,N,F,F,F,H,H,M,M,M
+81,57,Various squids nei,"Loliginidae, Ommastrephidae",F,F,F,F,F,H,H,L,L,L
+81,57,Wellington flying squid,Nototodarus sloani,F,F,F,F,F,H,H,M,M,M
+81,57,"57-Squids, cuttlefishes, octopuses",,,,,,,,,,,
+87,32,Patagonian grenadier,Macruronus magellanicus,O,O,O,O,O,H,L,L,L,L
+87,32,South Pacific hake,Merluccius gayi,O,O,F-O,O,O,L,L,L,L,L
+87,32,Southern hake,Merluccius australis,F,F,O,O,O,H,L,L,L,L
+87,32,"Other Cods, hakes, haddocks",,,,,,,,,,,
+87,32,"32-Cods, hakes, haddocks",,,,,,,,,,,
+87,33,33-Miscellaneous coastal fishes,,,,,,,,,,,
+87,34,Patagonian toothfish,Dissostichus eleginoides,F,O,O,O,O,H,M,L,L,L
+87,34,Other Miscellaneous demersal fishes,,,,,,,,,,,
+87,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+87,35,Anchoveta(=Peruvian anchovy),Engraulis ringens,F,F,F,"O, F ",F,L,L,L,L,M
+87,35,Araucanian herring,Strangomera bentincki,F,F,F,F,F,M,M,H,L,L
+87,35,Pacific thread herring,Opisthonema libertate,F,F,F,F-O,O,H,H,L,H,M
+87,35,South American pilchard,Sardinops sagax,F,F,F,F,O,L,L,M,L,M
+87,35,"Other Herrings, sardines, anchovies",,,,,,,,,,,
+87,35,"35-Herrings, sardines, anchovies",,,,,,,,,,,
+87,36,Bigeye tuna,Thunnus obesus,,,,,,,,,,
+87,36,Eastern Pacific bonito,Sarda chiliensis,,,,,,,,,,
+87,36,Skipjack tuna,Katsuwonus pelamis,,,,,,,,,,
+87,36,Yellowfin tuna,Thunnus albacares,,,,,,,,,,
+87,36,"Other Tunas, bonitos, billfishes",,,,,,,,,,,
+87,36,"36-Tunas, bonitos, billfishes",,,,,,,,,,,
+87,37,Chilean jack mackerel,Trachurus murphyi,O,O,O,O,F,M,L,L,L,L
+87,37,Pacific chub mackerel,Scomber japonicus,F,F,F,O,F,H,H,H,H,L
+87,37,Other Miscellaneous pelagic fishes,,,,,,,,,,,
+87,37,37-Miscellaneous pelagic fishes,,,,,,,,,,,
+87,57,Jumbo flying squid,Dosidicus gigas,U,N,U,U,F,H,H,M,H,L
+87,57,Various squids nei,"Loliginidae, Ommastrephidae",,,,,,,,,,
+87,57,"Other Squids, cuttlefishes, octopuses",,,,,,,,,,,
+87,57,"57-Squids, cuttlefishes, octopuses",,,,,,,,,,,
+88,32,Grenadiers nei,Macrourus spp,F,,,,,M,,,,
+88,34,Lanternfishes nei,Myctophidae,F,F,,F,F,M,M,M,M,M
+88,34,Other Miscellaneous demersal fishes,,F,F,F,F,F,M,M,H,H,H
+88,34,34-Miscellaneous demersal fishes,,,,,,,,,,,
+88,46,Antarctic krill,Euphausia superba,U-F,N-F,U-F,?,U-F,M,M,,L,L
+88,46,"46-Krill, planktonic crustaceans",,,,,,,,,,,
+Tunas,36,Albacore,Thunnus alalunga,"O,F,?","O,F","O,O,?","U,F,?","U,F,F",L,L,"L,L,H","L,M,H","L,L,M"
+Tunas,36,Atlantic bluefin tuna,Thunnus thynnus,"O,O","O,O","O,O","F,O","O,O",L,L,L,L,"H,H"
+Tunas,36,Bigeye tuna,Thunnus obesus,F,F,F,O,O,L,L,L,L,"L,L,M"
+Tunas,36,Skipjack tuna,Katsuwonus pelamis,"N,N","F,F","N,N","F, F","F,U",L,L,M,"L,M","M,L"
+Tunas,36,Southern bluefin tuna,Thunnus maccoyii,O,O,O,O,O,L,L,L,L,
+Tunas,36,Yellowfin tuna,Thunnus albacares,F,F,O,O,O,L,L,L,L,L
+Tunas,36,Albacore,Thunnus alalunga,F,F,F,U,U,L,L,L,L,L
+Tunas,36,Bigeye tuna,Thunnus obesus,F,F,F,F,F,L,L,L,L,L
+Tunas,36,Skipjack tuna,Katsuwonus pelamis,N,N,N,U,F,M,M,M,L,L
+Tunas,36,Southern bluefin tuna,Thunnus maccoyii,O,O,O,,,L,L,L,,
+Tunas,36,Yellowfin tuna,Thunnus albacares,F,F,N,O,O,L,L,L,L,L
+Tunas,36,Albacore,Thunnus alalunga,"O,N","F,N","N-F,N","U,U","U,U",L,L,"M,L",L,L
+Tunas,36,Bigeye tuna,Thunnus obesus,F;F,"F,F","F,F","O,O","F,F",L,L,L,L,L
+Tunas,36,Pacific bluefin tuna,Thunnus orientalis,O,O,O,O,O,L,L,M,L,L
+Tunas,36,Skipjack tuna,Katsuwonus pelamis,"N,N","F,N","N-F,N","F,U","F,U","M,L","M,L","M,L",L,L
+Tunas,36,Southern bluefin tuna,Thunnus maccoyii,O,O,O,O,O,L,L,L,L,L
+Tunas,36,Yellowfin tuna,Thunnus albacares,F;N,"O,F","O,O","O,F","F,F",L,L,L,L,L
+,,,,,,,,,,,,, 
+,,,,,,,,,,,,,
+,,,,,,,,,,,,,
+,,,,,,,,,,,,,
+,,,,,,,,,,,,,
+,,,,,,,,,,,,, 

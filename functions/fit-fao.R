@@ -9,7 +9,7 @@ fit_fao <-
            q_slope_prior = 0.025,
            estimate_proc_error = TRUE,
            estimate_qslope = FALSE,
-           default_initial_state = 1,
+           default_initial_state = NA,
            default_initial_state_cv = 0.2,
            chains = 1,
            cores = 1,
@@ -57,6 +57,37 @@ fit_fao <-
       mutate(data = "heuristic")
     
     
+    # catch only fit
+    
+    com_driors <-
+      format_driors(
+        taxa = scientific_name,
+        catch = catches,
+        years = seq_along(years),
+        use_heuristics = FALSE,
+        initial_state = NA,
+        initial_state_cv = NA,
+        b_ref_type = "k",
+        isscaap_group = unique(data$isscaap_group),
+        use_catch_prior = TRUE
+      )
+    
+    com_fit <-
+      fit_sraplus(
+        driors = com_driors,
+        include_fit = include_fit,
+        model = model,
+        engine = "sir",
+        draws = draws,
+        thin_draws = thin_draws
+      )
+    
+    com_fit_results <- com_fit$results %>%
+      filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy", "depletion")) %>%
+      mutate(year = rep(years, each = 4)) %>%
+      mutate(data = "catch_only")
+    
+    
     # sar fit
     
     if (!is.na(last(data$sar))) {
@@ -100,7 +131,7 @@ fit_fao <-
     # fmi fit
     fmi_dat <- support_data$mean_regional_isscaap_fmi %>%
       filter(
-        fao_area_code == unique(as.numeric(data$fao_area)),
+        fao_area_code == unique(as.numeric(data$fao_area_code)),
         isscaap_group == unique(data$isscaap_group)
       )
     
@@ -249,7 +280,6 @@ fit_fao <-
           isscaap_group = unique(data$isscaap_group),
           q_slope_prior = q_slope_prior
         )
-      
       sfs <- safely(fit_sraplus)
       
       cpue_fit <-
@@ -529,7 +559,8 @@ fit_fao <-
       used_cpue_plus <- FALSE
     }
     
-    results <- basic_fit_results %>% {
+    results <- basic_fit_results %>% 
+      bind_rows(com_fit_results) %>% {
       if (used_sar == TRUE) {
         bind_rows(., sar_fit_results)
       }
