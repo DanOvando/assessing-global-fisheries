@@ -1026,7 +1026,7 @@ if (run_ei_example == TRUE) {
   sfi <- safely(fit_india)
   
   ei_fits <- ei_data %>%
-    # s(4) %>%
+    # sample_n(4) %>%
     # filter(scientific_name == "Sphyraena spp") %>%
     mutate(ex_fits = map2(
       scientific_name,
@@ -1039,7 +1039,7 @@ if (run_ei_example == TRUE) {
         index_years = .y$year[!is.na(.y$cpue) & .y$year >= 1990],
         support_data = support_data,
         country = "India",
-        engine = "tmb",
+        engine = "stan",
         sar = 18.7,
         chains = 1,
         cores = 1,

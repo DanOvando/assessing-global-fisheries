@@ -831,6 +831,8 @@ prepare_sofia_data <- function(min_years_catch = 20,
   ei_capture <-
     readxl::read_xlsx(here::here("data", "India East Only.xlsx")) %>%
     janitor::clean_names() %>%
+    select(-total, -ratio, -x78) %>% 
+    filter(!is.na(country_country)) %>% 
     gather(year, capture, x1950:x2015) %>%
     mutate(year = as.numeric(str_replace_all(year, "\\D", "")))
  
