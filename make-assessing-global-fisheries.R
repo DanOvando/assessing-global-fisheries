@@ -67,7 +67,7 @@ run_case_studies <- FALSE
 
 run_continent_examples <- FALSE
 
-run_ei_example <- FALSE
+run_ei_example <- TRUE
 
 run_sofia_comparison <- TRUE
 
@@ -371,7 +371,6 @@ if (run_voi_models == TRUE){
       summary_plot = map(fit, "summary_plot"),
       summary = map(fit, "fit_summary")
     )
-  browser()
   # test <- test %>%
   #   mutate(
   #     summary_plot = map_plot(fit_performance, "summary_plot"),
@@ -549,7 +548,6 @@ if (run_voi_models == TRUE){
   # value of information analyses
   
   # how does the comparison stack up when you have more data?
-  browser()
   rmse_bias_plot <- noerror_data %>%
     ggplot(aes(rmse, bias)) +
     geom_hex(aes(fill = ..density..), binwidth = c(0.1, 0.1)) +
@@ -782,7 +780,6 @@ if (run_voi_models == TRUE){
   
 } # close fit voi models
 
-
 # run asia-eu comparison ------------------------------------------------------
 
 
@@ -793,21 +790,20 @@ support_data <- list(
 
 
 
-total_nominal_effort <- effort_data %>%
-  filter(effort_type == "nominal") %>%
+total_nominal_effort <- rous_data %>%
+  left_join(effort_region_to_country, by = "country") %>% 
   group_by(region,year) %>%
-  summarise(total_effort = sum(effort)) %>%
+  summarise(total_effort = sum(effort_cell_reported_nom, na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(region = tolower(region))
 
 
-
-total_effecive_effort <- effort_data %>%
-  filter(effort_type == "effective") %>%
-  group_by(region,year) %>%
-  summarise(total_effort = sum(effort)) %>%
-  ungroup() %>%
-  mutate(region = tolower(region))
+# total_effecive_effort <- effort_data %>%
+#   filter(effort_type == "effective") %>%
+#   group_by(region,year) %>%
+#   summarise(total_effort = sum(effort)) %>%
+#   ungroup() %>%
+#   mutate(region = tolower(region))
 
 
 total_nominal_effort %>%
@@ -836,22 +832,25 @@ total_stocks <- fao %>%
   mutate(continent = tolower(continent)) %>%
   left_join(total_nominal_effort, by = c("year", "continent" = "region"))
 
-fao %>% 
-  group_by(year) %>% 
-  summarise(catch = sum(capture, na.rm = TRUE)) %>% 
+
+
+total_stocks %>% 
+  group_by(continent, year) %>% 
+  summarise(cpue = mean(total_catch / total_effort, na.rm = TRUE)) %>% 
+  ggplot(aes(year, cpue, color = continent)) + 
+  geom_line()
+
+total_stocks %>% 
+  group_by(continent, year, scientific_name) %>% 
+  summarise(catch = sum(total_catch)) %>% 
+  group_by(continent, scientific_name) %>% 
+  mutate(catch = scale(catch)) %>% 
   ggplot(aes(year, catch)) + 
-  geom_line() + 
-  scale_y_continuous(labels = comma)
+  geom_smooth(show.legend = FALSE) + 
+  facet_wrap(~continent)
 
-
-total_stocks %>%
-  ggplot(aes(year, total_catch, color = scientific_name)) +
-  geom_line(show.legend = FALSE) +
-  facet_wrap(~continent) +
-  scale_y_log10()
 
 # future::plan(future::multiprocess, workers = 4)
-
 
 if (run_continent_examples == TRUE) {
   set.seed(42)
@@ -859,7 +858,8 @@ if (run_continent_examples == TRUE) {
   continent_fits <- total_stocks %>%
     group_by(scientific_name, continent) %>%
     nest() %>%
-    ungroup()
+    ungroup() #%>% 
+    # sample_n(10)
   
   sfe <- safely(fit_continent_examples)
   
@@ -875,7 +875,8 @@ if (run_continent_examples == TRUE) {
       engine = "stan",
       estimate_proc_error = TRUE,
       estimate_qslope = FALSE,
-      estimate_shape = FALSE
+      estimate_shape = FALSE,
+      first_effort_year= 1960 
     ))
   
   
@@ -908,24 +909,24 @@ total_stocks %>%
   scale_y_comma()
 
 
-total_stocks %>%
-  group_by(year, continent, scientific_name) %>%
-  summarise(`Total Catch` = sum(total_catch)) %>%
-  left_join(total_effecive_effort, by = c("continent" = "region", "year")) %>%
-  mutate(CPUE = `Total Catch` / total_effort) %>%
-  group_by(scientific_name, continent) %>%
-  mutate(CPUE = scale(CPUE),
-         lifetime_catch = sum(`Total Catch`)) %>%
-  rename(Effort = total_effort) %>%
-  gather(metric, value, `Total Catch`:CPUE) %>%
-  filter(metric == "CPUE") %>%
-  ggplot(aes(year, value, color = scientific_name, alpha = lifetime_catch)) +
-  geom_line(size = 1, show.legend = FALSE) +
-  facet_wrap(~continent, scales = "free_y") +
-  labs(x = "Year", y = "Centered and Scaled Effective Abundance Index") +
-  scale_color_discrete(name = "Region") +
-  theme_minimal() +
-  scale_y_comma()
+# total_stocks %>%
+#   group_by(year, continent, scientific_name) %>%
+#   summarise(`Total Catch` = sum(total_catch)) %>%
+#   left_join(total_effecive_effort, by = c("continent" = "region", "year")) %>%
+#   mutate(CPUE = `Total Catch` / total_effort) %>%
+#   group_by(scientific_name, continent) %>%
+#   mutate(CPUE = scale(CPUE),
+#          lifetime_catch = sum(`Total Catch`)) %>%
+#   rename(Effort = total_effort) %>%
+#   gather(metric, value, `Total Catch`:CPUE) %>%
+#   filter(metric == "CPUE") %>%
+#   ggplot(aes(year, value, color = scientific_name, alpha = lifetime_catch)) +
+#   geom_line(size = 1, show.legend = FALSE) +
+#   facet_wrap(~continent, scales = "free_y") +
+#   labs(x = "Year", y = "Centered and Scaled Effective Abundance Index") +
+#   scale_color_discrete(name = "Region") +
+#   theme_minimal() +
+#   scale_y_comma()
 
 
 
@@ -1038,11 +1039,11 @@ if (run_ei_example == TRUE) {
         index_years = .y$year[!is.na(.y$cpue) & .y$year >= 1990],
         support_data = support_data,
         country = "India",
-        engine = "stan",
+        engine = "tmb",
         sar = 18.7,
-        chains = 4,
-        cores = 4,
-        n_keep = 5000
+        chains = 1,
+        cores = 1,
+        n_keep = 2500
       )
     ))
   
@@ -1385,14 +1386,6 @@ ram_status_plot <- status_t %>%
 # link up generic effort to fao 2011
 
 
-rous_data <- read.csv(here("data", "MappedFAO.csv")) %>% 
-  na.omit() %>% 
-  as_tibble() %>% 
-  janitor::clean_names() %>% 
-  mutate(country = countrycode::countrycode(iso3, "iso3c", "un.name.en")) %>% 
-  filter(type2 == "I") %>% 
-  select(year,fao, effort_cell_reported_nom, country ) %>% 
-  rename(area = fao)
 
 rough_fao_region_effort <- effort_data %>%
   filter(effort_type == "nominal") %>%

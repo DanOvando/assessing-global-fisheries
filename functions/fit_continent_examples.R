@@ -84,7 +84,7 @@ fit_continent_examples <-
         years = seq_along(years),
         effort = data$total_effort[effort_years],
         effort_years = effort_years,
-        q_slope_prior = 0.025,
+        q_slope_prior = q_slope_prior,
         q_slope_prior_cv = 0.2,
         b_ref_type = "k"
       )
