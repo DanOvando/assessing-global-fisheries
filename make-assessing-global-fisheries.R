@@ -63,9 +63,8 @@ write_results <- TRUE
 process_fits <- FALSE
 
 # other things
-run_case_studies <- FALSE
 
-run_continent_examples <- FALSE
+run_continent_examples <- TRUE
 
 run_ei_example <- TRUE
 
@@ -1516,9 +1515,7 @@ areas <- unique(fao_status$fao_area_code)
 #   filter(year == max(year)) %>% 
 #   summarise(catch = sum(capture))
 
-
 # annnnnd try and run assessments
-# browser()
 if (run_sofia_comparison == TRUE) {
   # future::plan(future::multiprocess, workers = 4)
   
@@ -1537,10 +1534,11 @@ if (run_sofia_comparison == TRUE) {
         data,
         safely(fit_fao),
         support_data = support_data,
-        default_initial_state = 1,
+        default_initial_state = NA,
+        default_initial_state_cv = NA,
         min_effort_year = 1975,
         engine = "stan",
-        cores = 1,
+        cores = 2,
         .progress = TRUE,
         .options = future_options(globals = support_data, packages = c("tidyverse","sraplus"))
       )

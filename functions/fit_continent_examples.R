@@ -109,7 +109,8 @@ fit_continent_examples <-
         estimate_shape = estimate_shape,
         estimate_qslope = estimate_qslope,
         estimate_proc_error = estimate_proc_error,
-        use_baranov = use_baranov
+        use_baranov = use_baranov,
+        workers = 4
       )
     #
     # plot(cpue_driors$catch[cpue_driors$effort_years] / cpue_driors$effort)

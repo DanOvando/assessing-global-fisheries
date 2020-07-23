@@ -40,7 +40,6 @@ fit_fao <-
         b_ref_type = "k",
         isscaap_group = unique(data$isscaap_group)
       )
-    
     basic_fit <-
       fit_sraplus(
         driors = basic_driors,
@@ -58,7 +57,6 @@ fit_fao <-
     
     
     # catch only fit
-    
     com_driors <-
       format_driors(
         taxa = scientific_name,
@@ -71,7 +69,6 @@ fit_fao <-
         isscaap_group = unique(data$isscaap_group),
         use_catch_prior = TRUE
       )
-    
     com_fit <-
       fit_sraplus(
         driors = com_driors,
