@@ -70,9 +70,12 @@ run_continent_examples <- FALSE
 
 run_ei_example <- FALSE
 
-run_sofia_comparison <- FALSE
+run_sofia_comparison <- TRUE
 
 run_ram_tests <- TRUE
+
+run_ram_comparison <- TRUE
+
 
 
 engine = "stan"
@@ -1224,6 +1227,31 @@ stats <-
 
 sofia_status$status <- stats
 
+# there are MANY mispellings of scientific names in SOFIA
+
+correct_sofia <- sofia_status %>% 
+  select(common_name, scientific_name) %>% 
+  rename(bad_scientific_name = scientific_name) %>% 
+  unique() %>% 
+  mutate(sciname = map(common_name, ~ taxize::comm2sci(com = .x, db = "worms")[[1]]))
+
+correct_sofia <-  correct_sofia %>% 
+  mutate(sci_match = map_lgl(sciname, ~length(.x) > 0)) %>% 
+  filter(sci_match == TRUE) %>% 
+  mutate(good_scientific_name = map_chr(sciname, ~.x[1])) %>% 
+  select(common_name,good_scientific_name )
+
+# correct_sofia$foo <- correct_sofia$bad_scientific_name != correct_sofia$good_scientific_name
+
+sofia_status <- sofia_status %>%
+  left_join(correct_sofia, by = "common_name") %>%
+  mutate(scientific_name = ifelse(
+    is.na(good_scientific_name),
+    scientific_name,
+    good_scientific_name
+  )) %>% 
+  select(-good_scientific_name)
+
 # replicate rows for multiple status
 
 # tmp <- sofia_status %>%
@@ -1247,6 +1275,27 @@ sofia_status$status <- stats
 
 # merge with fao data
 
+# fuck <- sofia_status %>% 
+#   filter(fao_area_code == 67)
+# 
+# 
+# you <- fao_status <- fao %>%
+#   group_by(
+#     year,
+#     fao_area,
+#     fao_area_code,
+#     isscaap_group,
+#     isscaap_number,
+#     common_name,
+#     scientific_name
+#   ) %>%
+#   summarise(catch = sum(capture), .groups = "drop") %>% 
+#   filter(fao_area_code == 67) 
+# 
+# 
+# wtf <- you %>% 
+#   filter(scientific_name %in% unique(fuck$scientific_name))
+# 
 
 fao_status <- fao %>%
   group_by(
@@ -1255,7 +1304,7 @@ fao_status <- fao %>%
     fao_area_code,
     isscaap_group,
     isscaap_number,
-    common_name,
+    # common_name,
     scientific_name
   ) %>%
   summarise(catch = sum(capture), .groups = "drop") %>%
@@ -1264,7 +1313,7 @@ fao_status <- fao %>%
     by = c(
       "fao_area_code",
       "isscaap_number",
-      "common_name",
+      # "common_name",
       "scientific_name"
     )
   ) %>%
@@ -1585,6 +1634,7 @@ areas <- unique(fao_status$fao_area_code)
 #   summarise(catch = sum(capture))
 
 # annnnnd try and run assessments
+# browser()
 if (run_sofia_comparison == TRUE) {
   # future::plan(future::multiprocess, workers = 4)
   
@@ -1593,11 +1643,12 @@ if (run_sofia_comparison == TRUE) {
   future::plan(multisession, workers = n_cores)
   
   fao_status_fits <- fao_status %>%
-    # filter(fao_area_code %in% 87) %>%
+    # filter(fao_area_code %in% 67) %>%
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
     # sample_n(3) %>%
+    # slice(10) %>% 
     mutate(
       fits = future_map(
         data,
@@ -1616,28 +1667,7 @@ if (run_sofia_comparison == TRUE) {
       )
     )
   
-  
-  # "Pink(=Humpback)salmon_67_23"
-  #
-  # temp <- fao_status %>%
-  #   group_by(stockid) %>%
-  #   nest() %>%
-  #   ungroup() %>%
-  #   # sample_n(1) %>%
-  #   # filter(stockid ==  "Pink(=Humpback)salmon_67_23") %>%
-  #   slice(141) %>%
-  #   mutate(
-  #     fits = map(
-  #       data,
-  #       (fit_fao),
-  #       support_data = support_data,
-  #       min_effort_year = 1960,
-  #       engine = "stan",
-  #       cores = 1
-  #     )
-  #   )
-  
-  
+
   write_rds(fao_status_fits,
             path = file.path(results_path, "fao_status_fits.rds"))
   
@@ -1812,140 +1842,6 @@ po_map_plot <- fao_area_status %>%
 po_map_plot
 
 ggsave("percent_overfished_by_region.pdf", po_map_plot)
-
-
-
-
-
-# run RAM tests ------------------------------------------------------
-
-# for now, only including things that have total biomass estimates
-
-if (run_ram_tests) {
-  ram_fit_data <- ram_data %>%
-    select(
-      year,
-      stockid,
-      scientificname,
-      commonname,
-      year,
-      catch,
-      b_v_bmsy,
-      u_v_umsy,
-      total_biomass
-    ) %>%
-    group_by(stockid, scientificname) %>%
-    nest() %>%
-    ungroup()
-  
-  fit_model <-
-    function(sciname,
-             data,
-             survey_q = 1,
-             estimate_proc_error = FALSE,
-             #set to TRUE to estimate process error
-             estimate_shape = FALSE) {
-
-      index_years <- data$year[!is.na(data$b_v_bmsy)]
-      
-      driors <- format_driors(taxa = sciname,
-                              catch = data$catch,
-                              years = data$year,
-                              index =  (data$b_v_bmsy * survey_q * 100)[data$year %in% index_years],
-                              index_years = index_years,
-                              initial_state = NA,
-                              initial_state_cv = 0.05)
-      
-      # browser()
-      # sraplus::plot_driors(driors)
-      # 
-      fit <- fit_sraplus(driors = driors,
-                         engine = "stan",
-                         model = "sraplus_tmb",
-                         estimate_shape = estimate_shape, 
-                         estimate_proc_error = estimate_proc_error,
-                         estimate_initial_state = TRUE,
-                         n_keep = 2000)
-      
-      
-      # b <- fit$results %>%
-      #   filter(variable == "b_t")
-      
-      # plot(b$mean, data$total_biomass)
-      # abline(a = 0, b = 1)
-      #
-      out <- list(fit = fit,
-                  driors = driors)
-    }
-  
-  future::plan(multiprocess, workers = 8)
-  
-  a <- Sys.time()
-  set.seed(42)
-  ram_fit_data <- ram_fit_data %>%
-    sample_n(10) %>% 
-    # filter(stockid == "ARFLOUNDBSAI") %>% 
-    mutate(
-      fit = future_map2(
-        scientificname,
-        data,
-       safely(fit_model),
-        estimate_proc_error = TRUE,
-        estimate_shape = FALSE,
-        .progress = TRUE
-      )
-    )
-  
-  fit_worked <- map_lgl(map(ram_fit_data$fit, "error"), is.null)
-  Sys.time() - a
-  
-  ram_fit_data <- ram_fit_data %>%
-    filter(fit_worked)
-  
-  ram_fit_data$fit <- map(ram_fit_data$fit, "result")
-  
-  write_rds(ram_fit_data, path = file.path(results_path,"ram_tests.rds"))
-  
-  
-  i <- 8
-  
-  sraplus::plot_prior_posterior(ram_fit_data$fit[[i]]$fit, ram_fit_data$fit[[i]]$driors)
-  
-
-  compare_to_ram <- function(data, fit){
-    
-    # data <- ram_fit_data$data[[1]]
-    # 
-    # fit <- ram_fit_data$fit[[1]]
-    
-    comparison <- tibble(observed = data$b_v_bmsy) %>% 
-      bind_cols(fit$fit$results[fit$fit$results$variable == "b_div_bmsy",])
-    
-  }
-  
-  ram_comparison <- map2_df(ram_fit_data$data, ram_fit_data$fit, compare_to_ram,.id = "stock")
-  
-  ram_comparison %>% 
-    ggplot(aes(observed, mean, color = stock)) + 
-    geom_point(show.legend = FALSE, alpha = 0.5) + 
-    geom_abline(slope = 1, intercept = 0)
-  
-  ram_comparison %>% 
-    ggplot(aes(observed, mean)) + 
-    geom_bin2d(show.legend = TRUE, alpha = 0.5) + 
-    geom_abline(slope = 1, intercept = 0)
-
-  
-  
-}
-
-# compare to RAM -----------------------------------------------------------
-
-
-# re run, but with a pared down focus on area 67
-
-# filter down to just species that have matches between FAO and ram by fao area
-
 
 ram_catches <- ram_data %>%
   select(scientificname, catch, year, primary_country, primary_FAOarea) %>%
@@ -2240,6 +2136,309 @@ ram_v_sraplus_rmse_map_plot <- ram_v_sraplus_rmse_map %>%
         panel.background = element_rect(fill = "white"))
 
 ram_v_sraplus_rmse_map_plot
+
+
+
+# run RAM tests ------------------------------------------------------
+
+# for now, only including things that have total biomass estimates
+
+if (run_ram_tests) {
+  ram_fit_data <- ram_data %>%
+    select(
+      year,
+      stockid,
+      scientificname,
+      commonname,
+      year,
+      catch,
+      b_v_bmsy,
+      u_v_umsy,
+      total_biomass
+    ) %>%
+    group_by(stockid, scientificname) %>%
+    nest() %>%
+    ungroup()
+  
+  fit_model <-
+    function(sciname,
+             data,
+             survey_q = 1,
+             estimate_proc_error = FALSE,
+             #set to TRUE to estimate process error
+             estimate_shape = FALSE) {
+
+      index_years <- data$year[!is.na(data$b_v_bmsy)]
+      
+      driors <- format_driors(taxa = sciname,
+                              catch = data$catch,
+                              years = data$year,
+                              index =  (data$b_v_bmsy * survey_q * 100)[data$year %in% index_years],
+                              index_years = index_years,
+                              initial_state = NA,
+                              initial_state_cv = 0.05)
+      
+      # browser()
+      # sraplus::plot_driors(driors)
+      # 
+      fit <- fit_sraplus(driors = driors,
+                         engine = "stan",
+                         model = "sraplus_tmb",
+                         estimate_shape = estimate_shape, 
+                         estimate_proc_error = estimate_proc_error,
+                         estimate_initial_state = TRUE,
+                         n_keep = 2000)
+      
+      
+      # b <- fit$results %>%
+      #   filter(variable == "b_t")
+      
+      # plot(b$mean, data$total_biomass)
+      # abline(a = 0, b = 1)
+      #
+      out <- list(fit = fit,
+                  driors = driors)
+    }
+  
+  future::plan(multiprocess, workers = 8)
+  
+  a <- Sys.time()
+  set.seed(42)
+  ram_fit_data <- ram_fit_data %>%
+    # sample_n(10) %>% 
+    # filter(stockid == "ARFLOUNDBSAI") %>% 
+    mutate(
+      fit = future_map2(
+        scientificname,
+        data,
+       safely(fit_model),
+        estimate_proc_error = TRUE,
+        estimate_shape = FALSE,
+        .progress = TRUE
+      )
+    )
+  
+  fit_worked <- map_lgl(map(ram_fit_data$fit, "error"), is.null)
+  Sys.time() - a
+  
+  ram_fit_data <- ram_fit_data %>%
+    filter(fit_worked)
+  
+  ram_fit_data$fit <- map(ram_fit_data$fit, "result")
+  
+  write_rds(ram_fit_data, path = file.path(results_path,"ram_tests.rds"))
+  
+  
+  i <- 8
+  
+  sraplus::plot_prior_posterior(ram_fit_data$fit[[i]]$fit, ram_fit_data$fit[[i]]$driors)
+  
+
+  compare_to_ram <- function(data, fit){
+    
+    # data <- ram_fit_data$data[[1]]
+    # 
+    # fit <- ram_fit_data$fit[[1]]
+    
+    comparison <- tibble(observed = data$b_v_bmsy) %>% 
+      bind_cols(fit$fit$results[fit$fit$results$variable == "b_div_bmsy",])
+    
+  }
+  
+  ram_comparison <- map2_df(ram_fit_data$data, ram_fit_data$fit, compare_to_ram,.id = "stock")
+  
+  ram_comparison %>% 
+    ggplot(aes(observed, mean, color = stock)) + 
+    geom_point(show.legend = FALSE, alpha = 0.5) + 
+    geom_abline(slope = 1, intercept = 0)
+  
+  ram_comparison %>% 
+    ggplot(aes(observed, mean)) + 
+    geom_bin2d(show.legend = TRUE, alpha = 0.5) + 
+    geom_abline(slope = 1, intercept = 0)
+
+  
+  
+}
+
+# run RAM comparison  -----------------------------------------------------------
+
+
+
+# re run, but with a pared down focus on area 67
+
+# filter down to just species that have matches between FAO and ram by fao area
+
+
+if (run_ram_comparison == TRUE) {
+  
+  ram_comp_data <- ram_data %>%
+    select(
+      year,
+      stockid,
+      country,
+      primary_FAOarea,
+      scientificname,
+      commonname,
+      year,
+      catch,
+      b_v_bmsy,
+      u_v_umsy,
+      total_biomass
+    ) %>%
+    rename(scientific_name = scientificname) %>% 
+    mutate(fao_area_code = as.numeric(primary_FAOarea)) %>% 
+    left_join(fao_species, by = "scientific_name")
+  
+  # join regional U/Umsy and SAR data
+  ram_comp_data <- ram_comp_data %>%
+    left_join(fao_area_to_ram %>% select(-fao_area),
+              by = c("fao_area_code" = "area")) %>%
+    left_join(
+      state_space_results %>% filter(variable == "UvU"),
+      by = c("year", "state_space_region" = "region")
+    ) %>%
+    left_join(approx_sar_by_fao_region,
+              by = c("fao_area_code" = "fao_area_code")) %>%
+    rename(mean_u_umsy = dlm_geomean)
+
+  # assign effort data to RAM
+  
+  temp_ram <- ram_comp_data %>%
+    group_by(stockid) %>%
+    nest() %>%
+    ungroup()
+  
+  assign_effort <-
+    function(ram_stock,
+             data,
+             effort,
+             fao_catch,
+             scalar = 1000) {
+      # data <- temp_fao$data[[which(temp_fao$stockid == huh)]]
+      #
+      # fao_catch <- fao
+      #
+      # effort <- rous_data
+      #
+      # fao_stock <- temp_fao$stockid[which(temp_fao$stockid == huh)]
+      
+      comm_name <- unique(data$commonname)
+        
+      isscp_number <- unique(data$isscaap_number)
+
+      if (is.na(isscp_number)){
+       
+        isscp_number <- 33 
+      }
+      
+      fao_code <- unique(data$fao_area_code)
+
+      fao_matches <- fao_catch %>% {
+        if (any(.$common_name == comm_name & .$fao_area_code == fao_code, na.rm = TRUE)) {
+          filter(., common_name == comm_name & fao_area_code == fao_code)
+          # filter(fao, common_name == comm_name & fao_area_code == fao_code)
+          #
+          
+        } else {
+          filter(.,
+                 isscaap_number == isscp_number &
+                   fao_area_code == fao_code)
+          
+        }
+      }
+      matched_effort <- effort %>%
+        filter(area == fao_code) %>%
+        filter(country %in% unique(fao_matches$country)) %>%
+        group_by(year, area) %>%
+        summarise(effort_index = sum(effort_cell_reported_nom) / scalar,
+                  .groups = "drop") %>%
+        ungroup()
+      
+      data <- data %>%
+        left_join(matched_effort, by = c("year", "fao_area_code" =  "area"))
+      
+      
+    }
+  
+  
+  temp_ram <- temp_ram %>%
+    mutate(data = map2(
+      stockid,
+      data,
+      assign_effort,
+      fao_catch = fao,
+      effort = rous_data
+    ))
+  
+  
+  ram_comp_data <- temp_ram %>%
+    unnest(cols = data)
+  
+  rous_data %>% 
+    group_by(year, area) %>% 
+    summarise(effort = mean(effort_cell_reported_nom, na.rm = TRUE)) %>% 
+    ungroup() %>% 
+    ggplot(aes(year, effort)) + 
+    geom_line() + 
+    facet_wrap(~area, scales = "free_y")
+  
+  
+  ram_comp_data %>% 
+    group_by(year, fao_area_code) %>% 
+    summarise(effort = mean(effort_index, na.rm = TRUE)) %>% 
+    ungroup() %>% 
+    ggplot(aes(year, effort)) + 
+    geom_line() + 
+    facet_wrap(~fao_area_code, scales = "free_y")
+  
+  set.seed(24)
+  
+  future::plan(multisession, workers = n_cores)
+  
+  ram_status_fits <- ram_comp_data %>%
+    filter(fao_area_code %in% 67) %>%
+    group_by(stockid) %>%
+    nest() %>%
+    ungroup() %>% 
+    # sample_n(1) %>%
+    mutate(
+      fits = future_map(
+        data,
+       safely( fit_ram),
+        support_data = support_data,
+        default_initial_state = NA,
+        default_initial_state_cv = NA,
+        min_effort_year = 1975,
+        engine = "stan",
+        cores = 2,
+        .progress = TRUE,
+        .options = future_options(
+          globals = support_data,
+          packages = c("tidyverse", "sraplus")
+        )
+      )
+    )
+  
+  
+  check <- ram_status_fits$fits[[1]]$result
+
+  check %>%
+    filter(variable == "b_div_bmsy")  %>%
+    ggplot() +
+    geom_line(aes(year, mean, color = data)) +
+    geom_point(data = ram_status_fits$data[[1]], aes(year, b_v_bmsy))
+  #
+  write_rds(ram_status_fits,
+            path = file.path(results_path, "ram_status_fits.rds"))
+  
+} else {
+  ram_status_fits <-
+    read_rds(path = file.path(results_path, "ram_status_fits.rds"))
+  
+  
+}
+
 
 
 

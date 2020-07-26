@@ -1,4 +1,4 @@
-fit_fao <-
+fit_ram <-
   function(data,
            support_data,
            model = "sraplus_tmb",
@@ -19,10 +19,10 @@ fit_fao <-
            thin_draws = TRUE) {
     #
     #     data <- test$data[[1]]
-    
+    # browser()
     ogengine <- engine
     
-    scientific_name <- unique(data$species)
+    scientific_name <- unique(data$scientific_name)
     
     catches <- data$catch
     
@@ -126,11 +126,10 @@ fit_fao <-
     
     
     # fmi fit
+    
     fmi_dat <- support_data$mean_regional_isscaap_fmi %>%
-      filter(
-        fao_area_code == unique(as.numeric(data$fao_area_code)),
-        isscaap_group == unique(data$isscaap_group)
-      )
+      filter(fao_area_code == unique(as.numeric(data$fao_area_code)),
+             isscaap_group == unique(data$isscaap_group))
     
     
     fmi <-
@@ -143,7 +142,7 @@ fit_fao <-
     
     if (nrow(fmi_dat) == 0) {
       fmi_dat <- support_data$mean_regional_isscaap_fmi %>%
-        filter(fao_area_code == unique(as.numeric(data$fao_area))) %>%
+        filter(fao_area_code == unique(as.numeric(data$fao_area_code))) %>%
         pivot_longer(
           cols = c("research", "management", "socioeconomics", "enforcement"),
           names_to = "metric",
@@ -226,9 +225,8 @@ fit_fao <-
           initial_state_cv = default_initial_state_cv,
           isscaap_group = unique(data$isscaap_group)
         )
-
-      sfs <- safely(fit_sraplus)
       
+      sfs <- safely(fit_sraplus)
       u_fit <-
         sfs(
           driors = u_driors,
@@ -238,6 +236,7 @@ fit_fao <-
           draws = draws,
           thin_draws = thin_draws
         )
+      
       
       if (is.null(u_fit$error)) {
         u_fit <- u_fit$result
@@ -556,23 +555,97 @@ fit_fao <-
       used_cpue_plus <- FALSE
     }
     
-    results <- basic_fit_results %>% 
+    # fit with real RAM data
+    
+    index_years <- seq_along(years)[!is.na(data$b_v_bmsy)]
+    
+    used_ram_data <- TRUE
+    
+    ram_data_driors <-
+      format_driors(
+        taxa = scientific_name,
+        catch = catches,
+        years = seq_along(years),
+        index = data$b_v_bmsy[!is.na(data$b_v_bmsy)] * 100,
+        index_years = index_years,
+        initial_state = default_initial_state,
+        initial_state_cv = default_initial_state_cv,
+        isscaap_group = unique(data$isscaap_group)
+      )
+    
+    # plot_driors(ram_data_driors)
+    sfs <- safely(fit_sraplus)
+    
+    ram_data_fit <-
+      sfs(
+        driors = ram_data_driors,
+        include_fit = include_fit,
+        model = model,
+        engine = engine,
+        estimate_proc_error = estimate_proc_error,
+        estimate_qslope = estimate_qslope,
+        workers = cores,
+        refresh = refresh,
+        thin_draws = thin_draws
+      )
+    
+    # plot_prior_posterior(ram_data_fit$result, ram_data_driors)
+    if (is.null(ram_data_fit$error)) {
+      ram_data_fit <- ram_data_fit$result
+
+    } else {
+      used_ram_data <- FALSE
+    }
+    # 
+    if (engine == "tmb") {
+      ram_data_fit_results <- ram_data_fit$results %>%
+        filter(
+          variable %in% c(
+            "log_b_div_bmsy",
+            "log_u_div_umsy",
+            "log_c_div_msy",
+            "log_depletion"
+          )
+        ) %>%
+        mutate(year = rep(years, 4)) %>%
+        modify_at(c("mean", "lower", "upper"), exp) %>%
+        mutate(data = "ram-data") %>%
+        mutate(variable = str_replace_all(variable, "log_", ""))
+
+      rm(ram_data_fit)
+
+
+    } else {
+      ram_data_fit_results <- ram_data_fit$results %>%
+        filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy", "depletion")) %>%
+        mutate(year = year - 1 + min(years)) %>%
+        mutate(data = "ram-data")
+
+      rm(ram_data_fit)
+
+    } 
+
+    
+    
+    # store results
+    
+    results <- basic_fit_results %>%
       bind_rows(com_fit_results) %>% {
-      if (used_sar == TRUE) {
-        bind_rows(., sar_fit_results)
-      }
-      else{
-        .
-      }
-    } %>% {
-      if (used_cpue == TRUE) {
-        bind_rows(., cpue_fit_results) %>%
-          bind_rows(nom_cpue_fit_results)
-      }
-      else{
-        .
-      }
-    } %>%
+        if (used_sar == TRUE) {
+          bind_rows(., sar_fit_results)
+        }
+        else{
+          .
+        }
+      } %>% {
+        if (used_cpue == TRUE) {
+          bind_rows(., cpue_fit_results) %>%
+            bind_rows(nom_cpue_fit_results)
+        }
+        else{
+          .
+        }
+      } %>%
       {
         if (used_u == TRUE) {
           bind_rows(., u_fit_results)
@@ -595,6 +668,12 @@ fit_fao <-
         else{
           .
         }
+      } %>% {
+        if (used_ram_data == TRUE) {
+          bind_rows(., ram_data_fit_results)
+        } else{
+          .
+        }
       }
     
     # write(wtf,file = "wtf.txt", append = TRUE)
@@ -609,4 +688,4 @@ fit_fao <-
     gc()
     return(results)
     
-  }
+  } 
