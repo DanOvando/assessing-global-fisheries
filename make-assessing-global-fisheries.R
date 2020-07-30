@@ -73,7 +73,11 @@ run_ram_tests <- FALSE
 
 run_ram_comparison <- FALSE
 
-engine = "stan"
+knit_paper <- TRUE
+
+warning("Running full analysis takes upwards of 12 hours on 4 cores. Recommend starting on a Friday night having a nice weekend. Given memory constraints of models, more than 4 cores is not recommended.")
+
+engine <-  "stan"
 
 catchability = 1e-2
 
@@ -175,35 +179,7 @@ if (run_voi_models == TRUE) {
     mutate(b_ref_type = ifelse(initial_state_type == "prior",
                                "b",
                                b_ref_type))
-  
-  # stress_tests <- data_frame(
-  #   use_index = sample(c(FALSE),  draws, replace = TRUE),
-  #   index_type = sample(c("survey"), draws, replace = TRUE),
-  #   initial_state_type = sample(c("unfished", "known", "prior","heuristic"), draws, replace = TRUE),
-  #   initial_state_cv =  runif(draws, 0.05, 0.2),
-  #   use_terminal_state = sample(c(TRUE),  draws, replace = TRUE),
-  #   terminal_state_cv = runif(draws, 0.05, 0.2),
-  #   error_cv = sample(c(0, 1), draws, replace = TRUE),
-  #   stockid = sample(unique(ram_data$stockid), draws, replace = TRUE),
-  #   use_u_priors =  sample(c(FALSE),  draws, replace = TRUE),
-  #   u_cv = runif(draws, 0.05, 0.2),
-  #   index_window = sample(c(1, 0.25, .5), draws, replace = TRUE),
-  #   index_freq = sample(c(1, 2), draws, replace = TRUE),
-  #   u_window = sample(c("snapshot", "recent", "complete"), draws, replace = TRUE),
-  #   b_ref_type = sample(c("b"),  draws, replace = TRUE),
-  #   f_ref_type = sample(c("f", "fmsy"),  draws, replace = TRUE),
-  #   estimate_shape = sample(c(FALSE, TRUE), draws, replace = TRUE),
-  #   estimate_proc_error = sample(c(FALSE, TRUE), draws, replace = TRUE)
-  # ) %>%
-  #   mutate(error_cv = map_dbl(error_cv, ~ ifelse(.x == 0, 1e-6, runif(1, 0.05, 0.2)))) %>%
-  #   mutate(
-  #     b_ref_type = ifelse(
-  #       initial_state_type == "prior",
-  #       "b",
-  #       b_ref_type
-  #     )
-  #   )
-  
+
   
   if (fit_models == TRUE) {
     ram_fits <- stress_tests %>%
@@ -580,131 +556,131 @@ if (run_voi_models == TRUE) {
   ) +
     scale_x_percent(name = "% Change in RMSE")
   
-  u_voi_fit <-
-    rstanarm::stan_glmer(
-      rmse ~  initial_state_type  + use_index + u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
-                                                                                                                          stockid),
-      data = voi_data %>% filter(metric == "u_v_umsy", is.finite(rmse)),
-      cores = 4,
-      family = Gamma(link = "log")
-    )
+  # u_voi_fit <-
+  #   rstanarm::stan_glmer(
+  #     rmse ~  initial_state_type  + use_index + u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
+  #                                                                                                                         stockid),
+  #     data = voi_data %>% filter(metric == "u_v_umsy", is.finite(rmse)),
+  #     cores = 4,
+  #     family = Gamma(link = "log")
+  #   )
   
-  u_voi_plot <- bayesplot::mcmc_areas(
-    as.array(u_voi_fit),
-    regex_pars = c("use", "state", "estimate", "index", "u_"),
-    prob = 0.8,
-    # 80% intervals
-    prob_outer = 0.95,
-    # 99%
-    point_est = "mean",
-    transformations = function(x)
-      exp(x) - 1
-  ) +
-    scale_x_percent(name = "% Change in RMSE")
+  # u_voi_plot <- bayesplot::mcmc_areas(
+  #   as.array(u_voi_fit),
+  #   regex_pars = c("use", "state", "estimate", "index", "u_"),
+  #   prob = 0.8,
+  #   # 80% intervals
+  #   prob_outer = 0.95,
+  #   # 99%
+  #   point_est = "mean",
+  #   transformations = function(x)
+  #     exp(x) - 1
+  # ) +
+  #   scale_x_percent(name = "% Change in RMSE")
+  # 
   
-  
-  
-  index_voi_fit <-
-    rstanarm::stan_glmer(
-      rmse ~  factor(index_freq) + factor(index_window) + index_rmse + (1 |
-                                                                          stockid),
-      data = voi_data %>% filter(metric == "b_v_bmsy", use_index == TRUE, error_cv > min(error_cv)) %>% mutate(index_rmse = scale(index_rmse)),
-      family = Gamma(link = "log"),
-      cores = 4
-    )
-  
-  
-  index_voi_plot <- bayesplot::mcmc_areas(
-    as.array(index_voi_fit),
-    regex_pars = c("freq", "window","index"),
-    prob = 0.8,
-    # 80% intervals
-    prob_outer = 0.95,
-    # 99%
-    point_est = "mean",
-    transformations = function(x)
-      exp(x) - 1
-  ) +
-    scale_x_percent(name = "% Change in RMSE")
-  
-  
+  # 
+  # index_voi_fit <-
+  #   rstanarm::stan_glmer(
+  #     rmse ~  factor(index_freq) + factor(index_window) + index_rmse + (1 |
+  #                                                                         stockid),
+  #     data = voi_data %>% filter(metric == "b_v_bmsy", use_index == TRUE, error_cv > min(error_cv)) %>% mutate(index_rmse = scale(index_rmse)),
+  #     family = Gamma(link = "log"),
+  #     cores = 4
+  #   )
+  # 
+  # 
+  # index_voi_plot <- bayesplot::mcmc_areas(
+  #   as.array(index_voi_fit),
+  #   regex_pars = c("freq", "window","index"),
+  #   prob = 0.8,
+  #   # 80% intervals
+  #   prob_outer = 0.95,
+  #   # 99%
+  #   point_est = "mean",
+  #   transformations = function(x)
+  #     exp(x) - 1
+  # ) +
+  #   scale_x_percent(name = "% Change in RMSE")
+  # 
+  # 
   # effect on accuracy
   
-  acc_data <- voi_data %>%
-    filter(metric == "b_v_bmsy") %>%
-    mutate(bin_acc = accuracy > 0.5)
-  
-  
-  acc_voi_fit <-
-    rstanarm::stan_glmer(
-      bin_acc ~  initial_state_type  + use_index + u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
-                                                                                                                             stockid),
-      data = acc_data,
-      cores = 4,
-      family = binomial()
-    )
-  
-  
-  acc_voi_plot <- bayesplot::mcmc_areas(
-    as.array(acc_voi_fit),
-    regex_pars = c("use", "state", "estimate", "index", "u_"),
-    prob = 0.8,
-    # 80% intervals
-    prob_outer = 0.95,
-    # 99%
-    point_est = "mean",
-    transformations = function(x)
-      exp(x) - 1
-  ) +
-    scale_x_percent(name = "% Change in Accuracy")
-  
-  acc_index_voi_fit <-
-    rstanarm::stan_glmer(
-      bin_acc ~  factor(index_freq) + factor(index_window) + (1 | stockid),
-      data = acc_data %>% filter(use_index == TRUE),
-      cores = 4,
-      family = binomial()
-    )
-  
-  
-  acc_index_voi_plot <- bayesplot::mcmc_areas(
-    as.array(acc_index_voi_fit),
-    regex_pars = c("use", "state", "estimate", "index"),
-    prob = 0.8,
-    # 80% intervals
-    prob_outer = 0.95,
-    # 99%
-    point_est = "mean",
-    transformations = function(x)
-      exp(x) - 1
-  ) +
-    scale_x_percent(name = "% Change in Accuracy")
-  
-  # how wrong can you be?
-  
-  quality_data <- fits %>%
-    filter(use_index == TRUE,
-           fit_name == "sraplus",
-           error_cv > min(error_cv))
-  
-  quality_obs_v_pred_plot <- quality_data %>%
-    filter(metric == "b_v_bmsy") %>%
-    ggplot(aes(observed, predicted, color = pmin(20, index_rmse))) +
-    geom_point(alpha = 0.75, size = 4) +
-    geom_abline(aes(slope = 1, intercept = 0), linetype = 2) +
-    geom_smooth(method = 'lm') +
-    facet_wrap( ~ metric) +
-    scale_color_viridis()
-  
-  quality_effect_plot <- quality_data %>%
-    filter(metric == "b_v_bmsy") %>%
-    ggplot(aes(index_rmse, rmse)) +
-    geom_point() +
-    geom_abline(aes(slope = 0, intercept = mean(rmse))) +
-    geom_smooth(method = "lm") +
-    scale_x_log10() +
-    scale_y_log10()
-  
+  # acc_data <- voi_data %>%
+  #   filter(metric == "b_v_bmsy") %>%
+  #   mutate(bin_acc = accuracy > 0.5)
+  # 
+  # 
+  # acc_voi_fit <-
+  #   rstanarm::stan_glmer(
+  #     bin_acc ~  initial_state_type  + use_index + u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
+  #                                                                                                                            stockid),
+  #     data = acc_data,
+  #     cores = 4,
+  #     family = binomial()
+  #   )
+  # 
+  # 
+  # acc_voi_plot <- bayesplot::mcmc_areas(
+  #   as.array(acc_voi_fit),
+  #   regex_pars = c("use", "state", "estimate", "index", "u_"),
+  #   prob = 0.8,
+  #   # 80% intervals
+  #   prob_outer = 0.95,
+  #   # 99%
+  #   point_est = "mean",
+  #   transformations = function(x)
+  #     exp(x) - 1
+  # ) +
+  #   scale_x_percent(name = "% Change in Accuracy")
+  # 
+  # acc_index_voi_fit <-
+  #   rstanarm::stan_glmer(
+  #     bin_acc ~  factor(index_freq) + factor(index_window) + (1 | stockid),
+  #     data = acc_data %>% filter(use_index == TRUE),
+  #     cores = 4,
+  #     family = binomial()
+  #   )
+  # 
+  # 
+  # acc_index_voi_plot <- bayesplot::mcmc_areas(
+  #   as.array(acc_index_voi_fit),
+  #   regex_pars = c("use", "state", "estimate", "index"),
+  #   prob = 0.8,
+  #   # 80% intervals
+  #   prob_outer = 0.95,
+  #   # 99%
+  #   point_est = "mean",
+  #   transformations = function(x)
+  #     exp(x) - 1
+  # ) +
+  #   scale_x_percent(name = "% Change in Accuracy")
+  # 
+  # # how wrong can you be?
+  # 
+  # quality_data <- fits %>%
+  #   filter(use_index == TRUE,
+  #          fit_name == "sraplus",
+  #          error_cv > min(error_cv))
+  # 
+  # quality_obs_v_pred_plot <- quality_data %>%
+  #   filter(metric == "b_v_bmsy") %>%
+  #   ggplot(aes(observed, predicted, color = pmin(20, index_rmse))) +
+  #   geom_point(alpha = 0.75, size = 4) +
+  #   geom_abline(aes(slope = 1, intercept = 0), linetype = 2) +
+  #   geom_smooth(method = 'lm') +
+  #   facet_wrap( ~ metric) +
+  #   scale_color_viridis()
+  # 
+  # quality_effect_plot <- quality_data %>%
+  #   filter(metric == "b_v_bmsy") %>%
+  #   ggplot(aes(index_rmse, rmse)) +
+  #   geom_point() +
+  #   geom_abline(aes(slope = 0, intercept = mean(rmse))) +
+  #   geom_smooth(method = "lm") +
+  #   scale_x_log10() +
+  #   scale_y_log10()
+  # 
   flist <- ls()[str_detect(ls(), "_fit")]
   
   save(list = flist,
@@ -2342,3 +2318,12 @@ plots <- ls()[str_detect(ls(), "_plot")]
 
 save(file = here("results", results_name, "paper_plots.Rdata"),
      list = plots)
+
+
+
+# knit paper --------------------------------------------------------------
+if (knit_paper == TRUE){
+  
+  rmarkdown::render(here::here("documents","ovando-etal-assessing-global-fisheries.Rmd"), params = list(results_name = results_name,
+                                                                                                        min_years_catch = 25))
+}
