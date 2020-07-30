@@ -46,7 +46,7 @@ run_assessments <-
           f_ref_type = priors$f_ref_type,
           u_years = priors$u_years,
           b_ref_type = priors$b_ref_type,
-          shape_prior = 1.01,
+          shape_prior_source = priors$shape_prior_source,
           u_cv = priors$u_cv)
 
       if (all(is.na(driors$index)) & (length(driors$u) == 1)) {

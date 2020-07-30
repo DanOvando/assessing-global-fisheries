@@ -34,19 +34,16 @@ sraplus::get_tmb_model()
 
 min_years_catch <- 20
 
-crazy_b <- 4 # threshold for suspect B/Bmsy value
+crazy_b <- 5 # threshold for suspect B/Bmsy value
 
-crazy_u <- 5 # threshold for suspect U/Umsy value
+crazy_u <- 8 # threshold for suspect U/Umsy value
 
-draws <- 2500
+draws <- 3000
 
 min_draws <- 2000 # minimum number of unique SIR draws
 
 n_cores <- 3
 # number of cores for parallel processing
-
-future::plan(multiprocess, workers = n_cores)
-
 
 # options(mc.cores = 1)
 
@@ -54,35 +51,41 @@ results_name <- "v0.5"
 
 
 results_description <-
-  "publication version of results updated VOI from version 0.5 "
+  "publication version of results"
 
-run_voi_models <- FALSE
+run_voi_models <- TRUE
 # sub options for run_voi_models
 fit_models <- FALSE
 
-write_results <- TRUE
+write_results <- FALSE
 
 process_fits <- FALSE
 
-# other things
+# other run options things
 
 run_continent_examples <- FALSE
 
 run_ei_example <- FALSE
 
-run_sofia_comparison <- TRUE
+run_sofia_comparison <- FALSE
 
-run_ram_tests <- TRUE
+run_ram_tests <- FALSE
 
-run_ram_comparison <- TRUE
-
-
+run_ram_comparison <- FALSE
 
 engine = "stan"
 
 catchability = 1e-2
 
-theme_set(theme_classic() + theme(strip.background = element_rect(color = "transparent")))
+pub_theme <- theme_ipsum(base_size = 10,
+                         axis_text_size = 10,
+                         axis_title_size = 12) +
+    theme(panel.spacing = unit(.5,"lines"))
+
+theme_set(pub_theme)
+
+
+# theme_set(theme_classic() + theme(strip.background = element_rect(color = "transparent")))
 # data(Return)
 
 # return is from here, WARNING, changes rapidly, things break check and make sure this isn't why
@@ -122,6 +125,8 @@ has_total_biomass = ram_data %>%
   summarise(hastb = !any(is.na(total_biomass)),
             hasb = !any(is.na(b_v_bmsy))) %>%
   filter(hastb & hasb)
+
+og_ram_data <- ram_data
 
 ram_data <- ram_data %>%
   filter(stockid %in% has_total_biomass$stockid) %>%
@@ -163,6 +168,7 @@ if (run_voi_models == TRUE) {
     b_ref_type = sample(c("k", "b"),  draws, replace = TRUE),
     f_ref_type = sample(c("f", "fmsy"),  draws, replace = TRUE),
     estimate_shape = sample(c(FALSE, TRUE), draws, replace = TRUE),
+    shape_prior_source = sample(c("thorson", "fishlife"), draws, replace = TRUE),
     estimate_proc_error = sample(c(FALSE, TRUE), draws, replace = TRUE)
   ) %>%
     mutate(error_cv = map_dbl(error_cv, ~ ifelse(.x == 0, 1e-6, runif(1, 0.05, 0.2)))) %>%
@@ -221,7 +227,8 @@ if (run_voi_models == TRUE) {
           f_ref_type = f_ref_type,
           index_window = index_window,
           index_freq = index_freq,
-          u_window = u_window
+          u_window = u_window,
+          shape_prior_source = shape_prior_source
         ),
         generate_priors,
         q = catchability
@@ -235,7 +242,10 @@ if (run_voi_models == TRUE) {
     
     # sra_model <-
     #   rstan::stan_model(file = here::here("src", "biosra.stan"))
-    #
+    
+    future::plan(multiprocess, workers = n_cores)
+    
+    
     ram_fits <- ram_fits %>%
       # filter(initial_state_type == "unfished",
       #        u_window == "snapshot",
@@ -247,7 +257,7 @@ if (run_voi_models == TRUE) {
       #        index_window == 1) %>%
       # mutate(sciname = map_chr(data,~unique(.x$"scientificname"))) %>%
       # filter(sciname == "Ophiodon elongatus") %>%
-      # sample_n(20) %>%
+      # sample_n(4) %>%
     # slice(6) %>%
     mutate(
       fits = future_pmap(
@@ -353,8 +363,7 @@ if (run_voi_models == TRUE) {
   }
   
   # assess performance ------------------------------------------------------
-  
-  
+
   fit_failed <-
     !(ram_fits$fits %>% map("error") %>% map_lgl(is.null))
   
@@ -418,37 +427,27 @@ if (run_voi_models == TRUE) {
   
   fits$u_window <- forcats::fct_relevel(fits$u_window, "none")
   
-  
-  wtf <- fits %>%
-    filter(
-      use_terminal_state == TRUE,
-      metric == "b_v_bmsy",
-      b_ref_type == "b",
-      error_cv == min(error_cv),
-      use_index == FALSE
-    ) %>%
-    arrange(desc(rmse))
-  
-  View(wtf)
+
+  # View(wtf)
   
   i <- 2
   
-  huh <-
-    read_rds(file.path(
-      results_path,
-      "experiments",
-      paste0("experiment-", wtf$experiment[i], ".rds")
-    ))
+  # huh <-
+  #   read_rds(file.path(
+  #     results_path,
+  #     "experiments",
+  #     paste0("experiment-", wtf$experiment[i], ".rds")
+  #   ))
+  # 
+  # driors <-
+  #   ram_fits$priors[ram_fits$experiment == wtf$experiment[i]][[1]]
+  # 
+  # data <-
+  #   ram_fits$data[ram_fits$experiment == wtf$experiment[i]][[1]]
+  # 
+  # plot_sraplus(huh$sirplus)
   
-  driors <-
-    ram_fits$priors[ram_fits$experiment == wtf$experiment[i]][[1]]
-  
-  data <-
-    ram_fits$data[ram_fits$experiment == wtf$experiment[i]][[1]]
-  
-  plot_sraplus(huh$sirplus)
-  
-  plot_prior_posterior(huh$sraplus, driors)
+  # plot_prior_posterior(huh$sraplus, driors)
   
   
   # plot diagnostics --------------------------------------------------------
@@ -486,22 +485,6 @@ if (run_voi_models == TRUE) {
     geom_smooth(method = 'lm', aes(fill = fit_name)) +
     facet_wrap(use_index ~ metric)
   
-  obs_v_pred_plot <- noerror_data %>%
-    filter(metric == "depletion") %>%
-    ggplot(aes(observed, predicted, color = fit_name)) +
-    geom_point(alpha = 0.5) +
-    geom_abline(aes(slope = 1, intercept = 0), linetype = 2) +
-    geom_smooth(method = 'lm', aes(fill = fit_name)) +
-    facet_wrap(use_index ~ metric)
-  
-  
-  
-  overall_rmse_plot <- noerror_data %>%
-    filter(is.finite(rmse)) %>%
-    ggplot(aes(rmse, metric, fill = fit_name)) +
-    geom_density_ridges(alpha = 0.5) +
-    scale_x_continuous(limits = c(0, 2))
-  
   
   overall_rmse_plot <- noerror_data %>%
     filter(is.finite(rmse)) %>%
@@ -529,7 +512,7 @@ if (run_voi_models == TRUE) {
     geom_density_ridges(alpha = 0.5) +
     scale_x_continuous(limits = c(-1, 1)) +
     facet_wrap( ~ metric)
-  
+
   
   rmse_plot <- noerror_data %>%
     ggplot(aes(rmse, fit_name, fill = 0.5 - abs(0.5 - ..ecdf..))) +
@@ -539,28 +522,6 @@ if (run_voi_models == TRUE) {
     scale_fill_viridis(name = "Tail probability", direction = -1) +
     scale_x_continuous(limit = c(0, 1)) +
     facet_wrap(~ metric)
-  
-  
-  # conditional on the same data, how well does it perform?
-  
-  # cmsy_b_voi_fit <-
-  #   rstanarm::stan_glm(
-  #     log(rmse) ~  use_u_priors + use_initial_state + stockid,
-  #     data = noerror_data %>% filter(metric == "b_v_bmsy", fit_name == "cmsy"),
-  #     cores = 4
-  #   )
-  #
-  # #
-  # cmsy_b_voi_plot <- bayesplot::mcmc_areas(
-  #   as.array(cmsy_b_voi_fit),
-  #   regex_pars = c("index", "effort", "terminal", "initial", "fit_"),
-  #   prob = 0.8,
-  #   # 80% intervals
-  #   prob_outer = 0.9,
-  #   # 99%
-  #   point_est = "mean"
-  # ) +
-  #   scale_x_percent(name = "Change in RMSE")
   
   # value of information analyses
   
@@ -572,7 +533,7 @@ if (run_voi_models == TRUE) {
     scale_x_continuous(limits = c(0, .5)) +
     scale_y_continuous(limits = c(-.5, .5))  +
     scale_fill_viridis(option = "A")
-  
+
   b_rmse_fit <-
     rstanarm::stan_glmer(
       log(rmse) ~ fit_name + (1 | stockid),
@@ -595,21 +556,20 @@ if (run_voi_models == TRUE) {
   
   
   
-  # value of information
+  # value of information regressions
   
   b_voi_fit <-
     rstanarm::stan_glmer(
-      rmse ~  initial_state_type  + use_index * u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
-                                                                                                                          stockid),
-      data = voi_data %>% filter(metric == "b_v_bmsy"),
+      rmse ~  initial_state_type  + use_index +  u_window + estimate_shape + estimate_proc_error + use_terminal_state + shape_prior_source + (1 |
+                                                                                                                                                stockid),
+      data = noerror_data %>% filter(metric == "b_v_bmsy"),
       cores = 4,
       family = Gamma(link = "log")
     )
   
-  
   b_voi_plot <- bayesplot::mcmc_areas(
     as.array(b_voi_fit),
-    regex_pars = c("use", "state", "estimate", "index", "u_"),
+    regex_pars = c("use", "state", "estimate", "index", "u_","prior_"),
     prob = 0.8,
     # 80% intervals
     prob_outer = 0.95,
@@ -622,7 +582,7 @@ if (run_voi_models == TRUE) {
   
   u_voi_fit <-
     rstanarm::stan_glmer(
-      rmse ~  initial_state_type  + use_index * u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
+      rmse ~  initial_state_type  + use_index + u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
                                                                                                                           stockid),
       data = voi_data %>% filter(metric == "u_v_umsy", is.finite(rmse)),
       cores = 4,
@@ -646,8 +606,9 @@ if (run_voi_models == TRUE) {
   
   index_voi_fit <-
     rstanarm::stan_glmer(
-      rmse ~  factor(index_freq) + factor(index_window) + (1 | stockid),
-      data = voi_data %>% filter(metric == "b_v_bmsy", use_index == TRUE),
+      rmse ~  factor(index_freq) + factor(index_window) + index_rmse + (1 |
+                                                                          stockid),
+      data = voi_data %>% filter(metric == "b_v_bmsy", use_index == TRUE, error_cv > min(error_cv)) %>% mutate(index_rmse = scale(index_rmse)),
       family = Gamma(link = "log"),
       cores = 4
     )
@@ -655,7 +616,7 @@ if (run_voi_models == TRUE) {
   
   index_voi_plot <- bayesplot::mcmc_areas(
     as.array(index_voi_fit),
-    regex_pars = c("freq", "window"),
+    regex_pars = c("freq", "window","index"),
     prob = 0.8,
     # 80% intervals
     prob_outer = 0.95,
@@ -667,7 +628,6 @@ if (run_voi_models == TRUE) {
     scale_x_percent(name = "% Change in RMSE")
   
   
-  
   # effect on accuracy
   
   acc_data <- voi_data %>%
@@ -677,7 +637,7 @@ if (run_voi_models == TRUE) {
   
   acc_voi_fit <-
     rstanarm::stan_glmer(
-      bin_acc ~  initial_state_type  + use_index * u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
+      bin_acc ~  initial_state_type  + use_index + u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
                                                                                                                              stockid),
       data = acc_data,
       cores = 4,
@@ -750,60 +710,7 @@ if (run_voi_models == TRUE) {
   save(list = flist,
        file = file.path(results_path, "voi_fits.RData"))
   
-  # voi_data %>%
-  #   ggplot(aes((index_rmse), (rmse))) +
-  #   geom_point() +
-  #   scale_y_continuous(limits = c(0, 1)) +
-  #   scale_x_continuous(limits = c(0, 1)) +
-  #   geom_smooth(method = "lm") +
-  #   facet_grid(index_window ~ index_freq)
-  #
-  # voi_data %>%
-  #   ggplot(aes(log(u_rmse), log(rmse))) +
-  #   geom_point() +
-  #   scale_y_continuous(limits = c(0, 1)) +
-  #   geom_smooth(method = "lm")
-  #
-  # voi_data %>%
-  #   ggplot(aes(log(terminal_b_rmse), log(rmse))) +
-  #   geom_point() +
-  #   scale_y_continuous(limits = c(0, 1)) +
-  #   geom_smooth(method = "lm")
-  #
-  #
-  # voi_data %>%
-  #   ggplot(aes(rmse, y = index_window, group = index_window)) +
-  #   geom_density_ridges() +
-  #   scale_x_continuous(limits = c(0, 1))
-  #
-  #
-  # voi_data %>%
-  #   ggplot(aes(rmse, y = index_freq, group = index_freq)) +
-  #   geom_density_ridges() +
-  #   scale_x_continuous(limits = c(0, 1))
-  #
-  #
-  # sofiaplus_plots <- ls()[str_detect(ls(), "_plot")]
-  #
-  # sofiaplus_fits <- ls()[str_detect(ls(), "_fit")]
-  #
-  # saveRDS(fits,
-  #         file = here::here("results", results_name, "sofiaplus_fits.rds"))
-  #
-  # saveRDS(ram_fits,
-  #         file = here::here("results", results_name, "sofiaplus_rawfits.rds"))
-  #
-  #
-  # save(
-  #   list = sofiaplus_plots,
-  #   file = here::here("results", results_name, "sofiaplus_plots.Rdata")
-  # )
-  #
-  # save(
-  #   list = sofiaplus_fits,
-  #   file = here::here("results", results_name, "sofiaplus_fits.Rdata")
-  # )
-  
+ 
   
 } # close fit voi models
 
@@ -979,16 +886,21 @@ continent_kobe_plot <- a %>%
          continent,
          lifetime_catch) %>%
   spread(variable, mean) %>%
-  ggplot(aes(pmin(4, b_div_bmsy), pmin(4, u_div_umsy), color = continent)) +
+  ggplot() +
   geom_hline(aes(yintercept = 1), linetype = 2) +
   geom_vline(aes(xintercept = 1), linetype = 2) +
-  geom_density2d(alpha = 0.5) +
-  # geom_hex(binwidth = c(0.25,0.25)) +
-  geom_point(aes(size = lifetime_catch),
+  geom_hline(aes(yintercept = 0), linetype = 1) +
+  geom_vline(aes(xintercept = 0), linetype = 1) +
+  # geom_density2d(alpha = 0.5) +
+  geom_hex(aes(pmin(4, b_div_bmsy), pmin(4, u_div_umsy)), binwidth = c(0.5,.5), show.legend = FALSE, alpha = 0.9) +
+  geom_point(aes(pmin(4, b_div_bmsy), pmin(4, u_div_umsy), color = continent,size = lifetime_catch),
+             alpha = 0.5,
              show.legend = FALSE) +
-  scale_x_continuous(limits = c(0, 4), name = "B/Bmsy") +
-  scale_y_continuous(limits = c(0, 4), name = "U/Umsy") +
+  scale_size(range = c(2,7)) +
+  scale_x_continuous(limits = c(-.1, 4), name = "B/Bmsy") +
+  scale_y_continuous(limits = c(-.1, 4), name = "U/Umsy") +
   facet_grid(continent ~ data) +
+  scale_fill_continuous(low = "gainsboro", high = "black") +
   ggsci::scale_color_d3(name = "Region") +
   guides(size = FALSE)
 
@@ -1116,25 +1028,26 @@ ei_kobe_plot <- a %>%
   select(scientific_name, year, variable, mean, data) %>%
   spread(variable, mean) %>%
   ggplot(aes(pmin(2, b_div_bmsy), pmin(4, u_div_umsy))) +
+  geom_hline(aes(yintercept = 0), linetype = 1) +
+  geom_vline(aes(xintercept = 0), linetype = 1) +
   geom_hline(aes(yintercept = 1), linetype = 2) +
   geom_vline(aes(xintercept = 1), linetype = 2) +
-  geom_density2d() +
-  # geom_hex(binwidth = c(0.25,0.25)) +
+  geom_hex(binwidth = c(0.5,0.5), alpha = 0.9, show.legend = FALSE) +
   geom_point(
     show.legend = FALSE,
-    size = 3,
-    fill = "grey",
+    size = 4,
     alpha = 0.5
   ) +
-  scale_x_continuous(limits = c(0, 2), name = "B/Bmsy") +
-  scale_y_continuous(limits = c(0, 4), name = "U/Umsy") +
+  scale_x_continuous(limits = c(-.1, 2), name = "B/Bmsy") +
+  scale_y_continuous(limits = c(-.1, 4), name = "U/Umsy") +
+  scale_fill_continuous(low = "gainsboro", high = "black") +
   facet_wrap( ~ data)
 
 ei_kobe_plot
 
 
 
-eu_cpue_plot <- ei_cpue %>%
+ei_cpue_plot <- ei_cpue %>%
   ggplot(aes(year, cpue)) +
   geom_line(size = 2) +
   labs(x = "Year", y = "CPUE (kg/hour)")
@@ -1746,31 +1659,37 @@ temp <- faofits %>%
   mutate(data = case_when(data == "u_umsy" ~ "ram_u_umsy", TRUE ~ data)) %>%
   mutate(data = fct_reorder(data, pn))
 
-# temp$pn[temp$fao_region_name == "Pacific, Northeast" & temp$bin == "over" & temp$data == "FAO Report 569"] <- 0.09
+fao_status_data2 <- fao_status %>%
+  mutate(
+    bin = dplyr::case_when(
+      status == "F" ~ "fully",
+      status == "U" ~ "under",
+      status == "O" ~ "over",
+      TRUE ~ "unknown"
+    )
+  ) %>%
+  mutate(data = "FAO Report 569",
+         mean = rep(1, nrow(.))) 
+
+faofits2 <- fao_status_fits %>%
+  select(-data) %>%
+  unnest(cols = fits) %>%
+  filter(variable == "b_div_bmsy") %>%
+  mutate(bin = cut(mean, breaks = breaks, labels = labels)) %>%
+  separate(stockid, c("name", "speciesgroup", "area"), sep = '_', remove = FALSE) %>%
+  mutate(fao_area_code = as.numeric(area))
 
 
-fao_status_plot <- temp %>%
-  ggplot(aes(data, pn, fill = fao_region_name)) +
-  geom_col(
-    size = 1,
-    alpha = 1,
-    size = 1,
-    show.legend = FALSE,
-    color = "black"
-  ) +
-  coord_flip() +
-  facet_grid(fao_region_name ~ .) +
-  theme_minimal() +
-  scale_y_continuous(
-    breaks = seq(0, 1, by = 0.25),
-    labels = paste0(seq(0, 100, by = 25), "%"),
-    name = "Percent of Stocks Overfished"
-  ) +
-  theme(axis.text.x = element_text(size = 8),
-        axis.title.y = element_blank()) +
-  scale_fill_discrete(name = "FAO Category")
+fao_sraplus_comp_data <-  faofits2 %>%
+  group_by(name, area) %>%
+  filter(year == max(year)) %>%
+  ungroup() %>%
+  left_join(
+    fao_status_data2 %>% rename(fao_bin = bin) %>% select(stockid, year, fao_bin),
+    by = c("stockid", "year")
+  ) %>%
+  mutate(correct = bin == fao_bin)
 
-fao_status_plot
 
 
 if (!dir.exists(here("data", "FAO_AREAS_NOCOASTLINE"))) {
@@ -1783,6 +1702,12 @@ if (!dir.exists(here("data", "FAO_AREAS_NOCOASTLINE"))) {
   )
   
 }
+
+write_rds(fao_sraplus_comp_data, file.path(results_path, "fao_sraplus_comp_data.rds"))
+
+fao_sraplus_acc <- fao_sraplus_comp_data %>% 
+  group_by(data, fao_area_code) %>% 
+  summarise(accuracy = mean(correct, na.rm = TRUE))
 
 fao_areas <- sf::st_read(here('data', "FAO_AREAS_NOCOASTLINE")) %>%
   janitor::clean_names()
@@ -1800,343 +1725,49 @@ fao_areas = fao_areas %>%
   sf::st_simplify() %>%
   mutate(fao_area_code = as.numeric(f_area))
 
-fao_area_status <- fao_areas %>%
-  left_join(temp %>% mutate(f_area = as.character(fao_area_code)), by = "f_area") %>%
+
+fao_area_accuracy <- fao_areas %>%
+  left_join(fao_sraplus_acc %>% mutate(f_area = as.character(fao_area_code)), by = "f_area") %>%
   filter(!is.na(data))
 
 
+# world_map <-
+#   rnaturalearth::ne_countries(returnclass = "sf", scale = "small")
+
 world_map <-
-  rnaturalearth::ne_countries(returnclass = "sf", scale = "small") #%>%
-# sf::st_union() %>%
-# sf::st_polygonize()
+  rnaturalearth::ne_download(
+    scale = 50,
+    type = 'land',
+    category = 'physical',
+    returnclass = "sf"
+  )
 
-
-
-po_map_plot <- fao_area_status %>%
+fao_acc_map_plot <- fao_area_accuracy %>%
   filter(!is.na(data)) %>%
+  mutate(data = fct_reorder(data, -accuracy, .fun = mean)) %>% 
   ggplot() +
-  geom_sf(aes(fill = pn)) +
+  geom_sf(aes(fill = accuracy), size = .5) +
   geom_sf(
     data = world_map,
-    fill = "lightgrey",
+    fill = "darkgrey",
     color = "black",
     size = 0.05
   ) +
-  facet_wrap( ~ data) +
-  scale_fill_viridis_b(
-    option = "magma",
+  facet_wrap(~ data) +
+  scale_fill_viridis(
+    limits = c(0,1),
+    breaks = c(0,.33, .66,1),
+    name = "Accuracy",
     labels = percent,
-    name = "% Overfished",
-    guide = guide_coloursteps(
-      barwidth = ggplot2::unit(8, "lines"),
-      reverse = FALSE,
-      axis.colour = "white",
+    guide = guide_colorbar(
+      barwidth = ggplot2::unit(9, "lines"),
       axis.linewidth = 1,
-      show.limits = TRUE
-    )
-  ) +
-  ggthemes::theme_base() +
+      ticks.colour = "white",
+      frame.colour = "black"
+    )) +
   theme(legend.position = "top",
-        panel.background = element_rect(fill = "white"))
-
-po_map_plot
-
-ggsave("percent_overfished_by_region.pdf", po_map_plot)
-
-ram_catches <- ram_data %>%
-  select(scientificname, catch, year, primary_country, primary_FAOarea) %>%
-  mutate(fao_area_code = as.numeric(primary_FAOarea)) %>%
-  group_by(year, scientificname, fao_area_code) %>%
-  summarise(total_catch = sum(catch, na.rm = TRUE)) %>%
-  rename(scientific_name = scientificname) %>%
-  ungroup() %>%
-  mutate(combo = paste(scientific_name, fao_area_code, sep = '_'),
-         data = "RAM")
-
-fao_catches <- fao_status %>%
-  select(year, scientific_name, fao_area_code, catch) %>%
-  group_by(year, scientific_name, fao_area_code) %>%
-  summarise(total_catch = sum(catch, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(combo = paste(scientific_name, fao_area_code, sep = '_'),
-         data = "FAO") %>%
-  filter(combo %in% unique(ram_catches$combo))
-
-fao_ram_catches <- ram_catches %>%
-  bind_rows(fao_catches)  %>%
-  group_by(scientific_name, fao_area_code, data) %>%
-  mutate(scatch = as.numeric(scale(total_catch))) %>%
-  ungroup()
-
-
-
-fao_ram_catches %>%
-  ggplot(aes(
-    year,
-    scatch,
-    color = data,
-    group = interaction(data, scientific_name)
-  )) +
-  geom_line(alpha = 0.5) +
-  facet_wrap( ~ fao_area_code)
-
-
-fao_ram_catches %>%
-  select(-total_catch) %>%
-  pivot_wider(names_from = data, values_from = scatch) %>%
-  ggplot(aes(RAM, FAO)) +
-  geom_point(alpha = 0.5) +
-  geom_abline(slopee = 1, intercept = 0) +
-  facet_wrap( ~ fao_area_code)
-
-
-a = fao_ram_catches %>%
-  select(-total_catch) %>%
-  pivot_wider(names_from = data, values_from = scatch) %>%
-  filter(!is.na(FAO)) %>%
-  select(RAM, FAO)
-
-
-
-
-
-
-
-ram_status <- ram_data %>%
-  select(scientificname,
-         b_v_bmsy,
-         year,
-         primary_country,
-         primary_FAOarea) %>%
-  mutate(fao_area_code = as.numeric(primary_FAOarea)) %>%
-  group_by(year, scientificname, fao_area_code) %>%
-  summarise(mean_b = mean(b_v_bmsy, na.rm = TRUE)) %>%
-  left_join(fao_regions_key, by = c("fao_area_code" = "fao_region_num")) %>%
-  ungroup() %>%
-  filter(!is.na(mean_b)) %>%
-  rename(scientific_name = scientificname) %>%
-  mutate(combo = paste(scientific_name, fao_area_code, sep = '_'),
-         data = "RAM")
-
-
-rng_status <- ram_status %>%
-  mutate(mean_b = runif(n(), 0, 2.5),
-         data = "rng")
-
-eo_status <- ram_status %>%
-  mutate(mean_b = sample(c(1.5, .5), n(), replace = TRUE),
-         data = "either or")
-
-
-
-ram_status %>%
-  group_by(year, fao_area_code) %>%
-  summarise(
-    mmb = mean(mean_b),
-    po = mean(mean_b < 0.8),
-    n = n_distinct(scientific_name)
-  ) %>%
-  ggplot(aes(year, po)) +
-  geom_line() +
-  facet_wrap( ~ fao_area_code)
-
-
-
-ram_status %>%
-  group_by(fao_area_code, scientific_name) %>%
-  filter(year == max(year)) %>%
-  group_by(fao_area_code) %>%
-  summarise(
-    mmb = mean(mean_b),
-    po = mean(mean_b < 0.8),
-    n = n_distinct(scientific_name)
-  ) %>%
-  ggplot(aes(factor(fao_area_code), po, fill = mmb)) +
-  geom_col()
-
-
-
-ram_fao_status <- faofits %>%
-  left_join(fao_names, by = c("name" = "common_name")) %>%
-  mutate(combo = paste(scientific_name, fao_area_code, sep = '_')) %>%
-  filter(combo %in% unique(ram_status$combo)) %>%
-  rename(mean_b = mean) %>%
-  select(scientific_name, fao_area_code, year, data,  mean_b) %>%
-  bind_rows(ram_status %>% select(scientific_name, fao_area_code, year, data, mean_b)) %>%
-  bind_rows(rng_status %>% select(scientific_name, fao_area_code, year, data, mean_b)) %>%
-  bind_rows(eo_status %>% select(scientific_name, fao_area_code, year, data, mean_b)) %>%
-  mutate(bin = cut(mean_b, breaks = breaks, labels = labels)) %>%
-  group_by(fao_area_code, scientific_name) %>%
-  mutate(max_ram_year = max(year[data == "RAM"])) %>%
-  ungroup() %>%
-  filter(year == max_ram_year) %>% # filter to the most recent year that RAM is available for
-  ungroup()
-
-
-
-ram_fao_status_bins <- ram_fao_status %>%
-  group_by(fao_area_code, data, bin) %>%
-  count() %>%
-  group_by(data, fao_area_code) %>%
-  mutate(pn = n / sum(n)) %>%
-  ungroup() %>%
-  tidyr::complete(bin, nesting(fao_area_code, data),
-                  fill = list(n = 0, pn = 0)) %>%
-  mutate(data = case_when(data == "u_umsy" ~ "ram_u_umsy", TRUE ~ data)) %>%
-  mutate(data = fct_reorder(data, pn))
-
-
-ram_v_sraplus_map <- fao_areas %>%
-  left_join(ram_fao_status_bins, by = "fao_area_code")
-
-ram_v_sraplus_map_plot <- ram_v_sraplus_map %>%
-  filter(bin == "over") %>%
-  ggplot() +
-  geom_sf(aes(fill = pn)) +
-  geom_sf(
-    data = world_map,
-    fill = "lightgrey",
-    color = "black",
-    size = 0.05
-  ) +
-  facet_wrap( ~ data) +
-  scale_fill_viridis_b(
-    option = "magma",
-    labels = percent,
-    name = "% Overfished",
-    guide = guide_coloursteps(
-      barwidth = ggplot2::unit(8, "lines"),
-      reverse = FALSE,
-      axis.colour = "white",
-      axis.linewidth = 1,
-      show.limits = TRUE
-    )
-  ) +
-  ggthemes::theme_base() +
-  theme(legend.position = "top",
-        panel.background = element_rect(fill = "white"))
-
-ram_v_sraplus_map_plot
-
-# now do some accuracy and RMSE calculations
-
-faofits %>%
-  ggplot(aes(year, pmin(2.5, mean), group = name)) +
-  geom_line() +
-  facet_grid(area ~ data, scales = "free_y")
-
-
-ram_status %>%
-  ggplot(aes(year, pmin(2.5, mean_b), group = scientific_name)) +
-  geom_line(alpha = 0.5) +
-  facet_wrap( ~ fao_area_code, scales = "free_y")
-
-ram_v_sraplus_acc <- ram_fao_status %>%
-  ungroup() %>%
-  select(-year, -max_ram_year, -mean_b) %>%
-  pivot_wider(names_from = data, values_from = bin) %>%
-  pivot_longer(
-    c(-scientific_name, -fao_area_code, -RAM),
-    names_to = "data",
-    values_to = "bin"
-  ) %>%
-  mutate(correct = bin == RAM)
-
-ram_v_sraplus_acc_plot <- ram_v_sraplus_acc %>%
-  group_by(data) %>%
-  summarise(accuracy = mean(correct, na.rm = TRUE)) %>%
-  ggplot(aes(reorder(data,-accuracy), accuracy)) +
-  geom_col() +
-  scale_x_discrete(name = "Data Source") +
-  scale_y_continuous(labels = label_percent(accuracy = 1), name = "Accuracy")
-
-
-ram_v_sraplus_rmse <- ram_fao_status %>%
-  ungroup() %>%
-  select(-year, -max_ram_year, -bin) %>%
-  pivot_wider(names_from = data, values_from = mean_b) %>%
-  pivot_longer(
-    c(-scientific_name, -fao_area_code, -RAM),
-    names_to = "data",
-    values_to = "mean_b"
-  ) %>%
-  mutate(se = (RAM - mean_b) ^ 2)
-
-
-
-ram_v_sraplus_rmse %>%
-  ggplot(aes(RAM, pmin(2.5, mean_b), color = data)) +
-  geom_point() +
-  facet_wrap( ~ data, scales = "free_y")
-
-ram_v_sraplus_rmse_plot <- ram_v_sraplus_rmse %>%
-  group_by(data) %>%
-  summarise(rmse = sqrt(mean(se, na.rm = TRUE)),
-            r2 = yardstick::rsq_vec(RAM, mean_b)) %>%
-  ggplot(aes(reorder(data, rmse), rmse)) +
-  geom_col() +
-  scale_x_discrete(name = "Data Source") +
-  scale_y_continuous(name = "Root Mean Squared Error")
-
-ram_v_sraplus_r2_plot <- ram_v_sraplus_rmse %>%
-  group_by(data) %>%
-  summarise(rmse = sqrt(mean(se, na.rm = TRUE)),
-            r2 = yardstick::rsq_vec(RAM, mean_b)) %>%
-  ggplot(aes(reorder(data,-r2), r2)) +
-  geom_col() +
-  scale_x_discrete(name = "Data Source") +
-  scale_y_continuous(name = "R Squared")
-
-
-ram_v_sraplus_fao_acc <- ram_v_sraplus_acc %>%
-  group_by(fao_area_code, data) %>%
-  summarise(acc = mean(correct, na.rm = TRUE)) %>%
-  ungroup()
-
-ram_v_sraplus_acc_map <- fao_areas %>%
-  left_join(ram_v_sraplus_fao_acc, by = "fao_area_code")
-
-ram_v_sraplus_acc_map_plot <- ram_v_sraplus_acc_map %>%
-  ggplot() +
-  geom_sf(aes(fill = acc)) +
-  geom_sf(
-    data = world_map,
-    fill = "lightgrey",
-    color = "black",
-    size = 0.05
-  ) +
-  facet_wrap( ~ data) +
-  ggthemes::theme_base() +
-  theme(legend.position = "top",
-        panel.background = element_rect(fill = "white"))
-
-ram_v_sraplus_acc_map_plot
-
-
-ram_v_sraplus_fao_rmse <- ram_v_sraplus_rmse %>%
-  group_by(fao_area_code, data) %>%
-  summarise(rmse = sqrt(mean(se, na.rm = TRUE))) %>%
-  ungroup()
-
-ram_v_sraplus_rmse_map <- fao_areas %>%
-  left_join(ram_v_sraplus_fao_rmse, by = "fao_area_code")
-
-ram_v_sraplus_rmse_map_plot <- ram_v_sraplus_rmse_map %>%
-  ggplot() +
-  geom_sf(aes(fill = pmin(2, rmse))) +
-  geom_sf(
-    data = world_map,
-    fill = "lightgrey",
-    color = "black",
-    size = 0.05
-  ) +
-  facet_wrap( ~ data) +
-  ggthemes::theme_base() +
-  theme(legend.position = "top",
-        panel.background = element_rect(fill = "white"))
-
-ram_v_sraplus_rmse_map_plot
-
+        legend.direction = "horizontal",
+        panel.background = element_rect(fill = "lightgrey"))
 
 
 # run RAM tests ------------------------------------------------------
@@ -2229,151 +1860,159 @@ if (run_ram_tests) {
   write_rds(ram_fit_data, path = file.path(results_path,"ram_tests.rds"))
   
   
-  i <- 8
+ 
   
-  sraplus::plot_prior_posterior(ram_fit_data$fit[[i]]$fit, ram_fit_data$fit[[i]]$driors)
   
-
-  compare_to_ram <- function(data, fit){
-    
-    # data <- ram_fit_data$data[[1]]
-    # 
-    # fit <- ram_fit_data$fit[[1]]
-    
-    comparison <- tibble(observed = data$b_v_bmsy) %>% 
-      bind_cols(fit$fit$results[fit$fit$results$variable == "b_div_bmsy",])
-    
-  }
+} else {
   
-  ram_comparison <- map2_df(ram_fit_data$data, ram_fit_data$fit, compare_to_ram,.id = "stock")
-  
-  ram_comparison %>% 
-    ggplot(aes(observed, mean, color = stock)) + 
-    geom_point(show.legend = FALSE, alpha = 0.5) + 
-    geom_abline(slope = 1, intercept = 0)
-  
-  ram_comparison %>% 
-    ggplot(aes(observed, mean)) + 
-    geom_bin2d(show.legend = TRUE, alpha = 0.5) + 
-    geom_abline(slope = 1, intercept = 0)
-
+  ram_fit_tests <-   read_rds(path = file.path(results_path,"ram_tests.rds"))
   
   
 }
 
+
+i <- 8
+
+sraplus::plot_prior_posterior(ram_fit_tests$fit[[i]]$fit, ram_fit_tests$fit[[i]]$driors)
+
+
+compare_to_ram <- function(data, fit){
+  
+  # data <- ram_fit_data$data[[1]]
+  # 
+  # fit <- ram_fit_data$fit[[1]]
+  
+  comparison <- tibble(observed = data$b_v_bmsy) %>% 
+    bind_cols(fit$fit$results[fit$fit$results$variable == "b_div_bmsy",])
+  
+}
+
+ram_test_comparison <- map2_df(ram_fit_tests$data, ram_fit_tests$fit, compare_to_ram,.id = "stock")
+
+ram_test_comparison %>% 
+  ggplot(aes(observed, mean, color = stock)) + 
+  geom_point(show.legend = FALSE, alpha = 0.5) + 
+  geom_abline(slope = 1, intercept = 0)
+
+ram_test_comparison %>% 
+  ggplot(aes(observed, mean)) + 
+  geom_hex(show.legend = TRUE, alpha = 0.5, binwidth = c(0.25, 0.25)) + 
+  geom_abline(slope = 1, intercept = 0) + 
+  scale_fill_gradient(low = "lightgrey", high = "tomato")
+
+
 # run RAM comparison  -----------------------------------------------------------
 
+ram_comp_data <- og_ram_data %>%
+  mutate(has_things = !(is.na(catch) | catch == 0)) %>%
+  filter(has_things) %>%
+  group_by(stockid) %>%
+  mutate(delta_year = as.integer(year - lag(year))) %>%
+  mutate(delta_year = case_when(year == min(year) ~ as.integer(1),
+                                TRUE ~ delta_year)) %>%
+  mutate(missing_gaps = any(delta_year > 1)) %>%
+  filter(missing_gaps == FALSE) %>%
+  group_by(stockid) %>%
+  mutate(n = length(catch)) %>%
+  filter(n >= min_years_catch) %>%
+  ungroup()
+
+ram_comp_data <- ram_comp_data %>%
+  select(
+    year,
+    stockid,
+    country,
+    primary_FAOarea,
+    scientificname,
+    commonname,
+    year,
+    catch,
+    b_v_bmsy,
+    u_v_umsy,
+    total_biomass
+  ) %>%
+  rename(scientific_name = scientificname) %>% 
+  mutate(fao_area_code = as.numeric(primary_FAOarea)) %>% 
+  left_join(fao_species, by = "scientific_name")
+
+# join regional U/Umsy and SAR data
+ram_comp_data <- ram_comp_data %>%
+  left_join(fao_area_to_ram %>% select(-fao_area),
+            by = c("fao_area_code" = "area")) %>%
+  left_join(
+    state_space_results %>% filter(variable == "UvU"),
+    by = c("year", "state_space_region" = "region")
+  ) %>%
+  left_join(approx_sar_by_fao_region,
+            by = c("fao_area_code" = "fao_area_code")) %>%
+  rename(mean_u_umsy = dlm_geomean)
+
+# assign effort data to RAM
+
+temp_ram <- ram_comp_data %>%
+  group_by(stockid) %>%
+  nest() %>%
+  ungroup()
+
+assign_effort <-
+  function(ram_stock,
+           data,
+           effort,
+           fao_catch,
+           scalar = 1000) {
+    comm_name <- unique(data$commonname)
+    
+    isscp_number <- unique(data$isscaap_number)
+    
+    if (is.na(isscp_number)){
+      
+      isscp_number <- 33 
+    }
+    
+    fao_code <- unique(data$fao_area_code)
+    
+    fao_matches <- fao_catch %>% {
+      if (any(.$common_name == comm_name & .$fao_area_code == fao_code, na.rm = TRUE)) {
+        filter(., common_name == comm_name & fao_area_code == fao_code)
+ 
+      } else {
+        filter(.,
+               isscaap_number == isscp_number &
+                 fao_area_code == fao_code)
+        
+      }
+    }
+    matched_effort <- effort %>%
+      filter(area == fao_code) %>%
+      filter(country %in% unique(fao_matches$country)) %>%
+      group_by(year, area) %>%
+      summarise(effort_index = sum(effort_cell_reported_nom) / scalar,
+                .groups = "drop") %>%
+      ungroup()
+    
+    data <- data %>%
+      left_join(matched_effort, by = c("year", "fao_area_code" =  "area"))
+    
+    
+  }
 
 
-# re run, but with a pared down focus on area 67
+temp_ram <- temp_ram %>%
+  mutate(data = map2(
+    stockid,
+    data,
+    assign_effort,
+    fao_catch = fao,
+    effort = rous_data
+  ))
 
-# filter down to just species that have matches between FAO and ram by fao area
 
+ram_comp_data <- temp_ram %>%
+  unnest(cols = data)
 
 if (run_ram_comparison == TRUE) {
   
-  ram_comp_data <- ram_data %>%
-    select(
-      year,
-      stockid,
-      country,
-      primary_FAOarea,
-      scientificname,
-      commonname,
-      year,
-      catch,
-      b_v_bmsy,
-      u_v_umsy,
-      total_biomass
-    ) %>%
-    rename(scientific_name = scientificname) %>% 
-    mutate(fao_area_code = as.numeric(primary_FAOarea)) %>% 
-    left_join(fao_species, by = "scientific_name")
-  
-  # join regional U/Umsy and SAR data
-  ram_comp_data <- ram_comp_data %>%
-    left_join(fao_area_to_ram %>% select(-fao_area),
-              by = c("fao_area_code" = "area")) %>%
-    left_join(
-      state_space_results %>% filter(variable == "UvU"),
-      by = c("year", "state_space_region" = "region")
-    ) %>%
-    left_join(approx_sar_by_fao_region,
-              by = c("fao_area_code" = "fao_area_code")) %>%
-    rename(mean_u_umsy = dlm_geomean)
-
-  # assign effort data to RAM
-  
-  temp_ram <- ram_comp_data %>%
-    group_by(stockid) %>%
-    nest() %>%
-    ungroup()
-  
-  assign_effort <-
-    function(ram_stock,
-             data,
-             effort,
-             fao_catch,
-             scalar = 1000) {
-      # data <- temp_fao$data[[which(temp_fao$stockid == huh)]]
-      #
-      # fao_catch <- fao
-      #
-      # effort <- rous_data
-      #
-      # fao_stock <- temp_fao$stockid[which(temp_fao$stockid == huh)]
-      
-      comm_name <- unique(data$commonname)
-        
-      isscp_number <- unique(data$isscaap_number)
-
-      if (is.na(isscp_number)){
-       
-        isscp_number <- 33 
-      }
-      
-      fao_code <- unique(data$fao_area_code)
-
-      fao_matches <- fao_catch %>% {
-        if (any(.$common_name == comm_name & .$fao_area_code == fao_code, na.rm = TRUE)) {
-          filter(., common_name == comm_name & fao_area_code == fao_code)
-          # filter(fao, common_name == comm_name & fao_area_code == fao_code)
-          #
-          
-        } else {
-          filter(.,
-                 isscaap_number == isscp_number &
-                   fao_area_code == fao_code)
-          
-        }
-      }
-      matched_effort <- effort %>%
-        filter(area == fao_code) %>%
-        filter(country %in% unique(fao_matches$country)) %>%
-        group_by(year, area) %>%
-        summarise(effort_index = sum(effort_cell_reported_nom) / scalar,
-                  .groups = "drop") %>%
-        ungroup()
-      
-      data <- data %>%
-        left_join(matched_effort, by = c("year", "fao_area_code" =  "area"))
-      
-      
-    }
-  
-  
-  temp_ram <- temp_ram %>%
-    mutate(data = map2(
-      stockid,
-      data,
-      assign_effort,
-      fao_catch = fao,
-      effort = rous_data
-    ))
-  
-  
-  ram_comp_data <- temp_ram %>%
-    unnest(cols = data)
+ 
   
   rous_data %>% 
     group_by(year, area) %>% 
@@ -2397,7 +2036,7 @@ if (run_ram_comparison == TRUE) {
   future::plan(multisession, workers = n_cores)
   
   ram_status_fits <- ram_comp_data %>%
-    filter(fao_area_code %in% 67) %>%
+    # filter(fao_area_code %in% 67) %>%
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>% 
@@ -2423,12 +2062,6 @@ if (run_ram_comparison == TRUE) {
   
   check <- ram_status_fits$fits[[1]]$result
 
-  check %>%
-    filter(variable == "b_div_bmsy")  %>%
-    ggplot() +
-    geom_line(aes(year, mean, color = data)) +
-    geom_point(data = ram_status_fits$data[[1]], aes(year, b_v_bmsy))
-  #
   write_rds(ram_status_fits,
             path = file.path(results_path, "ram_status_fits.rds"))
   
@@ -2439,6 +2072,267 @@ if (run_ram_comparison == TRUE) {
   
 }
 
+# process ram status fits
+
+ram_fit_worked <- map_lgl(map(ram_status_fits$fits, "error"), is.null)
+
+
+ram_status_fits <- ram_status_fits %>% 
+  filter(ram_fit_worked) %>% 
+  mutate(fits = map(fits, "result"))
+
+
+compare_to_ram <- function(data, fit){
+  
+  bdat <- data %>% 
+    select(year, b_v_bmsy) %>% 
+    rename(ram_b_v_bmsy = b_v_bmsy )
+  
+  fit <- fit %>% 
+    filter(variable == "b_div_bmsy")
+  
+  comparison <- fit %>% 
+    left_join(bdat, by = "year")
+
+}
+
+ram_status_fits <- ram_status_fits %>% 
+  mutate(performance = map2(data, fits, compare_to_ram))
+
+ram_status_fits$performance[[24]] %>% 
+  ggplot() + 
+  geom_line(aes(year, mean, color = data)) + 
+  geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) + 
+  facet_wrap(~data) + 
+  scale_x_continuous(name = "B/Bmsy") +
+  labs(title = ram_status_fits$stockid[[1]])
+
+assess_ram_fits <- ram_status_fits %>% 
+  select(stockid, performance) %>% 
+  unnest(cols = performance) %>% 
+  filter(!is.na(ram_b_v_bmsy)) %>% 
+  group_by(stockid) %>% 
+  filter(year == max(year)) %>% 
+  ungroup() %>% 
+  mutate(ram_b_v_bmsy = pmin(ram_b_v_bmsy,5),
+         mean = pmin(mean, 5)) %>% 
+  mutate(resid = ram_b_v_bmsy - mean,
+         ae = abs(resid))
+
+write_rds(assess_ram_fits, path = file.path(results_path,"assess_ram_fits.rds"))
+
+write_rds(ram_comp_data, path = file.path(results_path,"ram_comp_data.rds"))
+
+assess_ram_fits %>% 
+  ggplot(aes(pmin(5,ram_b_v_bmsy),pmin(5,mean))) + 
+  geom_hex(binwidth = c(0.33, 0.33)) + 
+  geom_smooth(method = "lm", aes(color = "fit")) +
+  geom_abline(slope = 1, intercept = 0) +
+  facet_wrap(~data, scales = "free") 
+  
+
+ram_v_sraplus_plot <- assess_ram_fits %>% 
+  ggplot(aes(pmin(ram_b_v_bmsy,5), pmin(mean,5))) +
+  geom_point(alpha = 0.5) +
+  # geom_hex(binwidth = c(0.25, 0.25)) +
+  geom_smooth(method = "lm", aes(color = "Observed v. Predicted Fit")) +
+  geom_abline(size = 2,
+              linetype = 2,
+              aes(
+                slope = 1,
+                intercept = 0,
+                color = "1:1 Line"
+              )) +
+  facet_wrap( ~ data, scales = "free") +
+  scale_fill_viridis() +
+  scale_color_discrete(name = '') +
+  scale_x_continuous(name = "Observed B/Bmsy", limits = c(0, NA)) +
+  scale_y_continuous(name = "Predicted B/Bmsy", limits =  c(0, NA))
+
+ram_v_sraplus_resid_plot <- assess_ram_fits %>% 
+  ggplot(aes(resid, fill = data)) + 
+  geom_vline(aes(xintercept = 0) ,linetype = 2) +
+  geom_histogram(bins = 50) +
+  facet_wrap(~data)
+
+ram_v_sraplus_ae_plot <- assess_ram_fits %>% 
+  ggplot(aes(ae, fill = data)) + 
+  geom_vline(aes(xintercept = 0) ,linetype = 2) +
+  geom_histogram(bins = 50) +
+  facet_wrap(~data)
+
+ram_v_sraplus_area <- assess_ram_fits %>%
+  left_join(ram_comp_data %>% select(stockid, primary_FAOarea) %>% unique(),
+            by = "stockid") %>%
+  rename(primary_fao_area = primary_FAOarea) %>% 
+  group_by(primary_fao_area, data) %>%
+  mutate(sraplus_bin = cut(mean, breaks = breaks, labels = labels)) %>%
+  mutate(ram_bin = cut(ram_b_v_bmsy, breaks = breaks, labels = labels)) %>%
+  summarise(median_sraplus = median(mean, na.rm = TRUE),
+            median_ram = median(ram_b_v_bmsy, na.rm = TRUE),
+            accuracy = mean(sraplus_bin == ram_bin, na.rm = TRUE),
+            mape = median(abs((mean -  ram_b_v_bmsy) / ram_b_v_bmsy), na.rm = TRUE),
+            mpe = median(((mean -  ram_b_v_bmsy) / ram_b_v_bmsy), na.rm = TRUE),
+            rmse = mean(((mean -  ram_b_v_bmsy)^2)), na.rm = TRUE) %>% 
+  group_by(primary_fao_area)
+
+write_rds(ram_v_sraplus_area, path = file.path(results_path,"ram_v_sraplus_area.rds"))
+
+  
+
+fao_area_ram_status <- fao_areas %>%
+  left_join(ram_v_sraplus_area,
+            by = c("f_area" = "primary_fao_area")) %>%
+  mutate(pe = (median_sraplus - median_ram) / median_ram) %>% 
+  mutate(data = fct_relevel(data, "ram-data"))
+
+
+ram_status <- fao_area_ram_status %>% 
+  filter(!is.na(data)) %>% 
+  group_by(f_area) %>% 
+  slice(1) %>% 
+  select(-data, -median_sraplus) %>% 
+  mutate(data = "RAM Assessment", median_sraplus = median_ram) 
+  
+  
+
+fao_area_ram_status %>% 
+  group_by(data) %>% 
+  summarise(mape = median(abs(pe))) %>% 
+  arrange(mape)
+
+
+ram_mpe_map_plot <- fao_area_ram_status %>%
+  filter(!is.na(data)) %>% 
+  mutate(data = fct_reorder(data, abs(mpe), .fun = median)) %>% 
+  ggplot() +
+  geom_sf(aes(fill = mpe), size = .01) +
+  geom_sf(
+    data = world_map,
+    fill = "darkgrey",
+    color = "black",
+    size = 0.05
+  ) +
+  facet_wrap(~ data) +
+  scale_fill_gradient2(
+    low = "steelblue",
+    high = "tomato",
+    mid = "white",
+    name = "% Error",
+    labels = percent,
+    midpoint = 0,
+    limits = c(-1,3.5),
+    breaks = seq(-1, 3.5, by = .5),
+    guide = guide_colorbar(
+      barwidth = ggplot2::unit(15, "lines"),
+      axis.linewidth = 1,
+      ticks.colour = "black",
+      frame.colour = "black"
+    )
+  ) + 
+  theme(legend.position = c(.75,.1),
+        legend.direction = "horizontal",
+        panel.background = element_rect(fill = "lightgrey"),
+        legend.text = element_text(size = 8))
+
+ram_mape_map_plot <- fao_area_ram_status %>%
+  filter(!is.na(data)) %>% 
+  mutate(data = fct_reorder(data, mape, .fun = median)) %>% 
+  ggplot() +
+  geom_sf(aes(fill = mape), size = .01) +
+  geom_sf(
+    data = world_map,
+    fill = "darkgrey",
+    color = "black",
+    size = 0.05
+  ) +
+  facet_wrap(~ data) +
+  scale_fill_gradient(
+    low = "white",
+    # mid = "orange",
+    high = "firebrick",
+    name = "% Error",
+    # midpoint = 1.5,
+    labels = percent,
+    limits = c(0,NA),
+    guide = guide_colorbar(
+      barwidth = ggplot2::unit(15, "lines"),
+      axis.linewidth = 1,
+      ticks.colour = "black",
+      frame.colour = "black"
+    )
+  ) + 
+  theme(legend.position = c(.75,.1),
+        legend.direction = "horizontal",
+        panel.background = element_rect(fill = "lightgrey"))
+
+  
+
+
+ram_acc_map_plot <- fao_area_ram_status %>%
+  filter(!is.na(data)) %>%
+  mutate(data = fct_reorder(data, -accuracy, .fun = mean)) %>% 
+  ggplot() +
+  geom_sf(aes(fill = accuracy), size = .5) +
+  geom_sf(
+    data = world_map,
+    fill = "darkgrey",
+    color = "black",
+    size = 0.05
+  ) +
+  facet_wrap(~ data) +
+  scale_fill_viridis(
+    limits = c(0,1),
+    breaks = c(0,.33, .66,1),
+    name = "Accuracy",
+    labels = percent,
+    guide = guide_colorbar(
+      barwidth = ggplot2::unit(9, "lines"),
+      axis.linewidth = 1,
+      ticks.colour = "white",
+      frame.colour = "black"
+    )) +
+    theme(legend.position = c(.75,.1),
+          legend.direction = "horizontal",
+          panel.background = element_rect(fill = "lightgrey"))
+    
+ram_status <- fao_area_ram_status %>% 
+  filter(!is.na(data)) %>% 
+  group_by(f_area) %>% 
+  slice(1) %>% 
+  select(-data, -median_sraplus) %>% 
+  mutate(data = "RAM Assessment", median_sraplus = median_ram) 
+
+ram_status <- ram_status[,colnames(fao_area_ram_status)]
+
+combo <- fao_area_ram_status %>% 
+  bind_rows(ram_status)
+
+
+ram_b_map_plot <- combo %>%
+  filter(!is.na(data)) %>%
+  mutate(data = fct_relevel(data, "RAM Assessment")) %>%
+  ggplot() +
+  geom_sf(aes(fill = median_sraplus), size = .01) +
+  geom_sf(
+    data = world_map,
+    fill = "grey",
+    color = "black",
+    size = 0.05
+  ) +
+  facet_wrap( ~ data) +
+  scale_fill_viridis(
+    limits = c(0, NA),
+    name = "Median B/Bmsy",
+    guide = guide_colorbar(
+      barwidth = ggplot2::unit(12, "lines"),
+      axis.linewidth = 1,
+      ticks.colour = "black",
+      frame.colour = "black"
+    )
+  ) + 
+  theme(legend.position = "top",
+        panel.background = element_rect(fill = "lightgrey"))
 
 
 
