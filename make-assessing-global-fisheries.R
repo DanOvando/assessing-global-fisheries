@@ -1116,7 +1116,7 @@ stats <-
 
 sofia_status$status <- stats
 
-# there are MANY mispellings of scientific names in SOFIA
+# there are many mispellings of scientific names in SOFIA that need correcting
 
 correct_sofia <- sofia_status %>% 
   select(common_name, scientific_name) %>% 
@@ -2200,7 +2200,7 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
     limits = c(-1,3.5),
     breaks = seq(-1, 3.5, by = .5),
     guide = guide_colorbar(
-      barwidth = ggplot2::unit(15, "lines"),
+      barwidth = ggplot2::unit(10, "lines"),
       axis.linewidth = 1,
       ticks.colour = "black",
       frame.colour = "black"
@@ -2324,6 +2324,9 @@ save(file = here("results", results_name, "paper_plots.Rdata"),
 # knit paper --------------------------------------------------------------
 if (knit_paper == TRUE){
   
-  rmarkdown::render(here::here("documents","ovando-etal-assessing-global-fisheries.Rmd"), params = list(results_name = results_name,
-                                                                                                        min_years_catch = 25))
+  rmarkdown::render(
+    here::here("documents", "ovando-etal-assessing-global-fisheries.Rmd"),
+    params = list(results_name = results_name,
+                  min_years_catch = 25)
+  )
 }
