@@ -19,7 +19,8 @@ generate_priors <-
            u_window = 1,
            u_cv = 0.1,
            index_freq = 1,
-           effort_freq = 1) {
+           effort_freq = 1,
+           shape_prior_source = "thorson") {
     if (initial_state_type == "known") {
       initial_state = dplyr::case_when(b_ref_type == "k" ~ dat$b_rel[1],
                                        TRUE ~ dat$b_v_bmsy[1])
@@ -168,7 +169,6 @@ generate_priors <-
       
       
     } # close if use heuristics
-    
     priors <-
       list(
         carry = carry,
@@ -185,11 +185,12 @@ generate_priors <-
         index_years = index_years,
         effort_years = effort_years,
         u_years = u_years,
-        u_cv = u_cv
+        u_cv = u_cv,
+        shape_prior_source = shape_prior_source
       )
 
     # apply error to priors
-    error_prone <- !str_detect(names(priors), "cv|years|anchors")
+    error_prone <- !str_detect(names(priors), "cv|years|anchors|prior")
 
     priors <-
       map_if(priors, error_prone, ~ .x * exp(rnorm(length(.x), 0, error_cv) - error_cv ^

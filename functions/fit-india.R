@@ -102,7 +102,7 @@ sar_fit <-
       )
 
     sfs <- safely(fit_sraplus)
-
+    
     cpue_fit <-
       sfs(driors = cpue_driors,
           include_fit = include_fit,
@@ -115,7 +115,7 @@ sar_fit <-
           chains = chains,
           refresh = refresh,
           cores = cores,
-          adapt_delta = 0.9)
+          workers = 4)
 
     if (is.null(cpue_fit$error)){
       cpue_fit <- cpue_fit$result

@@ -556,6 +556,8 @@ prepare_sofia_data <- function(min_years_catch = 20,
   fmi$fao_country_name <-
     countrycode::countrycode(fmi$country_rfmo, "country.name", "un.name.en")
   
+  fmi$country <- countrycode::countrycode(fmi$country_rfmo, "country.name","un.name.en")
+  
   fmi$region <-
     countrycode::countrycode(fmi$country_rfmo, "country.name", "region")
   
@@ -769,6 +771,17 @@ prepare_sofia_data <- function(min_years_catch = 20,
   
   # assign("effort_region_to_country",effort_region_to_country, envir = .GlobalEnv )
   
+  rous_data <- read.csv(here("data", "MappedFAO.csv")) %>% 
+    na.omit() %>% 
+    as_tibble() %>% 
+    janitor::clean_names() %>% 
+    mutate(country = countrycode::countrycode(iso3, "iso3c", "un.name.en")) %>% 
+    filter(type2 == "I") %>% 
+    select(year,fao, effort_cell_reported_nom, country ) %>% 
+    rename(area = fao)
+  
+  assign("rous_data",rous_data, envir = .GlobalEnv )
+  
   
   # ugh. manual refactoring of region codes
   
@@ -818,6 +831,8 @@ prepare_sofia_data <- function(min_years_catch = 20,
   ei_capture <-
     readxl::read_xlsx(here::here("data", "India East Only.xlsx")) %>%
     janitor::clean_names() %>%
+    select(-total, -ratio, -x78) %>% 
+    filter(!is.na(country_country)) %>% 
     gather(year, capture, x1950:x2015) %>%
     mutate(year = as.numeric(str_replace_all(year, "\\D", "")))
  
