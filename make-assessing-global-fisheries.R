@@ -1130,7 +1130,6 @@ correct_sofia <-  correct_sofia %>%
   mutate(good_scientific_name = map_chr(sciname, ~.x[1])) %>% 
   select(common_name,good_scientific_name )
 
-# correct_sofia$foo <- correct_sofia$bad_scientific_name != correct_sofia$good_scientific_name
 
 sofia_status <- sofia_status %>%
   left_join(correct_sofia, by = "common_name") %>%
