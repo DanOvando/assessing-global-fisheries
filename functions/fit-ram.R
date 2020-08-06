@@ -13,6 +13,7 @@ fit_ram <-
            default_initial_state_cv = 0.2,
            chains = 1,
            cores = 1,
+           cmsy_cores = 4,
            reg_cv = NA,
            draws = 2e6,
            refresh = 0,
@@ -56,7 +57,48 @@ fit_ram <-
       mutate(data = "heuristic")
     
     
+    
+    # updated cmsy fit
+    
+    sfc <- purrr::safely(funct_cmsy)
+    
+    ported_cmsy <- sfc(
+      catches = catches[years >= 1950],
+      catch_years = years[years >= 1950],
+      stock = scientific_name,
+      common_name = unique(data$common_name),
+      scientific_name = unique(data$scientific_name),
+      res = unique(data$resilience),
+      start.yr = years[years >= 1950][1],
+      end.yr = dplyr::last(years[years >= 1950]),
+      cores = cmsy_cores
+    )
+    
+    if (is.null(ported_cmsy$error)){
+      
+      cmsy_results <- ported_cmsy$result %>% 
+        mutate(c_div_msy  = ct / msy) %>% 
+        select(year, bt, b_bmsy, f_fmsy, c_div_msy) %>% 
+        rename(depletion = bt, b_div_bmsy = b_bmsy, u_div_umsy = f_fmsy) %>% 
+        pivot_longer(-year, names_to = "variable", values_to = "mean") %>% 
+        mutate(sd = NA, lower = NA, upper = NA, data = "cmsy")
+      
+      # tests <- cmsy_results %>% 
+      #   bind_rows(basic_fit_results)
+      # 
+      # tests %>% 
+      #   filter(variable == "c_div_msy") %>% 
+      #   select(year, mean, data) %>% 
+      #   ggplot(aes(year, mean, color = data)) + 
+      #   geom_line()
+    
+      cmsy_worked <- TRUE 
+    } else {
+      cmsy_worked <- FALSE
+    }
+
     # catch only fit
+    
     com_driors <-
       format_driors(
         taxa = scientific_name,
@@ -674,7 +716,14 @@ fit_ram <-
         } else{
           .
         }
+      } %>% {
+        if (cmsy_worked == TRUE){
+          bind_rows(., cmsy_results)
+        } else {
+          .
+        }
       }
+      
     
     # write(wtf,file = "wtf.txt", append = TRUE)
     

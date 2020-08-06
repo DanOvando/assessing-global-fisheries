@@ -9,6 +9,7 @@ library(rstan)
 library(mvtnorm)
 library(FishLife)
 library(furrr)
+library(doParallel)
 library(future)
 library(viridis)
 library(sraplus)
@@ -53,7 +54,7 @@ results_name <- "v0.5"
 results_description <-
   "publication version of results"
 
-run_voi_models <- TRUE
+run_voi_models <- FALSE
 # sub options for run_voi_models
 fit_models <- FALSE
 
@@ -71,7 +72,7 @@ run_sofia_comparison <- FALSE
 
 run_ram_tests <- FALSE
 
-run_ram_comparison <- FALSE
+run_ram_comparison <- TRUE
 
 knit_paper <- TRUE
 
@@ -2006,20 +2007,38 @@ if (run_ram_comparison == TRUE) {
     geom_line() + 
     facet_wrap(~fao_area_code, scales = "free_y")
   
-  set.seed(24)
-  
   future::plan(multisession, workers = n_cores)
+  
+  comp_stocks <- ram_comp_data %>%
+    select(scientific_name) %>%
+    unique() %>%
+    mutate(fishbase_vuln = map_dbl(
+      scientific_name,
+      ~ rfishbase::species(.x, fields = "Vulnerability")$Vulnerability
+    )) %>%
+    mutate(
+      resilience = dplyr::case_when(
+        fishbase_vuln < 33 ~ "Low",
+        fishbase_vuln >= 66 ~ "High",
+        TRUE ~ "Medium"
+      )
+    ) %>% 
+    select(scientific_name, resilience)
+  
+  ram_comp_data <- ram_comp_data %>% 
+    left_join(comp_stocks, by = "scientific_name") %>% 
+    mutate(resilience = ifelse(is.na(resilience), "Medium",resilience))
   
   ram_status_fits <- ram_comp_data %>%
     # filter(fao_area_code %in% 67) %>%
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>% 
-    # sample_n(1) %>%
+    # sample_n(10) %>%
     mutate(
       fits = future_map(
         data,
-       safely( fit_ram),
+       safely(fit_ram),
         support_data = support_data,
         default_initial_state = NA,
         default_initial_state_cv = NA,
@@ -2028,7 +2047,7 @@ if (run_ram_comparison == TRUE) {
         cores = 2,
         .progress = TRUE,
         .options = future_options(
-          globals = support_data,
+          globals = TRUE,
           packages = c("tidyverse", "sraplus")
         )
       )
@@ -2074,13 +2093,14 @@ compare_to_ram <- function(data, fit){
 ram_status_fits <- ram_status_fits %>% 
   mutate(performance = map2(data, fits, compare_to_ram))
 
-ram_status_fits$performance[[24]] %>% 
-  ggplot() + 
-  geom_line(aes(year, mean, color = data)) + 
-  geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) + 
-  facet_wrap(~data) + 
-  scale_x_continuous(name = "B/Bmsy") +
-  labs(title = ram_status_fits$stockid[[1]])
+# i = 2
+# ram_status_fits$performance[[i]] %>% 
+#   ggplot() + 
+#   geom_line(aes(year, mean, color = data)) + 
+#   geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) + 
+#   facet_wrap(~data) + 
+#   scale_x_continuous(name = "B/Bmsy") +
+#   labs(title = ram_status_fits$stockid[[i]])
 
 assess_ram_fits <- ram_status_fits %>% 
   select(stockid, performance) %>% 
