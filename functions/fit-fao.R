@@ -16,7 +16,8 @@ fit_fao <-
            reg_cv = NA,
            draws = 2e6,
            refresh = 0,
-           thin_draws = TRUE) {
+           thin_draws = TRUE, 
+           cmsy_cores = 3) {
     #
     #     data <- test$data[[1]]
     
@@ -27,6 +28,44 @@ fit_fao <-
     catches <- data$catch
     
     years <- data$year
+    
+    
+    # fit cmsy
+    # 
+    sfc <- purrr::safely(portedcmsy::funct_cmsy)
+    
+    ported_cmsy <- sfc(
+      catches = catches[years >= 1950],
+      catch_years = years[years >= 1950],
+      stock = scientific_name,
+      common_name = NA,
+      scientific_name = scientific_name,
+      res = unique(data$resilience),
+      start.yr = years[years >= 1950][1],
+      end.yr = dplyr::last(years[years >= 1950]),
+      cores = cmsy_cores
+    )
+    if (is.null(ported_cmsy$error)) {
+      cmsy_results <- ported_cmsy$result %>%
+        mutate(c_div_msy  = ct / msy) %>%
+        select(year, bt, b_bmsy, f_fmsy, c_div_msy) %>%
+        rename(depletion = bt,
+               b_div_bmsy = b_bmsy,
+               u_div_umsy = f_fmsy) %>%
+        pivot_longer(-year, names_to = "variable", values_to = "mean") %>%
+        mutate(
+          sd = NA,
+          lower = NA,
+          upper = NA,
+          data = "cmsy"
+        )
+      
+      cmsy_worked <- TRUE
+    } else {
+      cmsy_worked <- FALSE
+    }
+    
+    # fit to u
     
     u_years <- seq_along(years)[!is.na(data$mean_u_umsy)]
     
@@ -595,15 +634,13 @@ fit_fao <-
         else{
           .
         }
+      }  %>% {
+        if (cmsy_worked) {
+          bind_rows(., cmsy_results)
+        } else {
+          .
+        }
       }
-    
-    # write(wtf,file = "wtf.txt", append = TRUE)
-    
-    # results %>%
-    #   filter(data == "sar") %>%
-    #   ggplot(aes(year, mean, color = data)) +
-    #   geom_line() +
-    #   facet_wrap(~variable, scales = "free_y")
     
     rm(list = ls()[!str_detect(ls(), "results")])
     gc()

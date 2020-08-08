@@ -9,11 +9,12 @@ fit_ram <-
            q_slope_prior = 0.025,
            estimate_proc_error = TRUE,
            estimate_qslope = FALSE,
+           estimate_shape = FALSE,
            default_initial_state = NA,
            default_initial_state_cv = 0.2,
            chains = 1,
            cores = 1,
-           cmsy_cores = 4,
+           cmsy_cores = 1,
            reg_cv = NA,
            draws = 2e6,
            refresh = 0,
@@ -21,6 +22,9 @@ fit_ram <-
     #
     #     data <- test$data[[1]]
     # browser()
+    
+    sfs <- safely(fit_sraplus)
+    
     ogengine <- engine
     
     scientific_name <- unique(data$scientific_name)
@@ -29,39 +33,8 @@ fit_ram <-
     
     years <- data$year
     
-    u_years <- seq_along(years)[!is.na(data$mean_u_umsy)]
-    
-    u_umsy <- data$mean_u_umsy[u_years]
-    basic_driors <-
-      format_driors(
-        taxa = scientific_name,
-        catch = catches,
-        years = seq_along(years),
-        use_heuristics = TRUE,
-        b_ref_type = "k",
-        isscaap_group = unique(data$isscaap_group)
-      )
-    basic_fit <-
-      fit_sraplus(
-        driors = basic_driors,
-        include_fit = include_fit,
-        model = model,
-        engine = "sir",
-        draws = draws,
-        thin_draws = thin_draws
-      )
-    
-    basic_fit_results <- basic_fit$results %>%
-      filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy", "depletion")) %>%
-      mutate(year = rep(years, each = 4)) %>%
-      mutate(data = "heuristic")
-    
-    
-    
-    # updated cmsy fit
-    
-    sfc <- purrr::safely(funct_cmsy)
-    
+    sfc <- purrr::safely(portedcmsy::funct_cmsy)
+    # browser()
     ported_cmsy <- sfc(
       catches = catches[years >= 1950],
       catch_years = years[years >= 1950],
@@ -73,6 +46,7 @@ fit_ram <-
       end.yr = dplyr::last(years[years >= 1950]),
       cores = cmsy_cores
     )
+    write_rds(ported_cmsy, "wtf.rds")
     
     if (is.null(ported_cmsy$error)){
       
@@ -91,11 +65,58 @@ fit_ram <-
       #   select(year, mean, data) %>% 
       #   ggplot(aes(year, mean, color = data)) + 
       #   geom_line()
-    
+      
       cmsy_worked <- TRUE 
     } else {
       cmsy_worked <- FALSE
     }
+    
+    u_years <- seq_along(years)[!is.na(data$mean_u_umsy)]
+    
+    u_umsy <- data$mean_u_umsy[u_years]
+    basic_driors <-
+      format_driors(
+        taxa = scientific_name,
+        catch = catches,
+        years = seq_along(years),
+        use_heuristics = TRUE,
+        b_ref_type = "k",
+        isscaap_group = unique(data$isscaap_group)
+      )
+    
+    basic_fit <-
+      sfs(
+        driors = basic_driors,
+        include_fit = include_fit,
+        estimate_shape = estimate_shape,
+        model = model,
+        engine = "sir",
+        draws = draws,
+        thin_draws = thin_draws
+      )
+    
+    if (is.null(basic_fit$error)){
+      
+      basic_fit_results <- basic_fit$result$results %>%
+        filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy", "depletion")) %>%
+        mutate(year = rep(years, each = 4)) %>%
+        mutate(data = "heuristic")
+ 
+      basic_worked <- TRUE 
+    } else {
+      
+      basic_fit_results <- tibble(year = NA,variable = NA, mean = NA, sd = NA, lower = NA, upper = NA, data = NA)
+      
+      basic_worked <- FALSE
+    }
+    
+    
+ 
+    
+    
+    # updated cmsy fit
+    
+  
 
     # catch only fit
     
@@ -118,6 +139,8 @@ fit_ram <-
         model = model,
         engine = "sir",
         draws = draws,
+        estimate_shape = estimate_shape,
+        
         thin_draws = thin_draws
       )
     
@@ -151,6 +174,8 @@ fit_ram <-
           model = model,
           engine = "sir",
           draws = draws,
+          estimate_shape = estimate_shape,
+          
           thin_draws = thin_draws
           
         )
@@ -231,6 +256,8 @@ fit_ram <-
           driors = fmi_driors,
           include_fit = include_fit,
           model = model,
+          estimate_shape = estimate_shape,
+          
           engine = "sir",
           draws = draws,
           thin_draws = thin_draws
@@ -268,12 +295,13 @@ fit_ram <-
           isscaap_group = unique(data$isscaap_group)
         )
       
-      sfs <- safely(fit_sraplus)
       u_fit <-
         sfs(
           driors = u_driors,
           include_fit = include_fit,
           model = model,
+          estimate_shape = estimate_shape,
+          
           engine = "sir",
           draws = draws,
           thin_draws = thin_draws
@@ -329,6 +357,8 @@ fit_ram <-
           estimate_proc_error = estimate_proc_error,
           estimate_qslope = estimate_qslope,
           workers = cores,
+          estimate_shape = estimate_shape,
+          
           refresh = refresh,
           thin_draws = thin_draws
         )
@@ -354,6 +384,8 @@ fit_ram <-
           engine = engine,
           estimate_proc_error = estimate_proc_error,
           estimate_qslope = estimate_qslope,
+          estimate_shape = estimate_shape,
+          
           workers = cores,
           refresh = refresh
         )
@@ -489,7 +521,8 @@ fit_ram <-
           estimate_qslope = estimate_qslope,
           workers = cores,
           refresh = refresh,
-          thin_draws = thin_draws
+          thin_draws = thin_draws,
+          estimate_shape = estimate_shape
         )
       
       nom_cpue_plus_driors <-
@@ -517,6 +550,7 @@ fit_ram <-
           engine = engine,
           estimate_proc_error = estimate_proc_error,
           estimate_qslope = estimate_qslope,
+          estimate_shape = estimate_shape,
           workers = cores,
           refresh = refresh,
           thin_draws = thin_draws
@@ -626,11 +660,12 @@ fit_ram <-
         engine = engine,
         estimate_proc_error = estimate_proc_error,
         estimate_qslope = estimate_qslope,
+        estimate_shape = estimate_shape,
         workers = cores,
         refresh = refresh,
         thin_draws = thin_draws
       )
-    
+    # browser()
     # plot_prior_posterior(ram_data_fit$result, ram_data_driors)
     if (is.null(ram_data_fit$error)) {
       ram_data_fit <- ram_data_fit$result
@@ -671,7 +706,8 @@ fit_ram <-
     
     # store results
     
-    results <- basic_fit_results %>%
+    results <- 
+      basic_fit_results  %>%
       bind_rows(com_fit_results) %>% {
         if (used_sar == TRUE) {
           bind_rows(., sar_fit_results)
@@ -717,13 +753,14 @@ fit_ram <-
           .
         }
       } %>% {
-        if (cmsy_worked == TRUE){
+        if (cmsy_worked == TRUE) {
           bind_rows(., cmsy_results)
         } else {
           .
         }
-      }
-      
+      } %>% 
+      filter(!is.na(data))
+    
     
     # write(wtf,file = "wtf.txt", append = TRUE)
     

@@ -24,6 +24,7 @@ library(tidybayes)
 library(rstan)
 library(rstanarm)
 library(sf)
+library(portedcmsy)
 Sys.unsetenv("PKG_CXXFLAGS")
 
 options(dplyr.summarise.inform = FALSE)
@@ -72,7 +73,7 @@ run_sofia_comparison <- FALSE
 
 run_ram_tests <- FALSE
 
-run_ram_comparison <- TRUE
+run_ram_comparison <- FALSE
 
 knit_paper <- TRUE
 
@@ -763,14 +764,35 @@ total_stocks %>%
 
 # future::plan(future::multiprocess, workers = 4)
 
+
+comp_stocks <- total_stocks %>%
+  select(scientific_name) %>%
+  unique() %>%
+  mutate(fishbase_vuln = map_dbl(
+    scientific_name,
+    ~ rfishbase::species(.x, fields = "Vulnerability")$Vulnerability
+  )) %>%
+  mutate(
+    resilience = dplyr::case_when(
+      fishbase_vuln < 33 ~ "Low",
+      fishbase_vuln >= 66 ~ "High",
+      TRUE ~ "Medium"
+    )
+  ) %>% 
+  select(scientific_name, resilience)
+
+total_stocks <- total_stocks %>% 
+  left_join(comp_stocks, by = "scientific_name") %>% 
+  mutate(resilience = ifelse(is.na(resilience), "Medium",resilience))
+
 if (run_continent_examples == TRUE) {
-  set.seed(42)
+  set.seed(24)
   
   continent_fits <- total_stocks %>%
     group_by(scientific_name, continent) %>%
     nest() %>%
     ungroup() #%>%
-  # sample_n(10)
+  # sample_n(3)
   
   sfe <- safely(fit_continent_examples)
   
@@ -786,7 +808,8 @@ if (run_continent_examples == TRUE) {
         estimate_proc_error = TRUE,
         estimate_qslope = FALSE,
         estimate_shape = FALSE,
-        first_effort_year = 1960
+        first_effort_year = 1960,
+        cmsy_cores = 8
       )
     )
   
@@ -931,11 +954,30 @@ ei_data <- ei_capture %>%
   left_join(ei_cpue, by = "year") %>%
   left_join(fao_names, by = c("species_asfis_species" = "common_name")) %>%
   ungroup() %>%
-  filter(!is.na(scientific_name)) %>%
+  filter(!is.na(scientific_name)) 
+
+comp_stocks <- ei_data %>%
+  select(scientific_name) %>%
+  unique() %>%
+  mutate(fishbase_vuln = map_dbl(
+    scientific_name,
+    ~ rfishbase::species(.x, fields = "Vulnerability")$Vulnerability
+  )) %>%
+  mutate(
+    resilience = dplyr::case_when(
+      fishbase_vuln < 33 ~ "Low",
+      fishbase_vuln >= 66 ~ "High",
+      TRUE ~ "Medium"
+    )
+  ) %>% 
+  select(scientific_name, resilience)
+
+ei_data <- ei_data %>% 
+  left_join(comp_stocks, by = "scientific_name") %>% 
+  mutate(resilience = ifelse(is.na(resilience), "Medium",resilience)) %>% 
   group_by(species_asfis_species, scientific_name) %>%
   nest() %>%
   ungroup()
-
 
 if (run_ei_example == TRUE) {
   set.seed(42)
@@ -1523,7 +1565,28 @@ areas <- unique(fao_status$fao_area_code)
 #   summarise(catch = sum(capture))
 
 # annnnnd try and run assessments
-# browser()
+# 
+# 
+comp_stocks <- fao_status %>%
+  select(scientific_name) %>%
+  unique() %>%
+  mutate(fishbase_vuln = map_dbl(
+    scientific_name,
+    ~ rfishbase::species(.x, fields = "Vulnerability")$Vulnerability
+  )) %>%
+  mutate(
+    resilience = dplyr::case_when(
+      fishbase_vuln < 33 ~ "Low",
+      fishbase_vuln >= 66 ~ "High",
+      TRUE ~ "Medium"
+    )
+  ) %>% 
+  select(scientific_name, resilience)
+
+fao_status <- fao_status %>% 
+  left_join(comp_stocks, by = "scientific_name") %>% 
+  mutate(resilience = ifelse(is.na(resilience), "Medium",resilience))
+
 if (run_sofia_comparison == TRUE) {
   # future::plan(future::multiprocess, workers = 4)
   
@@ -1551,7 +1614,7 @@ if (run_sofia_comparison == TRUE) {
         .progress = TRUE,
         .options = future_options(
           globals = support_data,
-          packages = c("tidyverse", "sraplus")
+          packages = c("tidyverse", "sraplus", "portedcmsy")
         )
       )
     )
@@ -1588,16 +1651,15 @@ faofits <- fao_status_fits %>%
   unnest(cols = fits) %>%
   filter(variable == "b_div_bmsy") %>%
   mutate(bin = cut(mean, breaks = breaks, labels = labels)) %>%
-  separate(stockid, c("name", "speciesgroup", "area"), sep = '_') %>%
+  separate(stockid, c("name", "speciesgroup", "area"), sep = '_', remove = FALSE) %>%
   mutate(fao_area_code = as.numeric(area))
 
 
-# wtf <- faofits %>%
-#   filter(stockid == stockid[1],
-#          str_detect(data, "cpue")) %>%
-#   ggplot(aes(year, mean, color = data)) +
-#   geom_line() +
-#   facet_wrap(~data)
+wtf <- faofits %>%
+  filter(stockid == unique(stockid)[3]) %>%
+  ggplot(aes(year, mean, color = data)) +
+  geom_line() +
+  facet_wrap(~data)
 
 fao_status_data <- fao_status %>%
   mutate(
@@ -1749,7 +1811,6 @@ fao_acc_map_plot <- fao_area_accuracy %>%
 # run RAM tests ------------------------------------------------------
 
 # for now, only including things that have total biomass estimates
-
 if (run_ram_tests) {
   ram_fit_data <- ram_data %>%
     select(
@@ -1889,8 +1950,10 @@ ram_comp_data <- og_ram_data %>%
   mutate(missing_gaps = any(delta_year > 1)) %>%
   filter(missing_gaps == FALSE) %>%
   group_by(stockid) %>%
-  mutate(n = length(catch)) %>%
-  filter(n >= min_years_catch) %>%
+  mutate(n = length(catch),
+         has_ram_index = any(!is.na(b_v_bmsy))) %>%
+  filter(n >= min_years_catch,
+         has_ram_index == TRUE) %>%
   ungroup()
 
 ram_comp_data <- ram_comp_data %>%
@@ -1986,6 +2049,25 @@ temp_ram <- temp_ram %>%
 ram_comp_data <- temp_ram %>%
   unnest(cols = data)
 
+comp_stocks <- ram_comp_data %>%
+  select(scientific_name) %>%
+  unique() %>%
+  mutate(fishbase_vuln = map_dbl(
+    scientific_name,
+    ~ rfishbase::species(.x, fields = "Vulnerability")$Vulnerability
+  )) %>%
+  mutate(
+    resilience = dplyr::case_when(
+      fishbase_vuln < 33 ~ "Low",
+      fishbase_vuln >= 66 ~ "High",
+      TRUE ~ "Medium"
+    )
+  ) %>% 
+  select(scientific_name, resilience)
+
+ram_comp_data <- ram_comp_data %>% 
+  left_join(comp_stocks, by = "scientific_name") %>% 
+  mutate(resilience = ifelse(is.na(resilience), "Medium",resilience))
 if (run_ram_comparison == TRUE) {
   
  
@@ -2007,34 +2089,14 @@ if (run_ram_comparison == TRUE) {
     geom_line() + 
     facet_wrap(~fao_area_code, scales = "free_y")
   
-  future::plan(multisession, workers = n_cores)
-  
-  comp_stocks <- ram_comp_data %>%
-    select(scientific_name) %>%
-    unique() %>%
-    mutate(fishbase_vuln = map_dbl(
-      scientific_name,
-      ~ rfishbase::species(.x, fields = "Vulnerability")$Vulnerability
-    )) %>%
-    mutate(
-      resilience = dplyr::case_when(
-        fishbase_vuln < 33 ~ "Low",
-        fishbase_vuln >= 66 ~ "High",
-        TRUE ~ "Medium"
-      )
-    ) %>% 
-    select(scientific_name, resilience)
-  
-  ram_comp_data <- ram_comp_data %>% 
-    left_join(comp_stocks, by = "scientific_name") %>% 
-    mutate(resilience = ifelse(is.na(resilience), "Medium",resilience))
+  future::plan(multisession, workers = 4)
   
   ram_status_fits <- ram_comp_data %>%
     # filter(fao_area_code %in% 67) %>%
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>% 
-    # sample_n(10) %>%
+    # sample_n(40) %>%
     mutate(
       fits = future_map(
         data,
@@ -2045,10 +2107,12 @@ if (run_ram_comparison == TRUE) {
         min_effort_year = 1975,
         engine = "stan",
         cores = 2,
+       estimate_shape = TRUE,
+       cmsy_cores = 4,
         .progress = TRUE,
         .options = future_options(
           globals = TRUE,
-          packages = c("tidyverse", "sraplus")
+          packages = c("tidyverse", "sraplus", "portedcmsy")
         )
       )
     )
@@ -2093,14 +2157,14 @@ compare_to_ram <- function(data, fit){
 ram_status_fits <- ram_status_fits %>% 
   mutate(performance = map2(data, fits, compare_to_ram))
 
-# i = 2
-# ram_status_fits$performance[[i]] %>% 
-#   ggplot() + 
-#   geom_line(aes(year, mean, color = data)) + 
-#   geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) + 
-#   facet_wrap(~data) + 
-#   scale_x_continuous(name = "B/Bmsy") +
-#   labs(title = ram_status_fits$stockid[[i]])
+i = 24
+ ram_status_fits$performance[[i]] %>%
+  ggplot() +
+  geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) +
+   geom_line(aes(year, mean, color = data)) +
+  facet_wrap(~data) +
+  scale_x_continuous(name = "B/Bmsy") +
+  labs(title = ram_status_fits$stockid[[i]])
 
 assess_ram_fits <- ram_status_fits %>% 
   select(stockid, performance) %>% 
@@ -2120,7 +2184,7 @@ write_rds(ram_comp_data, path = file.path(results_path,"ram_comp_data.rds"))
 
 assess_ram_fits %>% 
   ggplot(aes(pmin(5,ram_b_v_bmsy),pmin(5,mean))) + 
-  geom_hex(binwidth = c(0.33, 0.33)) + 
+  geom_hex(binwidth = c(0.33, 0.33), color = "white") + 
   geom_smooth(method = "lm", aes(color = "fit")) +
   geom_abline(slope = 1, intercept = 0) +
   facet_wrap(~data, scales = "free") 
