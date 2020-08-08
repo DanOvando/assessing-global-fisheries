@@ -100,10 +100,10 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.5.1",
+      "Version": "1.0.5",
       "Source": "Repository",
-      "Repository": null,
-      "Hash": "4591f7b0a4bf433b1bd1e87c08835e6f"
+      "Repository": "CRAN",
+      "Hash": "125dc7a0ed375eb68c0ce533b48d291f"
     },
     "RcppEigen": {
       "Package": "RcppEigen",
@@ -286,15 +286,10 @@
     },
     "broom": {
       "Package": "broom",
-      "Version": "0.7.0.9001",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "broom",
-      "RemoteUsername": "tidyverse",
-      "RemoteRef": "master",
-      "RemoteSha": "3d7d35e7dca575e60c7506b0c8dcdf00a23919e9",
-      "Hash": "bc5c6cf319a281bad86d63bafef97ae1"
+      "Version": "0.7.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "2ca5ae42f3bfd149504d63c833c2be26"
     },
     "caTools": {
       "Package": "caTools",
@@ -1222,11 +1217,11 @@
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteRepo": "renv",
       "RemoteUsername": "rstudio",
-      "RemoteRef": "HEAD",
+      "RemoteRepo": "renv",
+      "RemoteRef": "0.11.0-23",
       "RemoteSha": "735e17f696e17873895891f4e0a84c578344e0f6",
-      "Hash": "20fb217cf440deee2d5d5c9e7c868c65"
+      "Hash": "ebdc0ae13a7e17d9b10b777fc10abee7"
     },
     "reprex": {
       "Package": "reprex",
@@ -1577,15 +1572,10 @@
     },
     "tibble": {
       "Package": "tibble",
-      "Version": "3.0.3.9000",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "tibble",
-      "RemoteUsername": "tidyverse",
-      "RemoteRef": "master",
-      "RemoteSha": "66a503f6cb2925829756384c3c7151d5bbe97f98",
-      "Hash": "451eeba60b6c77adcfb0f344740d7e62"
+      "Version": "3.0.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "08bd36bd34b20d4f7971d49e81deaab0"
     },
     "tidybayes": {
       "Package": "tidybayes",
