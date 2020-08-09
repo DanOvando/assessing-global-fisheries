@@ -44,7 +44,7 @@ draws <- 3000
 
 min_draws <- 2000 # minimum number of unique SIR draws
 
-n_cores <- 3
+n_cores <- 2
 # number of cores for parallel processing
 
 # options(mc.cores = 1)
@@ -69,11 +69,11 @@ run_continent_examples <- FALSE
 
 run_ei_example <- FALSE
 
-run_sofia_comparison <- FALSE
+run_sofia_comparison <- TRUE
 
 run_ram_tests <- FALSE
 
-run_ram_comparison <- FALSE
+run_ram_comparison <- TRUE
 
 knit_paper <- TRUE
 
@@ -123,7 +123,7 @@ if (dir.exists(here::here("results", results_name)) == FALSE) {
 }
 
 
-prepare_sofia_data(lookup_fmi_names = FALSE)
+prepare_sofia_data(lookup_fmi_names = TRUE)
 
 
 has_total_biomass = ram_data %>%
@@ -1599,7 +1599,7 @@ if (run_sofia_comparison == TRUE) {
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    # sample_n(3) %>%
+    sample_n(10) %>%
     # slice(10) %>% 
     mutate(
       fits = future_map(

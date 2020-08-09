@@ -1109,12 +1109,12 @@
       "Version": "1.0",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "portedcmsy",
       "RemoteUsername": "danovando",
+      "RemoteRepo": "portedcmsy",
       "RemoteRef": "HEAD",
-      "RemoteSha": "9bba85e24a9a1893aed5960bc69686975a82c2d8",
-      "Hash": "8182f5a026c331b0e98e0893255283e4"
+      "RemoteSha": "f80cae2367f70580d1187417e47f740c767c3bdf",
+      "RemoteHost": "api.github.com",
+      "Hash": "8f9f228c9aaf400f776ad10bc3c46d0a"
     },
     "praise": {
       "Package": "praise",
@@ -1362,9 +1362,15 @@
     "rstan": {
       "Package": "rstan",
       "Version": "2.21.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "52772d81aa532a6331fd535701882c12"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "rstan",
+      "RemoteUsername": "stan-dev",
+      "RemoteRef": "develop",
+      "RemoteSha": "a9a44bb16232ed8aacbd94f76a2ab42fb93ac4cb",
+      "RemoteSubdir": "rstan/rstan",
+      "Hash": "9e454c0702529d422781f200cbd91d09"
     },
     "rstanarm": {
       "Package": "rstanarm",
