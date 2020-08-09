@@ -35,12 +35,13 @@
       "Version": "2.0.0",
       "Source": "GitHub",
       "RemoteType": "github",
+      "Remotes": "james-thorson/utilities, kaskr/TMB_contrib_R/TMBhelper",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "James-Thorson-NOAA",
       "RemoteRepo": "FishLife",
-      "RemoteRef": "master",
+      "RemoteUsername": "james-thorson",
+      "RemoteRef": "HEAD",
       "RemoteSha": "62ddde0477fe71e595497fee13a54f33c621966d",
-      "Hash": "be692e73c4ea336506d05d9b91537fdb"
+      "Hash": "f356383c1e7b5835d03b6fee3a41b3ba"
     },
     "HDInterval": {
       "Package": "HDInterval",
@@ -168,9 +169,9 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "utilities",
       "RemoteUsername": "james-thorson",
-      "RemoteRef": "HEAD",
+      "RemoteRef": "master",
       "RemoteSha": "9ea779ab14361957eb1021fe896971490805d313",
-      "Hash": "83713d7032a0ba0da8bcf31d7ca4742e"
+      "Hash": "c33ca8e32055c200c4e547fedc6d41c8"
     },
     "V8": {
       "Package": "V8",
@@ -1056,15 +1057,10 @@
     },
     "patchwork": {
       "Package": "patchwork",
-      "Version": "1.0.1.9000",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "patchwork",
-      "RemoteUsername": "thomasp85",
-      "RemoteRef": "master",
-      "RemoteSha": "82a5e0319ae9f52a6a84624aaa161a8c7f91b6ad",
-      "Hash": "116774f6d44ee59c2c1de2a0bb50c270"
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "d6b817898a400e82e6777d4f7e027100"
     },
     "phangorn": {
       "Package": "phangorn",
@@ -1114,11 +1110,11 @@
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "danovando",
       "RemoteRepo": "portedcmsy",
-      "RemoteRef": "master",
+      "RemoteUsername": "danovando",
+      "RemoteRef": "HEAD",
       "RemoteSha": "9bba85e24a9a1893aed5960bc69686975a82c2d8",
-      "Hash": "d49cf53cd9741109c428788a3a86cf33"
+      "Hash": "8182f5a026c331b0e98e0893255283e4"
     },
     "praise": {
       "Package": "praise",
@@ -1366,15 +1362,9 @@
     "rstan": {
       "Package": "rstan",
       "Version": "2.21.2",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "rstan",
-      "RemoteUsername": "stan-dev",
-      "RemoteRef": "develop",
-      "RemoteSha": "a9a44bb16232ed8aacbd94f76a2ab42fb93ac4cb",
-      "RemoteSubdir": "rstan/rstan",
-      "Hash": "9e454c0702529d422781f200cbd91d09"
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "52772d81aa532a6331fd535701882c12"
     },
     "rstanarm": {
       "Package": "rstanarm",
