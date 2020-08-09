@@ -1406,10 +1406,10 @@
     },
     "rvest": {
       "Package": "rvest",
-      "Version": "0.3.5",
+      "Version": "0.3.6",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "6a20c2cdf133ebc7ac45888c9ccc052b"
+      "Hash": "a9795ccb2d608330e841998b67156764"
     },
     "scales": {
       "Package": "scales",
@@ -1514,11 +1514,11 @@
       "Version": "3.7.1",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
       "RemoteUsername": "danovando",
       "RemoteRepo": "sraplus",
       "RemoteRef": "master",
       "RemoteSha": "6d6f9534a1c4de2269598ba9595b37593a1fc574",
+      "RemoteHost": "api.github.com",
       "Hash": "184e28f94ad2537fc93147c344b2f273"
     },
     "statmod": {
@@ -1544,10 +1544,10 @@
     },
     "survival": {
       "Package": "survival",
-      "Version": "3.1-12",
+      "Version": "3.2-3",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "1c5bb53bd428f3c42a25b7aeb983d8c7"
+      "Hash": "3cc6154c577a82f06250254db30a4bfb"
     },
     "svUnit": {
       "Package": "svUnit",
