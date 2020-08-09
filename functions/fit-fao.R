@@ -1,5 +1,6 @@
 fit_fao <-
   function(data,
+           id,
            support_data,
            model = "sraplus_tmb",
            engine = "tmb",
@@ -17,9 +18,16 @@ fit_fao <-
            draws = 2e6,
            refresh = 0,
            thin_draws = TRUE, 
-           cmsy_cores = 3) {
+           cmsy_cores = 3,
+           results_path,
+           write_results) {
     #
     #     data <- test$data[[1]]
+    #     
+    
+    if (write_results & !dir.exists(file.path(results_path, "faofits"))){
+      dir.create((file.path(results_path, "faofits")))
+    }
     
     ogengine <- engine
     
@@ -641,6 +649,15 @@ fit_fao <-
           .
         }
       }
+    
+    if (write_results){
+      
+      write_rds(results, file.path(results_path, "faofits",paste0(id, ".rds")))
+      
+      results <- NA
+    }
+    
+    
     
     rm(list = ls()[!str_detect(ls(), "results")])
     gc()

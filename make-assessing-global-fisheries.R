@@ -25,13 +25,15 @@ library(rstan)
 library(rstanarm)
 library(sf)
 library(portedcmsy)
+
 Sys.unsetenv("PKG_CXXFLAGS")
+
+sraplus::get_tmb_model()
 
 options(dplyr.summarise.inform = FALSE)
 
 rstan::rstan_options(auto_write = TRUE)
 
-sraplus::get_tmb_model()
 # options -----------------------------------------------------------------
 
 min_years_catch <- 20
@@ -784,7 +786,6 @@ comp_stocks <- total_stocks %>%
 total_stocks <- total_stocks %>% 
   left_join(comp_stocks, by = "scientific_name") %>% 
   mutate(resilience = ifelse(is.na(resilience), "Medium",resilience))
-
 if (run_continent_examples == TRUE) {
   set.seed(24)
   
@@ -1586,7 +1587,6 @@ comp_stocks <- fao_status %>%
 fao_status <- fao_status %>% 
   left_join(comp_stocks, by = "scientific_name") %>% 
   mutate(resilience = ifelse(is.na(resilience), "Medium",resilience))
-
 if (run_sofia_comparison == TRUE) {
   # future::plan(future::multiprocess, workers = 4)
   
@@ -1602,8 +1602,9 @@ if (run_sofia_comparison == TRUE) {
     sample_n(10) %>%
     # slice(10) %>% 
     mutate(
-      fits = future_map(
+      fits = future_map2(
         data,
+        stockid,
         safely(fit_fao),
         support_data = support_data,
         default_initial_state = NA,
@@ -1611,6 +1612,8 @@ if (run_sofia_comparison == TRUE) {
         min_effort_year = 1975,
         engine = "stan",
         cores = 2,
+        write_results = TRUE, 
+        results_path = results_path,
         .progress = TRUE,
         .options = future_options(
           globals = support_data,
@@ -1626,6 +1629,8 @@ if (run_sofia_comparison == TRUE) {
 } else {
   fao_status_fits <-
     read_rds(path = file.path(results_path, "fao_status_fits.rds"))
+  
+  
   
   
 }
