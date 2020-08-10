@@ -46,7 +46,7 @@ draws <- 3000
 
 min_draws <- 2000 # minimum number of unique SIR draws
 
-n_cores <- 3
+n_cores <- 2
 # number of cores for parallel processing
 
 # options(mc.cores = 1)
@@ -57,7 +57,7 @@ results_name <- "v0.5"
 results_description <-
   "publication version of results"
 
-run_voi_models <- FALSE
+run_voi_models <- TRUE
 # sub options for run_voi_models
 fit_models <- FALSE
 
@@ -1592,7 +1592,7 @@ if (run_sofia_comparison == TRUE) {
   
   set.seed(42)
   
-  future::plan(multisession, workers = n_cores)
+  future::plan(multisession, workers = n_cores, .cleanup = TRUE)
   
   fao_status_fits <- fao_status %>%
     # filter(fao_area_code %in% 67) %>%
@@ -1612,7 +1612,7 @@ if (run_sofia_comparison == TRUE) {
         min_effort_year = 1975,
         engine = "stan",
         cores = 2,
-        write_results = TRUE, 
+        write_results = FALSE, 
         results_path = results_path,
         .progress = TRUE,
         .options = future_options(
