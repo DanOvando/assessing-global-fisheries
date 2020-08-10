@@ -657,10 +657,12 @@ fit_fao <-
       results <- NA
     }
     
+    # local_mem = pryr::mem_used()
+    # write(local_mem, "local_mem.rds")
+    # 
     
-    
-    rm(list = ls()[!str_detect(ls(), "results")])
-    gc()
+    # rm(list = ls()[!str_detect(ls(), "results")])
+    # gc()
     return(results)
     
   }
