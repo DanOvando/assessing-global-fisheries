@@ -1,6 +1,7 @@
 # Results
-data/fao-*
-data/fao_*
+# !data/fao-to-bell-region.csv
+#data/fao-*
+#data/fao_*
 data/fao/*
 results/*
 *.docx
@@ -14,7 +15,7 @@ sraplus_tmb.*
 
 data/ram/*
 
-data/FAO*
+data/FAO_AREAS*
 
 data-raw/RAM*
 # History files

@@ -1,5 +1,6 @@
 fit_fao <-
   function(data,
+           id,
            support_data,
            model = "sraplus_tmb",
            engine = "tmb",
@@ -16,9 +17,17 @@ fit_fao <-
            reg_cv = NA,
            draws = 2e6,
            refresh = 0,
-           thin_draws = TRUE) {
+           thin_draws = TRUE, 
+           cmsy_cores = 1,
+           results_path,
+           write_results) {
     #
     #     data <- test$data[[1]]
+    #     
+    
+    if (write_results & !dir.exists(file.path(results_path, "faofits"))){
+      dir.create((file.path(results_path, "faofits")))
+    }
     
     ogengine <- engine
     
@@ -27,6 +36,44 @@ fit_fao <-
     catches <- data$catch
     
     years <- data$year
+    
+    
+    # fit cmsy
+    # 
+    sfc <- purrr::safely(portedcmsy::funct_cmsy)
+    
+    ported_cmsy <- sfc(
+      catches = catches[years >= 1950],
+      catch_years = years[years >= 1950],
+      stock = scientific_name,
+      common_name = NA,
+      scientific_name = scientific_name,
+      res = unique(data$resilience),
+      start.yr = years[years >= 1950][1],
+      end.yr = dplyr::last(years[years >= 1950]),
+      cores = cmsy_cores
+    )
+    if (is.null(ported_cmsy$error)) {
+      cmsy_results <- ported_cmsy$result %>%
+        mutate(c_div_msy  = ct / msy) %>%
+        select(year, bt, b_bmsy, f_fmsy, c_div_msy) %>%
+        rename(depletion = bt,
+               b_div_bmsy = b_bmsy,
+               u_div_umsy = f_fmsy) %>%
+        pivot_longer(-year, names_to = "variable", values_to = "mean") %>%
+        mutate(
+          sd = NA,
+          lower = NA,
+          upper = NA,
+          data = "cmsy"
+        )
+      
+      cmsy_worked <- TRUE
+    } else {
+      cmsy_worked <- FALSE
+    }
+    
+    # fit to u
     
     u_years <- seq_along(years)[!is.na(data$mean_u_umsy)]
     
@@ -595,18 +642,27 @@ fit_fao <-
         else{
           .
         }
+      }  %>% {
+        if (cmsy_worked) {
+          bind_rows(., cmsy_results)
+        } else {
+          .
+        }
       }
     
-    # write(wtf,file = "wtf.txt", append = TRUE)
+    if (write_results){
+      
+      write_rds(results, file.path(results_path, "faofits",paste0(id, ".rds")))
+      
+      results <- NA
+    }
     
-    # results %>%
-    #   filter(data == "sar") %>%
-    #   ggplot(aes(year, mean, color = data)) +
-    #   geom_line() +
-    #   facet_wrap(~variable, scales = "free_y")
+    # local_mem = pryr::mem_used()
+    # write(local_mem, "local_mem.rds")
+    # 
     
-    rm(list = ls()[!str_detect(ls(), "results")])
-    gc()
+    # rm(list = ls()[!str_detect(ls(), "results")])
+    # gc()
     return(results)
     
   }
