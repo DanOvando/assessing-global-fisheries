@@ -18,7 +18,7 @@ fit_fao <-
            draws = 2e6,
            refresh = 0,
            thin_draws = TRUE, 
-           cmsy_cores = 3,
+           cmsy_cores = 1,
            results_path,
            write_results) {
     #

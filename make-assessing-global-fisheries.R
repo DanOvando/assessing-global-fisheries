@@ -71,15 +71,15 @@ run_continent_examples <- FALSE
 
 run_ei_example <- FALSE
 
-run_sofia_comparison <- TRUE
+run_sofia_comparison <- FALSE
 
 run_ram_tests <- FALSE
 
-run_ram_comparison <- TRUE
+run_ram_comparison <- FALSE
 
 knit_paper <- TRUE
 
-warning("Running full analysis takes upwards of 12 hours on 4 cores. Recommend starting on a Friday night having a nice weekend. Given memory constraints of models, more than 4 cores is not recommended.")
+warning("Running full analysis takes upwards of 24 hours on 2 cores. Recommend starting on a Friday night having a nice weekend. Given memory constraints of models, more than 2 cores is not recommended (memory routinley runs out on a 16 core 36GB machine when cores > 2)")
 
 engine <-  "stan"
 
@@ -1611,7 +1611,8 @@ if (run_sofia_comparison == TRUE) {
         default_initial_state_cv = NA,
         min_effort_year = 1975,
         engine = "stan",
-        cores = 2,
+        cores = 1,# run in to lots of memory problems if greater than 1
+        cmsy_cores = 1, # run in to lots of memory problems if greater than 1
         write_results = FALSE, 
         results_path = results_path,
         .progress = TRUE,
@@ -1761,13 +1762,14 @@ fao_areas <- fao_areas %>%
   mutate(geometry = map(data, st_union)) %>%
   select(-data)
 
+
 fao_areas = fao_areas %>%
   unnest(cols = geometry) %>%
   ungroup() %>%
   sf::st_as_sf() %>%
-  sf::st_simplify() %>%
-  mutate(fao_area_code = as.numeric(f_area))
-
+  # sf::st_simplify() %>%
+  mutate(fao_area_code = as.numeric(f_area)) #%>% 
+  # st_transform(crs = "+proj=moll")
 
 fao_area_accuracy <- fao_areas %>%
   left_join(fao_sraplus_acc %>% mutate(f_area = as.character(fao_area_code)), by = "f_area") %>%
@@ -1783,7 +1785,9 @@ world_map <-
     type = 'land',
     category = 'physical',
     returnclass = "sf"
-  )
+  ) #%>% 
+  # st_transform(crs = "+proj=moll")
+  
 
 fao_acc_map_plot <- fao_area_accuracy %>%
   filter(!is.na(data)) %>%
@@ -1794,7 +1798,7 @@ fao_acc_map_plot <- fao_area_accuracy %>%
     data = world_map,
     fill = "darkgrey",
     color = "black",
-    size = 0.05
+    size = 0.01
   ) +
   facet_wrap(~ data) +
   scale_fill_viridis(
@@ -1810,7 +1814,7 @@ fao_acc_map_plot <- fao_area_accuracy %>%
     )) +
   theme(legend.position = "top",
         legend.direction = "horizontal",
-        panel.background = element_rect(fill = "lightgrey"))
+        panel.background = element_rect(fill = "white"))
 
 
 # run RAM tests ------------------------------------------------------
@@ -2135,7 +2139,9 @@ if (run_ram_comparison == TRUE) {
   
 }
 
-# process ram status fits
+
+# make plots --------------------------------------------------------------
+
 
 ram_fit_worked <- map_lgl(map(ram_status_fits$fits, "error"), is.null)
 
@@ -2181,7 +2187,18 @@ assess_ram_fits <- ram_status_fits %>%
   mutate(ram_b_v_bmsy = pmin(ram_b_v_bmsy,5),
          mean = pmin(mean, 5)) %>% 
   mutate(resid = ram_b_v_bmsy - mean,
+         ae = abs(resid)) %>% 
+  filter(!data %in%  c("heuristic", "catch_only")) 
+
+null_model <- assess_ram_fits %>% 
+  filter(data == "cmsy") %>% 
+  mutate(mean = sample(c(.4,1,1.6), n(), replace = TRUE)) %>% 
+  mutate(data = "Guess") %>% 
+  mutate(resid = ram_b_v_bmsy - mean,
          ae = abs(resid))
+
+assess_ram_fits <- assess_ram_fits %>% 
+  bind_rows(null_model)
 
 write_rds(assess_ram_fits, path = file.path(results_path,"assess_ram_fits.rds"))
 
@@ -2275,20 +2292,20 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
     data = world_map,
     fill = "darkgrey",
     color = "black",
-    size = 0.05
+    size = 0.01
   ) +
   facet_wrap(~ data) +
   scale_fill_gradient2(
     low = "steelblue",
     high = "tomato",
     mid = "white",
-    name = "% Error",
+    name = "% Bias",
     labels = percent,
     midpoint = 0,
     limits = c(-1,3.5),
     breaks = seq(-1, 3.5, by = .5),
     guide = guide_colorbar(
-      barwidth = ggplot2::unit(10, "lines"),
+      barwidth = ggplot2::unit(15, "lines"),
       axis.linewidth = 1,
       ticks.colour = "black",
       frame.colour = "black"
@@ -2296,7 +2313,7 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
   ) + 
   theme(legend.position = c(.75,.1),
         legend.direction = "horizontal",
-        panel.background = element_rect(fill = "lightgrey"),
+        panel.background = element_rect(fill = "white"),
         legend.text = element_text(size = 8))
 
 ram_mape_map_plot <- fao_area_ram_status %>%
@@ -2308,7 +2325,7 @@ ram_mape_map_plot <- fao_area_ram_status %>%
     data = world_map,
     fill = "darkgrey",
     color = "black",
-    size = 0.05
+    size = 0.01
   ) +
   facet_wrap(~ data) +
   scale_fill_gradient(
@@ -2328,7 +2345,7 @@ ram_mape_map_plot <- fao_area_ram_status %>%
   ) + 
   theme(legend.position = c(.75,.1),
         legend.direction = "horizontal",
-        panel.background = element_rect(fill = "lightgrey"))
+        panel.background = element_rect(fill = "white"))
 
   
 
@@ -2337,12 +2354,12 @@ ram_acc_map_plot <- fao_area_ram_status %>%
   filter(!is.na(data)) %>%
   mutate(data = fct_reorder(data, -accuracy, .fun = mean)) %>% 
   ggplot() +
-  geom_sf(aes(fill = accuracy), size = .5) +
+  geom_sf(aes(fill = accuracy), size = .01) +
   geom_sf(
     data = world_map,
     fill = "darkgrey",
     color = "black",
-    size = 0.05
+    size = 0.01
   ) +
   facet_wrap(~ data) +
   scale_fill_viridis(
@@ -2358,7 +2375,7 @@ ram_acc_map_plot <- fao_area_ram_status %>%
     )) +
     theme(legend.position = c(.75,.1),
           legend.direction = "horizontal",
-          panel.background = element_rect(fill = "lightgrey"))
+          panel.background = element_rect(fill = "white"))
     
 ram_status <- fao_area_ram_status %>% 
   filter(!is.na(data)) %>% 
@@ -2382,7 +2399,7 @@ ram_b_map_plot <- combo %>%
     data = world_map,
     fill = "grey",
     color = "black",
-    size = 0.05
+    size = 0.01
   ) +
   facet_wrap( ~ data) +
   scale_fill_viridis(
@@ -2396,7 +2413,7 @@ ram_b_map_plot <- combo %>%
     )
   ) + 
   theme(legend.position = "top",
-        panel.background = element_rect(fill = "lightgrey"))
+        panel.background = element_rect(fill = "white"))
 
 
 
