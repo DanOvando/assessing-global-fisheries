@@ -144,9 +144,15 @@
     "TMB": {
       "Package": "TMB",
       "Version": "1.7.18",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "1500330bbd3c378400d65a5010aa7ce5"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "adcomp",
+      "RemoteUsername": "kaskr",
+      "RemoteRef": "quote_path",
+      "RemoteSha": "4e5c76dcd7d6822ad635a8823abb2079461fe8c4",
+      "RemoteSubdir": "TMB",
+      "Hash": "cee0002c75c973672485f50d020b928e"
     },
     "TMBhelper": {
       "Package": "TMBhelper",

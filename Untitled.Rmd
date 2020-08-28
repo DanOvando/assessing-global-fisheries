@@ -1,0 +1,42 @@
+---
+title: "test"
+author: "Dan"
+date: "8/27/2020"
+output:
+  bookdown::pdf_document2: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## R Markdown
+
+Table.\@ref(tab:param-tab)
+
+```{r param-tab}
+
+cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "K", `Default Prior` = "$logn(10\\times{max(catch)},4)$") %>%
+  rbind(c("Growth rate", "r", "$logn(r_{fishlife}, \\sigma_{r,fishlife})$")) %>%
+  rbind(c("Shape parameter", "m", "Drawn from @horson2012")) %>%
+  rbind(c("Catchability", "q", "$logn(1e^{-3}, 0.3)$")) %>%
+  rbind(c("Observation Error", "$\\sigma_{obs}$", "$logn(.05,2)$")) %>%
+  rbind(c("Ratio of process to observation error", "$\\gamma$", "$logn(.05,0.5)$")) %>%
+  rbind(c("Tech Creep", "$creep$", "$logn(0.025,0.2)$")) %>% 
+  rbind(c("Initial State", "$B0$", "$logn(0.025,0.2)$"))
+
+ 
+knitr::kable(
+  cd,
+  "latex",
+  align = "l",
+  escape = F,
+  row.names = F,
+  caption = "Potential parameters included in sraplus, abbreviations, and default priors"
+) %>%
+  kableExtra::kable_styling(full_width = T, font_size = 9) %>%
+  kableExtra::row_spec(0, bold = T)
+```

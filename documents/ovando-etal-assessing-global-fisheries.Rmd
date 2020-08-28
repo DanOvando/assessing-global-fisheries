@@ -13,9 +13,9 @@ date: "`r Sys.Date()`"
 bibliography: ["../references.bib"]
 csl: nature.csl
 output: 
+  bookdown::pdf_document2: default
   bookdown::word_document2:
     reference_docx: word-template.docx
-  bookdown::pdf_document2: default
 params:
   results_name: ["v0.5"]
   min_years_catch: [25]
@@ -327,167 +327,11 @@ The coming decades are a critical time for the future of fisheries and ocean hea
 
 All analysis were conducted in the R programming language [@rcoreteam2019]. Model fitting was conducted using Rcpp [eddelbuettel2011] and stan [@carpenter2017], implemented through Template Model Builder [@kristensen2016] by the tmbstan package [@monnahan2018]. The `sraplus` package is publicly available at [github.com/danovando/sraplus](https://github.com/DanOvando/sraplus), and all materials needed to fully reproduce this manuscript are available at [github.com/DanOvando/assessing-global-fisheries](https://github.com/DanOvando/assessing-global-fisheries). 
 
-## Model Overview
-
-The core of `sraplus` is a Pella-Tomlinson [@pella1969] production model  in the manner of @winker2018. While models of these kinds abstract away many important details of fish biology and fleet behavior, they are the highest resolution model that the potential data evaluated here will support. The purpose of `sraplus` is not to make substantial improvements in the fitting of surplus production models, but to provide a flexible tool for exploring the impacts of adding different kinds of data and priors on estimates of fishery status. Detailed examples of how to operate the code of the model can be found [github.com/danovando/sraplus](https://github.com/DanOvando/sraplus). Here we describe the overall methods used to produce the results in this paper and highlight key details. 
-
-`sraplus` can be used in two general ways: as a mechanism for revealing implicit priors on fishery status through a sample-importance-resampling algorithm, and as a means for fitting indices of abundance informed by priors. To illustrate we will walk through a series of ways that `sraplus` could be applied to a case study fishery. 
-
-Suppose that the only thing we observe from a fishery is a catch history. Assuming Pella-Tomlinson population dynamics, the only thing we can learn from this catch history alone is the set of model parameters that ensure that the population still exists and never collapsed in the past (i.e. that catches have never been greater than biomass). We can think of this as a binomial process in which we fit a model of the population, conditional on catches, to the fact that we know that population existed in each time step of the catch history.  Beyond that though, baring additional information we have no way of knowing whether these catches represent a substantial proportion of a small population or a minuscule fraction of a massive population; all we know is that the current population must be greater than 0 and less than or equal to carrying capacity *k*. 
-
-What happens when we impose informative priors on the population parameters? For example at a bare minimum, we know that carrying capacity must be less than infinity, and we can certainly make inferences based on knowledge from other better studied fisheries of similar species on what a potential upper bound on carrying capacity might be. Once we have generated informative priors on our population parameters, we have implicitly provided priors on the biomass and therefore status of the fishery over its entire history: if our priors on carrying capacity only extend a small fraction beyond the minimum value needed to ensure the existence of the population, our implicit prior is that the population is severely depleted. If our prior is that carrying capacity is orders of magnitude greater than the observed catches, then our implicit prior is that the population is relatively unexploited. 
-
-For our case study fishery, we can use `sraplus` as a filter to say, conditional on our priors, the catch history, and the population model, what is our implied prior on stock status of the fishery over time (see Section XX and Table.\@ref(tab:prior-tab) for descriptions of model parameters). While user defined priors on population parameters can be supplied, `sraplus` has a number of built in mechanisms for setting parameters based on the taxonomy of the species in question and the magnitude of the catch history. This form of analysis is often extended though to include an explicit prior on stock status in the most recent year [@walters2006]. 
-
-For our case study, expert opinion tells us that the stock is likely between XX and XX% of carrying capacity in the most recent year. While we can use `sraplus` to include this addition information, doing so introduces a nontrivial statistical problem: we have now placed two priors on the same outcome (current stock status), one explicit and one implicit in our growth parameter priors.  The net effect of this is that once these priors are run through `sraplus`, our post-model-pre-data "estimate" of stock status will appear to have been updated, creating an illusion that we have learned something about stock status. However, we have absolutely no data with which to update our prior on stock status beyond the requirement that the population exists. 
-
-`sraplus` implements an approximate solution to this problem. Rather than using combinations of implied and explicit priors, `sraplus` asks, given an explicit prior on recent stock status, what prior distributions of population parameters produce our explicit prior on recent stock status, given the other prior distributions, catch history and model assumptions. This helps resolve some of the statistical issues related to placing multiple priors on the same parameter (recent stock status), and makes clear where any information on recent stock status is coming from. To return to our case study then, uncorrected, combining our explicit priors on recent stock status with our population parameter priors reveals an implicit prior on recent stock status that spans XX to XX. Using our correction, the implicit prior on recent stock status more or less matches our explicit prior (Fig.XX). 
-
-
-```{r}
-
-id = unique(ram_comp_data$stockid)
-
-ex <- ram_data %>% 
-  filter(stockid %in% id[[1]]) 
-
-ex %>% 
-  ggplot(aes(year, b_v_bmsy)) + 
-  geom_point()
-
-# fit using catch heuristic
-
-co_driors <- sraplus::format_driors(taxa = unique(ex$scientificname),
-                                 catch = ex$catch, 
-                                 years = ex$year,
-                                 terminal_state = 0.25,
-                                 terminal_state_cv = 0.25,
-                                 b_ref_type = "k")
-
-plot_driors(co_driors)
-
-
-
-biased_co_fit <- sraplus::fit_sraplus(driors = co_driors, tune_prior_predictive = FALSE,
-                                      estimate_shape = TRUE)
-
-
-co_fit <- sraplus::fit_sraplus(driors = co_driors, tune_prior_predictive = TRUE,
-                                      estimate_shape = TRUE)
-
-
-plot_sraplus(`biased fit` = biased_co_fit, `unbiased fit` = co_fit)
-
-```
-
-
-While `sraplus` lets users supply their best estimate of recent stock status for a given fishery, the model also allows users to supply data on the swept area ratio (SAR , @amoroso2018) and/or fisheries management index (FMI, @melnychuk2017) scores for a given fishery. SAR is a measure of the trawling intensity in a given region, and as such for species susceptible to trawl gears can be an effective index of fishing pressure. FMI reflects expert opinion on the research, management, enforcement, and socioeconomic capacity of a given fishery, which together have significant associations with stock status. `sraplus` uses relationships between these SAR and FMI scores and observed F/F~MSY~  and B/B~MSY~ values to generate a posterior predictive distribution of F/F~MSY~ or B/B~MSY~ for the fishery in question, which serves as the priors for `sraplus`. This process lets us convert information on stock status present in other available data into a form that aligns with the model structure of `sraplus`.
-
-To continue our case study, suppose that we no longer believe we have good data on current stock status, but do have a reasonable estimate of swept area ratio. `sraplus` can now use the posterior predictive $\hat{F/F~MSY~}$ generated by the SAR value as the prior for recent F/F~MSY~ for the fishery in question. This process allows users to translate something that they can measure, SAR, into something that they perhaps cannot (F/F~MSY~). The model then determines the growth parameter priors that conditional on the catch history and model structure produce the SAR generated $\hat{F/F~MSY~}$ prior distribution. 
-
-Up to this point we still have not fit the model to any data; sraplus is simply helping us visualize the implications of our priors in terms of stock status over time and relevant reference points such as MSY. In order to actually learn something new about the stock in question, we need to update our priors with data. `sraplus` allows for two methods for accomplishing this: the model can be fit to an observed index of abundance (for example a fishery independent survey), or fit to a catch-per-unit effort index calculated from the observed catch and an index of fishing effort. In the latter case, the model must make an assumption about the rate of efficiency increase of a unit of fishing effort over time. When data are available the model can be provided priors on recent fishery status derived from expert opinion or FMI/SAR values as well. 
-
-
-pull out example from SAR fits
-```{r}
-sar <- sraplus::sar %>% 
-  filter(stockid %in% unique(ram_data$stockid)) %>% 
-  arrange(desc(sar)) %>% 
-  select(stockid, everything()) %>% 
-  slice(10)
-
-ex <- ram_data %>% 
-  filter(stockid %in% unique(sar$stockid)) 
-
-ex %>% 
-  ggplot(aes(year, b_v_bmsy)) + 
-  geom_point()
-
-# fit using catch heuristic
-
-co_driors <- sraplus::format_driors(taxa = unique(ex$scientificname),
-                                 catch = ex$catch, 
-                                 years = ex$year,
-                                 terminal_state = 0.25,
-                                 terminal_state_cv = 0.25,
-                                 b_ref_type = "k")
-
-plot_driors(co_driors)
-
-
-
-biased_co_fit <- sraplus::fit_sraplus(driors = co_driors, tune_prior_predictive = FALSE,
-                                      estimate_shape = TRUE)
-
-
-co_fit <- sraplus::fit_sraplus(driors = co_driors, tune_prior_predictive = TRUE,
-                                      estimate_shape = TRUE)
-
-
-plot_sraplus(`biased fit` = biased_co_fit, `unbiased fit` = co_fit)
-
-# fit using SAR
-
-sar_driors <- sraplus::format_driors(taxa = unique(ex$scientificname),
-                                 catch = ex$catch, 
-                                 years = ex$year,
-                                 sar = sar$sar[sar$stockid == unique(ex$stockid)])
-
-plot_driors(sar_driors)
-
-
-sar_fit <- fit_sraplus(sar_driors, estimate_shape = TRUE)
-
-plot_sraplus(`biased fit` = biased_co_fit, `unbiased fit` = co_fit, `sar fit` = sar_fit)
-
-
-# fit using biomass index
-
-index_driors <- sar_driors <- sraplus::format_driors(taxa = unique(ex$scientificname),
-                                 catch = ex$catch, 
-                                 years = ex$year,
-                                 sar = sar$sar[sar$stockid == unique(ex$stockid)],
-                                 index = ex$b_v_bmsy[!is.na(ex$b_v_bmsy)], 
-                                 index_years = ex$year[!is.na(ex$b_v_bmsy)])
-
-index_fit <- fit_sraplus(index_driors, engine = "stan", estimate_shape = TRUE)
-
-plot_sraplus(`biased fit` = biased_co_fit, `unbiased fit` = co_fit, `sar fit` = sar_fit,
-             `index fit` = index_fit,
-             plotvars = "b_div_bmsy") + 
-  geom_point(data = ex, aes(year, b_v_bmsy))
-
-
-```
-
+`sraplus` contains too many options to cover within this methods section. We encourage readers to explore the documentation available at the package website at www.github.com/danovando/sraplus. Below we describe the structure of the population model underpinning `sraplus`, the estimation model, and a brief example demonstrating the use of the model. 
 
 ## Population Model
 
-The core of our model is a Pella-Tomlinson [@pella1969] production model  in the manner of @winker2018. While models of these kinds abstract away many important details of fish biology and fleet behavior, they are the highest resolution model that the potential data evaluated here will support. 
-
-```{r prior-tab}
-cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "K", `Default Prior` = "$logn(10\\times{max(catch)},4)$") %>%
-  rbind(c("Growth rate", "r", "$logn(r_{fishlife}, \\sigma_{r,fishlife})$")) %>%
-  rbind(c("Shape parameter", "m", "$logn(1.01, 0.25)$")) %>%
-  rbind(c("Catchability", "q", "$logn(1e^{-3}, 0.3)$")) %>%
-  rbind(c("Observation Error", "$\\sigma_{obs}$", "$logn(.05,2)$")) %>%
-  rbind(c("Process Error", "$\\sigma_{proc}$", "$logn(.05,0.5)$")) %>% 
-  rbind(c("Tech Creep", "$creep$", "$logn(0.025,0.2)$"))
-
- 
-knitr::kable(
-  cd,
-  "latex",
-  align = "l",
-  booktabs = TRUE,
-  escape = F,
-  row.names = F,
-  caption = "Potential parameters included in sraplus, abbreviations, and default priors"
-) %>%
-  kableExtra::kable_styling(full_width = T, font_size = 9) %>%
-  kableExtra::row_spec(0, bold = T)
-```
-
+The core of `sraplus` is a Pella-Tomlinson [@pella1969] production model constructed in the manner of @winker2018. While models of these kinds abstract away many important details of fish biology and fleet behavior, they are the highest resolution model that the potential data evaluated here will support. The purpose of `sraplus` is not to make substantial improvements in the fitting of surplus production models, but to provide a flexible tool for exploring the impacts of adding different kinds of data and priors on estimates of fishery status
 
 The population growth equation is  
 
@@ -500,43 +344,11 @@ The population growth equation is
   (\#eq:hockey)
 \end{equation}
 
-Where $B_t$ is biomass at time *t*, *r* is the intrinsic growth rate, *m* is the scaling parameter that allows for the ratio of Bmsy/K to shift (when *m* is 2 the Bmsy / K = 0.5 and the model acts as a Schaefer model, lower values of m shift the production function left, higher values right), *c* is catch, and *p* is process error. The Pella-Tomlinson model does have an issue where growth rates can become unrealistically large when the population reaches low sizes. We deal with this problem by following the methods described in @winker2018. to reduce the production of the population when it falls below a threshold of 25% of carrying capacity. Incorporation of process errors is useful for two reasons: (1) when you have an abundance index, process errors can reduce bias arising from lack of fit in a deterministic SRA whenever dynamics are poorly explained by catch-history alone, and (2) with or without an abundance index (or other info), the stochastic portion is necessary to get good uncertainty intervals (i.e., with close to nominal coverage, see @thorson2018). 
+Where $B_t$ is biomass at time *t*, *r* is the intrinsic growth rate, *m* is the scaling parameter that allows for the ratio of B~msy~/K to shift. When *m* is two Bmsy / K = 0.5 and the model acts as a Schaefer model, lower values of m shift the production function left, higher values right. *c* is catch, and *p* is process error. Growth rates can become unrealistically large when the population reaches low sizes under the Pella-Tomlinson model. We deal with this problem by following the methods described in @winker2018. to reduce the production of the population when it falls below a threshold of 25% of carrying capacity. 
 
-<!-- When the SIR method is used we use the supplied catch history. However, for the maximum likelihood approach, convergence is greatly facilitated by estimating catches ($\hat{c_t}$) rather than using the observed catches directly. $\hat{c_t}$ is given as -->
+We  allow for process error *p* (in the manner of the stochastic stock reduction analysis error suggested by @walters2006). This allows the population dynamics to deviate from the exact values given by the Pella-Tomlinson operating model, while still conforming to the assumptions of this model on average. Incorporation of process errors is useful for two reasons: (1) when you have an abundance index, process errors can reduce bias arising from lack of fit in a deterministic SRA whenever dynamics are poorly explained by catch-history alone, and (2) with or without an abundance index (or other info), the stochastic portion is necessary to get good uncertainty intervals (i.e., with close to nominal coverage, see @thorson2018). 
 
-<!-- \begin{equation} -->
-<!--   \hat{c_t} = u_{t}B_{t} -->
-<!--   (\#eq:chat) -->
-<!-- \end{equation} -->
-
-
-<!-- where $u_t$ is estimated through -->
-
-<!-- \begin{equation} -->
-<!--   u_{t} = \frac{1}{1 + e^{-u^*_t}} -->
-<!--   (\#eq:invf) -->
-<!-- \end{equation} -->
-
-<!-- Equation \@ref(eq:invf) ensures that $u_t$ is between 0 and 1, while the model estimates $u^*_t$ to improve performance.  -->
-
-<!-- $\hat{c_t}$ is then fit to the observed catches through the likelihood -->
-
-<!-- \begin{equation} -->
-<!--   log\left(c_t\right) \sim normal\left(log\left(\hat{c_t}\right),0.05\right) -->
-<!--   (\#eq:catch) -->
-<!-- \end{equation} -->
-
-<!-- Where we assume an observation coefficient of variation of 5\%. We estimate catch rather than directly using the observed catch in order to improve model performance. As priors on depletion, or indices of abundance, pull the estimated population closer to zero, there is a greater and greater chance that the observed catch history will result in a collapse of the population (catch in time *t* being greater than biomass in time *t*); It is much harder to find parameters that produce a final depletion of 1\% of carrying capacity while not crashing the population prior to then given a catch history, than it is to produce a final depletion of 99\% of carrying capacity. We can impose restrictions and penalties on population crashes, but this distorts the gradients of the model, causing the model to often become stuck once a few crashes have occurred. Since $u_t$ is constrained between 0 and 1, $\hat{c_t}$ will always be "viable", and by then fitting to the observed catches, the model has an easier time finding parameters that produce a near match to the observed catches while not crashing the population. As of now none of the data used in this exercise have missing years of catch data, but the model can handle those cases in the future due to the random walk priors imposed on $u_t$ detailed below.  -->
-
-<!-- In order to help separate out observation error in the catch and process error in the population model, when catch is being estimated we assume that fishing mortality $u_t$ follows a random walk on average, assigning each $u_t$ a prior of -->
-
-<!-- \begin{equation} -->
-<!--   log(u_t) \sim normal(log(u_{t - 1}),0.1)) -->
-<!--   (\#eq:rwalk) -->
-<!-- \end{equation} -->
-
-
-We  allow for process error (in the manner of the stochastic stock reduction analysis error suggested by @walters2006). This allows the population dynamics to deviate from the exact values given by the Pella-Tomlinson operating model, while still conforming to the assumptions of this model on average. Process error *p* is assumed to be log-normally distributed, such that 
+Process error *p* is assumed to be log-normally distributed, such that 
 
 \begin{equation}
   p_t \sim e^{normal\left(-\sigma_{proc}^2/2,\sigma_{proc}\right)}
@@ -544,7 +356,197 @@ We  allow for process error (in the manner of the stochastic stock reduction ana
 \end{equation}
 
 
-All of our estimates are Bayesian in nature. We can break the use of our model into two distinct categories: with data and without. By "data", we refer to measurements which are confronted with model estimates within a likelihood function. In our context, these include fishery-independent survey data, or a CPUE index. When there are no data, the model amounts to filtering priors through the model (the combination of the Pella-Tomlinson operating model and the catches for the stock in question, along with any fixed parameters). Under this mode, the model is essentially a stock-reduction analysis model, in the manner of @walters2006, in which we ask, which combinations of prior probability distributions of parameters do not crash the population, given the constraints of the model. 
+## Estimation Model
+
+All of our estimates are Bayesian in nature. We can break the use of `sraplus` into two distinct categories: with data and without. By "data", we refer to measurements which are used to confront model estimates within a likelihood function. In our context, these include fishery-independent survey data, or a CPUE index. When there are no data, the model amounts to filtering priors through the model (the combination of the Pella-Tomlinson operating model and the catches for the stock in question, along with any fixed parameters). Under this mode, the model is essentially a stock-reduction analysis model, in the manner of @walters2006, in which we ask, which combinations of prior probability distributions of parameters do not crash the population (i.e. results in biomass less than catches in any time step in the fishery's history), given the constraints of the population model. 
+
+The full list of estimable parameters are listed in Table.\@ref(tab:param-tab). *r* and *k* are the only two parameters that are always estimated. Estimation of every other parameter can be turned on or off. When estimation is turned off estimable parameters are fixed at their initial values, which can either be set to model defaults or specified by the user. For our main sets of results (everything excluding the value of information analysis), the estimated parameters are *r*, *k*, *m*, $\sigma_{obs}$, $\gamma$, and *B0*. *q* is also estimated when needed. 
+
+```{r param-tab}
+cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "K", `Default Prior` = "$logn(10\\times{max(catch)},4)$") %>%
+  rbind(c("Growth rate", "r", "$logn(r_{fishlife}, \\sigma_{r,fishlife})$")) %>%
+  rbind(c("Shape parameter", "m", "Drawn from @horson2012")) %>%
+  rbind(c("Catchability", "q", "$logn(1e^{-3}, 0.3)$")) %>%
+  rbind(c("Observation Error", "$\\sigma_{obs}$", "$logn(.05,2)$")) %>%
+  rbind(c("Ratio of process to observation error", "$\\gamma$", "$logn(.05,0.5)$")) %>%
+  rbind(c("Tech Creep", "$creep$", "$logn(0.025,0.2)$")) %>% 
+  rbind(c("Initial State", "$B0$", "$logn(0.025,0.2)$"))
+
+ 
+knitr::kable(
+  cd,
+  "latex",
+  align = "l",
+  escape = F,
+  row.names = F,
+  caption = "Potential parameters included in sraplus, abbreviations, and default priors"
+) %>%
+  kableExtra::kable_styling(full_width = T, font_size = 9) %>%
+  kableExtra::row_spec(0, bold = T)
+```
+
+
+`sraplus` can be run in two forms: either as a stock reduction analysis [SRA,@walters2006], or fit to an index of abundance (fishery dependent or independent). Unless there is an abundance index to fit to the model runs as a stock reduction analysis. A stock reduction analysis works by specifying prior distributions on population parameters and critically the recent state of the fishery. `sraplus` allows users to specify the most recent status in units of depletion, B/B~MSY~, F, or F/F~MSY~. We then sample from the prior distributions of the population model parameters and apply those to the production model, along with the catch history. Any run that results in the collapse of the population (catch greater than biomass in any time step) is immediately rejected. The remaining viable draws from the prior distributions are sampled in proportion to the supplied prior on recent stock status. It is critical to note that a stock reduction analysis is only a mechanism for revealing implicit priors on fishery status and parameters through a sample-importance-resampling algorithm: the model cannot learn anything new about stock status in the absence of additional data to fit to, beyond the prior on stock status that is fed to it. The usefullness of this process then is in filling in the gap of parameters of interest (e.g. maximum sustainable yield, MSY), and providing historic values of stock status. Any model results based on data sources listed in Table.\@ref(tab:dat-description) that do not contain "cpue" or "RAM data" is estimated through stock reduction analysis. 
+
+When an index of abundance is available the model estimates the posterior probability distributions of the estimated and transformed parameters using Hamiltonian Monte Carlo implemented in stan [@standevelopmentteam2018] accessed through the `tmbstan` interface [@monnahan2018]. The model fits to a direct estimate of abundance (e.g. a fishery independent survey or a standardized catch-per-unit-effort index), the likelihood is
+
+$$log(\pmb{A_t}) \sim normal(f(r,k,m,B0,\pmb{p},\pmb{C}) \times q, sigma_{obs{}}) $$
+where *f* is the Pella-Tomlinson produciton model (Equation 1.XX). When an effort index is available, `sraplus` constructs an index of abundance based on the catch and effort data. @rousseau2019 measure an index of abundance as catch divided by their effort index, either nominal or effective (assuming the 2.6\% technology rate). This assumes that every unit increase in effort is linearly greater than the unit of effort before it. When effort increases dramatically above historic levels, this can create a CPUE index that decreases faster than the true population. This is due to the fact that the marginal fishing mortality produced by increasing unit of efforts increases decreases as effort approaches infinity (since fishing mortality is bounded between 0 and 1). To accommodate this, we generate a catch per effective harvest rate index of abundance, as
+
+$$cpue_t = \frac{catch_t}{(1 - e^{-q_tE_t})}$$
+
+
+Where $q_t$ can has a technology rate component $\tau$
+
+$$q_t = q_{t-1} \times (1  + \tau)$$
+
+We then fit to the index of abundance per
+
+$$log(cpue_t) \sim normal(f(r,k,m,B0,\pmb{p},\pmb{C}), sigma_{obs{}})$$
+
+## Priors
+
+Priors for all estimable parameters can be left at default values or set by the user. The shape parameter is usually not reliably estimable given available data for surplus production models, however, @thorson2012 provides estimate the ratio of B~MSY~ to K for many fish taxa. While we estimate *m* by default throughout the results presented here, we use highly informative priors for the shape parameter drawn from @thorson2012 based on the genus of the species in question. 
+
+
+We address two critical features of prior use in sraplus below: tuning of the prior-predictive distribution and translation of outside data into priors usable by sraplus. 
+
+### Prior Predictive Tuning
+
+Suppose that the only thing we observe from a fishery is a catch history. Assuming Pella-Tomlinson population dynamics, the only thing we can learn from this catch history alone is the set of model parameters that ensure that the population still exists and never collapsed in the past. We can think of this as a binomial process in which we fit a model of the population, conditional on catches, to the fact that we know that population existed in each time step of the catch history.  Beyond that though, baring additional information we have no way of knowing whether these catches represent a substantial proportion of a small population or a minuscule fraction of a massive population; all we know is that the current population must be greater than 0 and less than or equal to carrying capacity *k*. 
+
+In the absence of any data to fit to, the SRA algorithm works by assuming that we know current stock status, and then finds feasible parameters to satisfy that belief. This creates a problem for the Bayesian nature of our analysis though. Consider a production model with two parameters, a growth rate *r* and a carrying capacity *k*. Once we specify prior distributions on r and k, and then apply these distributions to our model (the shape of the production function along with the catch histories), we have implicitly provided a prior on the status of the stock in all time periods, since each unique combination of r and k together with the model produces a deterministic stock status in each time step. Doing so places essentially two priors on recent stock status: one implicit prior through the population parameter priors, and one explicit through the users perception of recent stock status, creating a problem termed Borel's Paradox. This may seem like an academic concern, and indeed in our experience when the data are sufficiently informative the Bayesian version of our model subject to Borel's paradox produces effectively identical results to those produce by the same model fit by maximum likelihood. However, particularly for the SRA version of `sraplus`, Borel's Paradox poses a particular problem. 
+
+The SRA algorithm works in two steps. First, the algorithm rejects any draws that resulted in the collapse of the population (biomass less than catch in a given timestep). From there a standard SRA would sample from the priors in proportion to the stated prior on recent stock status. If the bulk of the prior on terminal stock status was concentrated at 50% of *k*, combinations of *r* and *k* that produce terminal stock status near 50% of *k* are sampled proportionally more frequently. However, lower values of terminal stock status have fewer candidate values of *r* and *k*, since it becomes harder and harder to find viable pairs that come close to but do not crash the population at any time step. Conversely, in the absence of constraints higher values of stock status have infinite combinations of plausible *r* and *k* combinations: since under this model the population cannot be greater than carrying capacity, as for example *k* approaches infinity terminal stock status asymptotes at close to 100% of *k*. The net result of this is that even though individual combinations of *r* and *k* that produce higher stock status than the mean of the prior on recent stock status individually have lower probability of being sampled, there are many more opportunities for the lower-probability events that produce higher stock status to be sampled. As a result, the post-model-pre-data prior on terminal depletion will always be higher under this method than the supplied prior on stock status. 
+
+We present a novel approximation to this problem here. Our solution amounts to a two-step SIR algorithm. We first run the standard SIR algorithm as described above. We then break the resulting draws into bins based on terminal stock status, and calculate the mean sampling probability of each bin.
+
+$$p(bin_i) = \frac{1}{N_i}\sum_{n = 1}^{N_i}{p(b_{n,i})}$$
+
+We then divide the sampling probability of of bin *i* evenly among each of the draws within that bin *n*
+
+$$p(n_i) = \frac{p(bin_i)}{N_i}$$
+
+And we then perform a second SIR algorithm but now sampling each observation $n_i$ in proportion to $p(n_i)$. The net result of this is a post-model-pre-data distribution of parameters *r* and *k*  that produce a distribution of recent stock status that roughly matches the supplied prior on recent stock status. In effect, this process answers the question "given the model, what combinations of parameters produce my prior on recent stock status". This is only an approximate solution, but it helps ensure that the post-model-pre-data distribution of stock status much more closely matches the stated prior on recent stock status, and reduced the positive bias resulting from use of the raw SRA algorithm (Fig.\@ref(fig:bias-plot)). 
+
+```{r bias-plot, fig.cap = "Post-model-pre-data distribution of depletion (biomass relative to carrying capacity) from raw SRA algorithm (untuned, top row), from SRA algorithm with approximate tuning applied (tuned, middle row), compared to the supplised prior on depletion (bottom row). Black vertical line indicates median value. "}
+
+id = unique(ram_comp_data$stockid)
+
+ex <- ram_data %>% 
+  filter(stockid %in% id[[1]]) 
+
+# fit using catch heuristic
+
+co_driors <- sraplus::format_driors(taxa = unique(ex$scientificname),
+                                 catch = ex$catch, 
+                                 years = ex$year,
+                                 terminal_state = 0.25,
+                                 terminal_state_cv = 0.5,
+                                 b_ref_type = "k")
+
+biased_co_fit <- sraplus::fit_sraplus(driors = co_driors, tune_prior_predictive = FALSE,
+                                      estimate_shape = TRUE)
+
+biased_depletion <- biased_co_fit$fit %>% 
+  filter(variable == "dep_t") %>%
+  filter(year == max(year)) %>% 
+  mutate(set = "Untuned Post-Model-Pre-Data") %>% 
+  select(year, value, set)
+
+
+co_fit <- sraplus::fit_sraplus(driors = co_driors, tune_prior_predictive = TRUE,
+                                      estimate_shape = TRUE)
+
+tuned_depletion <- co_fit$fit %>% 
+  filter(year == max(year), variable == "dep_t") %>% 
+  mutate(set = "Tuned Post-Model-Pre-Data") %>% 
+  select(year, value, set)
+
+prior <- tuned_depletion %>% 
+  mutate(value = rlnorm(n(), log(0.25), 0.5)) %>% 
+    mutate(set = "Prior")
+
+comps <- biased_depletion %>% 
+  bind_rows(tuned_depletion) %>% 
+  bind_rows(prior) %>% 
+  group_by(set) %>% 
+  mutate(valrank = percent_rank(value)) %>% 
+  filter(between(valrank, .05, .95))
+
+comps %>% 
+  ggplot(aes(x = value, y = set)) + 
+  ggridges::geom_density_ridges(alpha = 0.9,
+                                quantile_lines = TRUE, quantiles = 2) +
+  scale_x_continuous(limits = c(0, 1.2), name = "Depletion (B/K)") + 
+  scale_y_discrete(name = '')
+
+
+```
+
+
+
+
+### Priors Informed by Outside Data
+
+Along with allowing users to supply their own priors, the `sraplus` package contains three classes of built in methods for converting information on stock status from additional outside data into a form usable as a prior by `sraplus`. We paired data on catch histories, swept area ratio (SAR), and fisheries management index (FMI) with estimates of stock status from the RAM legacy stock assessment database. We then train a model of the general form $log(status) \sim normal(variable,\sigma)$ for each of these three data types. Given values of these variables for a new fishery then, `sraplus` uses the fitted model to generate posterior predictive distributions of stock status based on these data, which can then be used as priors on stock status by `sraplus`. 
+
+All prior regression models where tested by out-of-sample predictive power, and where competing models were considered the final model was chosen by leave-on-out validation [xx citation]. These models are intended as a reasonably robust means of translating available data into usable prior for our model. Given the scope of this analysis, we do not claim that the presented regressions are the best possible model relating these data with fishery status indicators of interest. Rather, each regression was tested to ensure that it is unlikely that, given the same data, and alternative model would be unlikely to perform much better than those presented here.
+
+#### Catch-Only Priors
+
+Many of the current methods for estimating global stock status of unassessed stocks are based on inferring stock status from characteristics of the catch history [@costello2012b; @costello2016a; @pauly2007; @rosenberg2018]. While these catch-only methods have been shown to have series shortcomings [@free2020], as a point of reference we use two forms of catch-only priors: a statistical and CMSY, as presented implemented by @palomares2020. 
+
+For the CMSY based methods, we used a ported version of the CMSY model available [here](https://github.com/DanOvando/portedcmsy). For each stock we used all the default options provided by CMSY, except for resilience, which was pulled from the vulnerability scores from FishBase accessed through `rfishbase` [boettiger2012]. Vulnerability scores greater than 66 were scored as low resilience, between 33 and 66 medium resilience, and lower than 33 high resilience.
+
+For the statistical approach, we utilize data from the RAM Legacy Stock Assessment Database to estimate a regression of stock status as a function of catch history characteristics. To facilitate the process, we first fit a spectral clustering algorithm to the scaled catch histories of fisheries in RAM, in order identify four possible clusters of catch history types within the the data. Emergent clusters show for example one build around "one way trip" style catch histories, others with a boom and bust, etc. 
+
+We then trained a classification algorithm to predict which catch cluster a given fishery would fall into based on the shape of its catch history. This algorithm was then used to assign fisheries to one of the four identified catch history types, and the catch history type was then used as a hierarchical term within our catch-based regressions (where *s* refers to a smoothing term). For the first regression, we restrict the data to the first year of data available for each fishery *i*, in order to estimate initial stock status
+
+$$log(value_i) \sim normal(s(\frac{first(catch)}{max(catch)} | cluster_i) + s(log(lengthi)|cluster_i) + 1, \sigma) $$
+
+For the second regression, we included data for all available years *y* for fishery *i*. The model is then used to construct a prior on fishery status in the terminal year of the data
+
+$$log(value_{i,y}) \sim normal(s(fyear | cluster_i) + s(\frac{catch_{i,y}}{max(catch_i)} | cluster_i) + cluster_i, \sigma)$$
+where *fyear* is the year of the fishery, starting from 0. 
+
+#### Fisheries Management Index Priors
+
+The Fisheries Management Index (FMI), as presented in @melnychuk2017, utilizes surveys filled out by regional experts to score a fishery against a set of 46 specific questions for individual species about what elements of fisheries management were in place. These questions are then aggregated into broader categories of science, enforcement, management, and socioeconomic. The higher the score, the better the expert judges that a given metric is met in that fishery. Importantly, FMI surveys can be filled out in the absence of stock assessments. This allows us to explore how FMI values map onto stock status, and explore the ability then to use FMI scores to produce priors on stock status for unassessed fisheries (in a manner similar to @osio2015 and @cope2015). 
+
+The final selected model relating FMI variable to stock status metrics was a generalized additive model (GAM) of the form
+
+$$log(value_i) \sim N(s(research_i) + s(management_i) +
+s(enforcement_i) + s(socioeconomics_i) + \frac{catch_i}{max(catch)_i)} + 1,\sigma_{SAR})$$
+
+#### Swept Area Ratio Priors
+
+@amoroso2018 provides an extensive database of trawling footprints throughout the world, including both regions heavily covered by stock assessments and largely unassessed areas. This makes the trawl footprint data an ideal candidate for supporting global stock assessment efforts. As illustrated in @amoroso2018, there is an evident positive relationship between the swept area ratio (SAR,the total annual area trawled divided by the total area of the region) and U/U~MSY~. Note that SAR can be greater than 1 since the same area can be trawled multiple times in a year, e.g. if all trawl-able areas are trawled twice a year then the SAR will be 2. Also note the skewed distribution of SAR values with most concentrated well below 1 and only a handful above 1.
+
+The final selected model relating SAR to to stock status metrics was
+
+$$log(value_i) \sim normal(s(SAR_i) + s(\frac{catch_i}{max(catch)_i)}) + 1,\sigma_{SAR}) $$
+
+
+## Example Use of `sraplus`
+
+`sraplus` can be used in two general ways: as a mechanism for revealing implicit priors on fishery status through a sample-importance-resampling algorithm, and as a means for fitting indices of abundance informed by priors. To illustrate we will walk through a series of ways that `sraplus` could be applied to a case study fishery. 
+
+
+What happens when we impose informative priors on the population parameters? For example at a bare minimum, we know that carrying capacity must be less than infinity, and we can certainly make inferences based on knowledge from other better studied fisheries of similar species on what a potential upper bound on carrying capacity might be. Once we have generated informative priors on our population parameters, we have implicitly provided priors on the biomass and therefore status of the fishery over its entire history: if our priors on carrying capacity only extend a small fraction beyond the minimum value needed to ensure the existence of the population, our implicit prior is that the population is severely depleted. If our prior is that carrying capacity is orders of magnitude greater than the observed catches, then our implicit prior is that the population is relatively unexploited. 
+
+For our case study fishery, we can use `sraplus` as a filter to say, conditional on our priors, the catch history, and the population model, what is our implied prior on stock status of the fishery over time (see Section XX and for descriptions of model parameters). While user defined priors on population parameters can be supplied, `sraplus` has a number of built in mechanisms for setting parameters based on the taxonomy of the species in question and the magnitude of the catch history. This form of analysis is often extended though to include an explicit prior on stock status in the most recent year [@walters2006]. 
+
+For our case study, expert opinion tells us that the stock is likely between XX and XX% of carrying capacity in the most recent year. While we can use `sraplus` to include this addition information, doing so introduces a nontrivial statistical problem: we have now placed two priors on the same outcome (current stock status), one explicit and one implicit in our growth parameter priors.  The net effect of this is that once these priors are run through `sraplus`, our post-model-pre-data "estimate" of stock status will appear to have been updated, creating an illusion that we have learned something about stock status. However, we have absolutely no data with which to update our prior on stock status beyond the requirement that the population exists. 
+
+`sraplus` implements an approximate solution to this problem. Rather than using combinations of implied and explicit priors, `sraplus` asks, given an explicit prior on recent stock status, what prior distributions of population parameters produce our explicit prior on recent stock status, given the other prior distributions, catch history and model assumptions. This helps resolve some of the statistical issues related to placing multiple priors on the same parameter (recent stock status), and makes clear where any information on recent stock status is coming from. To return to our case study then, uncorrected, combining our explicit priors on recent stock status with our population parameter priors reveals an implicit prior on recent stock status that spans XX to XX. Using our correction, the implicit prior on recent stock status more or less matches our explicit prior (Fig.XX). 
+
+
+While `sraplus` lets users supply their best estimate of recent stock status for a given fishery, the model also allows users to supply data on the swept area ratio (SAR , @amoroso2018) and/or fisheries management index (FMI, @melnychuk2017) scores for a given fishery. SAR is a measure of the trawling intensity in a given region, and as such for species susceptible to trawl gears can be an effective index of fishing pressure. FMI reflects expert opinion on the research, management, enforcement, and socioeconomic capacity of a given fishery, which together have significant associations with stock status. `sraplus` uses relationships between these SAR and FMI scores and observed F/F~MSY~  and B/B~MSY~ values to generate a posterior predictive distribution of F/F~MSY~ or B/B~MSY~ for the fishery in question, which serves as the priors for `sraplus`. This process lets us convert information on stock status present in other available data into a form that aligns with the model structure of `sraplus`.
+
+To continue our case study, suppose that we no longer believe we have good data on current stock status, but do have a reasonable estimate of swept area ratio. `sraplus` can now use the posterior predictive $\hat{F/F~MSY~}$ generated by the SAR value as the prior for recent F/F~MSY~ for the fishery in question. This process allows users to translate something that they can measure, SAR, into something that they perhaps cannot (F/F~MSY~). The model then determines the growth parameter priors that conditional on the catch history and model structure produce the SAR generated $\hat{F/F~MSY~}$ prior distribution. 
+
+Up to this point we still have not fit the model to any data; sraplus is simply helping us visualize the implications of our priors in terms of stock status over time and relevant reference points such as MSY. In order to actually learn something new about the stock in question, we need to update our priors with data. `sraplus` allows for two methods for accomplishing this: the model can be fit to an observed index of abundance (for example a fishery independent survey), or fit to a catch-per-unit effort index calculated from the observed catch and an index of fishing effort. In the latter case, the model must make an assumption about the rate of efficiency increase of a unit of fishing effort over time. When data are available the model can be provided priors on recent fishery status derived from expert opinion or FMI/SAR values as well. 
 
 We use a Bayesian methods as it suits the philosophy of our analysis: incorporating prior knowledge about stock status drawn from expert opinion or other similar stocks, and where possible confronting those priors with data. However, this process does introduce a problem, in that it a) certain parts of the prior probability distribution have zero support in the data (e.g. carrying capacity's so small that they crash the population) and b) they create priors on both the *input* (e.g. growth rates and carrying capacity) and *outputs* (recent stock status), effectively putting two prior distributions for the same outcome, a problem termed Borel's Paradox XX punt citation. This may seem like an academic concern, and indeed in our experience when the data are sufficiently informative the Bayesian version of our model subject to Borel's paradox produces effectively identical results to those produce by the same model fit by maximum likelihood. However, particularly for the data-less version of our model, Borel's Paradox poses a particular problem. 
 
@@ -563,62 +565,6 @@ $$p(n_i) = \frac{p(bin_i)}{N_i}$$
 And we then perform a second SIR algorithm but now sampling each observation $n_i$ in proportion to $p(n_i)$. The net result of this is a post-model-pre-data distribution of parameters *r* and *k*  that produce a distribution of recent stock status that roughly matches the supplied prior on recent stock status. In effect, this answers the question "given the model, what combinations of parameters produce my prior on recent stock status". 
 
 <!-- @raftery1993 -->
-
-## FMI and SAR Based Priors
-
-All prior regression models where tested by out-of-sample predictive power, and where competing models were considered the final model was chosen by leave-on-out validation [xx citation]. These models are intended as a reasonably robust means of translating available data into usable prior for our model. Given the scope of this analysis, we do not claim that the presented regressions are the best possible model relating these data with fishery status indicators of interest. Rather, each regression was tested to ensure that it is unlike that, given the same data, and alternative model would be unlikely to perform much better than those presented here XX this might be too much defenseXX
-
-For each statistical prior, we fit three different models, relating the data of interesting, e.g. swept area ratio (SAR), to each of *B/B~MSY~*, *F/F~MSY~*, and *F*
-
-### Swept Area Ratio Priors
-
-@amoroso2018 provides an extensive database of trawling footprints throughout the world, including both regions heavily covered by stock assessments and largely unassessed areas. This makes the trawl footprint data an ideal candidate for supporting global stock assessment efforts. As illustrated in @amoroso2018, there is an evident positive relationship between the swept area ratio (SAR,the total annual area trawled divided by the total area of the region) and U/U~MSY~. Note that SAR can be greater than 1 since the same area can be trawled multiple times in a year, e.g. if all trawl-able areas are trawled twice a year then the SAR will be 2. Also note the skewed distribution of SAR values with most concentrated well below 1 and only a handful above 1.
-
-The final selected model relating SAR to to stock status metrics was
-
-$$log(value_i) \sim normal(s(SAR_i) + s(\frac{catch_i}{max(catch)_i)}) + 1,\sigma_{SAR}) $$
-
-
-
-
-## Fisheries Management Index Priors
-
-The Fisheries Management Index (FMI), as presented in @melnychuk2017, utilizes surveys filled out by regional experts to score a fishery against a set of 46 specific questions for individual species about what elements of fisheries management were in place. These questions are then aggregated into broader categories of science, enforcement, management, and socioeconomic. The higher the score, the better the expert judges that a given metric is met in that fishery. Importantly, FMI surveys can be filled out in the absence of stock assessments. This allows us to explore how FMI values map onto stock status, and explore the ability then to use FMI scores to produce priors on stock status for unassessed fisheries (in a manner similar to @osio2015 and @cope2015). 
-
-The final selected model relating FMI variable to stock status metrics was a generalized additive model (GAM) of the form
-
-$$log(value_i) \sim N(s(research_i) + s(management_i) +
-s(enforcement_i) + s(socioeconomics_i) + \frac{catch_i}{max(catch)_i)} + 1,\sigma_{SAR})$$
-
-## Catch-Only Priors
-
-Many of the current methods for estimating global stock status of unassessed stocks are based on inferring stock status from characteristics of the catch history [@costello2012b; @costello2016a; @pauly2007; @rosenberg2018]. While these catch-only methods have been shown to have series shortcomings [@free2020], as a point of reference we use two forms of catch-only priors: a statistical and CMSY, as presented implemented by @palomares2020. 
-
-For the CMSY based methods, we used a ported version of the CMSY model available [here](https://github.com/DanOvando/portedcmsy). For each stock we used all the default options provided by CMSY, except for resilience, which was pulled from the vulnerability scores from FishBase accessed through `rfishbase` [boettiger2012]. Vulnerability scores greater than 66 were scored as low resilience, between 33 and 66 medium resilience, and lower than 33 high resilience.
-
-For the statistical approach, we utilize data from the RAM Legacy Stock Assessment Database to estimate a regression of stock status as a function of catch history characteristics. To facilitate the process, we first fit a spectral clustering algorithm to the scaled catch histories of fisheries in RAM, in order identify four possible clusters of catch history types within the the data. Emergent clusters show for example one build around "one way trip" style catch histories, others with a boom and bust, etc. 
-
-We then trained a classification algorithm to predict which catch cluster a given fishery would fall into based on the shape of its catch history. This algorithm was then used to assign fisheries to one of the four identified catch history types, and the catch history type was then used as a hierarchical term within our catch-based regressions (where *s* refers to a smoothing term). For the first regression, we restrict the data to the first year of data available for each fishery *i*, in order to estimate initial stock status
-
-$$log(value_i) \sim normal(s(\frac{first(catch)}{max(catch)} | cluster_i) + s(log(lengthi)|cluster_i) + 1, \sigma) $$
-
-For the second regression, we included data for all available years *y* for fishery *i*. The model is then used to construct a prior on fishery status in the terminal year of the data
-
-$$log(value_{i,y}) \sim normal(s(fyear | cluster_i) + s(\frac{catch_{i,y}}{max(catch_i)} | cluster_i) + cluster_i, \sigma)$$
-where *fyear* is the year of the fishery, starting from 0. 
-
-
-## Effort Data
-
-While the FMI and SAR data show some potential for estimating U/U~MSY~ and B/B~MSY~ values, they are clearly not an ideal measure of stock status. An alternative is to actually develop indices of abundance that we can fit models to. @rousseau2019 provides a useful starting place for this exercise, presenting estimates of fishing effort throughout the globe from 1950 to 2015.  Merging these data with capture statistics can provide a crude CPUE index that can then be used to fit a surplus production model. Developing an index of abundance in this manner is clearly a very rough analysis only intended to illustrate broad concepts. Any analysis of CPUE data can be severely affected by changes in technology, skill, hyperdepletion, hyperstability, changes in the spatial footprint of the fishery, and selectivity [@maunder2004a; @walters2003]. In the case of this analysis, a kilowatt day of fishing with 1950s technology clearly represents a different amount of fishing power than a kilowatt day of fishing in 2012. To account for this somewhat, @rousseau2019 include a 2.6% annual "technological creep" factor, which we incorporate in our analysis. 
-
-@rousseau2019 measure an index of abundance as catch divided by their effort index, either nominal or effective (assuming the 2.6\% technology rate). This assumes that every unit increase in effort is linearly greater than the unit of effort before it. When effort increases dramatically above historic levels, this can create a CPUE index that decreases faster than the true population. This is due to the fact that the marginal fishing mortality produced by increasing unit of efforts increases decreases as effort approaches infinity (since fishing mortality is bounded between 0 and 1). To accommodate this, we generate a catch per effective harvest rate index of abundance, as
-
-$$I_t = \frac{catch_t}{(1 - e^{-q_tE_t})}$$
-
-Where $q_t$ can has a technology rate component $\tau$
-
-$$q_t = q_{t-1} \times (1  + \tau)$$
 
 
 ## Value of Information Calculations
@@ -664,7 +610,7 @@ The population growth equation is
 , & \text{if $B_t>0.25 \times K$}.\\
      B_{t + 1} = \left(B_{t} + \frac{B_{t}}{0.25 \times K}\left(B_{t}\frac{r}{m - 1}\left(1 - \left(\frac{B_t}{K}\right)^{m- 1}\right) - \hat{c_t}\right)\right)p_t, & \text{otherwise}.
   \end{cases}
-  (\#eq:hockey)
+  (\#eq:sihockey)
 \end{equation}
 
 Where $B_t$ is biomass at time *t*, *r* is the intrinsic growth rate, *m* is the scaling parameter that allows for the ratio of Bmsy/K to shift (when *m* is 2 the Bmsy / K = 0.5 and the model acts as a Schaefer model, lower values of m shift the production function left, higher values right), *c* is catch, and *p* is process error. The Pella-Tomlinson model does have an issue where growth rates can become unrealistically large when the population reaches low sizes. We deal with this problem by following the methods described in @winker2018. to reduce the production of the population when it falls below a threshold of 25% of carrying capacity. Incorporation of process errors is useful for two reasons: (1) when you have an abundance index, process errors can reduce bias arising from lack of fit in a deterministic SRA whenever dynamics are poorly explained by catch-history alone, and (2) with or without an abundance index (or other info), the stochastic portion is necessary to get good uncertainty intervals (i.e., with close to nominal coverage, see @thorson2018). 
@@ -707,7 +653,7 @@ We  allow for process error (in the manner of the stochastic stock reduction ana
 
 \begin{equation}
   p_t \sim e^{normal\left(-\sigma_{proc}^2/2,\sigma_{proc}\right)}
-  (\#eq:procerror)
+  (\#eq:siprocerror)
 \end{equation}
 
 
