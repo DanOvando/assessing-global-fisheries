@@ -25,6 +25,7 @@ library(rstan)
 library(rstanarm)
 library(sf)
 library(portedcmsy)
+extrafont::loadfonts()
 
 Sys.unsetenv("PKG_CXXFLAGS")
 
@@ -450,21 +451,21 @@ if (run_voi_models == TRUE) {
     filter(fit_name != "cmsy")
   
   
-  voi_data %>%
-    filter(use_index == FALSE,
-           metric == "b_v_bmsy",
-           b_ref_type == "b") %>%
-    ggplot(aes(rmse, fill = use_terminal_state)) +
-    geom_density(position = "dodge")
+  # voi_data %>%
+  #   filter(use_index == FALSE,
+  #          metric == "b_v_bmsy",
+  #          b_ref_type == "b") %>%
+  #   ggplot(aes(rmse, fill = use_terminal_state)) +
+  #   geom_density(position = "dodge")
   
   
   
-  noerror_data %>%
-    filter(use_index == FALSE,
-           metric == "b_v_bmsy",
-           b_ref_type == "b") %>%
-    ggplot(aes(observed, predicted, color = use_terminal_state)) +
-    geom_point()
+  # noerror_data %>%
+  #   filter(use_index == FALSE,
+  #          metric == "b_v_bmsy",
+  #          b_ref_type == "b") %>%
+  #   ggplot(aes(observed, predicted, color = use_terminal_state)) +
+  #   geom_point()
   
   obs_v_pred_plot <- noerror_data %>%
     filter(metric == "b_v_bmsy") %>%
@@ -757,9 +758,9 @@ comp_stocks <- exs %>%
   select(scientificname, resilience)
 
 
-exs %>%
-  ggplot(aes(year, b_v_bmsy, color = stockid)) +
-  geom_line(show.legend = FALSE)
+# exs %>%
+#   ggplot(aes(year, b_v_bmsy, color = stockid)) +
+#   geom_line(show.legend = FALSE)
 
 total_nominal_effort <- rous_data %>%
   left_join(effort_region_to_country, by = "country") %>%
@@ -876,9 +877,9 @@ sraplus_v_truth <- tmp %>%
   left_join(truth, by = c("stockid","year")) %>% 
   filter(data == "cpue") 
 
-sraplus_v_truth %>% 
-  ggplot(aes(catch, b_div_bmsy)) + 
-  geom_point(size = 2)
+# sraplus_v_truth %>% 
+#   ggplot(aes(catch, b_div_bmsy)) + 
+#   geom_point(size = 2)
 
 
 # run sofia-comparison --------------------------------------------------------
@@ -1648,16 +1649,16 @@ compare_to_ram <- function(data, fit){
 
 ram_test_comparison <- map2_df(ram_fit_tests$data, ram_fit_tests$fit, compare_to_ram,.id = "stock")
 
-ram_test_comparison %>% 
-  ggplot(aes(observed, mean, color = stock)) + 
-  geom_point(show.legend = FALSE, alpha = 0.5) + 
-  geom_abline(slope = 1, intercept = 0)
-
-ram_test_comparison %>% 
-  ggplot(aes(observed, mean)) + 
-  geom_hex(show.legend = TRUE, alpha = 0.5, binwidth = c(0.25, 0.25)) + 
-  geom_abline(slope = 1, intercept = 0) + 
-  scale_fill_gradient(low = "lightgrey", high = "tomato")
+# ram_test_comparison %>% 
+#   ggplot(aes(observed, mean, color = stock)) + 
+#   geom_point(show.legend = FALSE, alpha = 0.5) + 
+#   geom_abline(slope = 1, intercept = 0)
+# 
+# ram_test_comparison %>% 
+#   ggplot(aes(observed, mean)) + 
+#   geom_hex(show.legend = TRUE, alpha = 0.5, binwidth = c(0.25, 0.25)) + 
+#   geom_abline(slope = 1, intercept = 0) + 
+#   scale_fill_gradient(low = "lightgrey", high = "tomato")
 
 
 # run RAM comparison  -----------------------------------------------------------
@@ -1794,23 +1795,23 @@ if (run_ram_comparison == TRUE) {
   
  
   
-  rous_data %>% 
-    group_by(year, area) %>% 
-    summarise(effort = mean(effort_cell_reported_nom, na.rm = TRUE)) %>% 
-    ungroup() %>% 
-    ggplot(aes(year, effort)) + 
-    geom_line() + 
-    facet_wrap(~area, scales = "free_y")
-  
-  
-  ram_comp_data %>% 
-    group_by(year, fao_area_code) %>% 
-    summarise(effort = mean(effort_index, na.rm = TRUE)) %>% 
-    ungroup() %>% 
-    ggplot(aes(year, effort)) + 
-    geom_line() + 
-    facet_wrap(~fao_area_code, scales = "free_y")
-  
+  # rous_data %>% 
+  #   group_by(year, area) %>% 
+  #   summarise(effort = mean(effort_cell_reported_nom, na.rm = TRUE)) %>% 
+  #   ungroup() %>% 
+  #   ggplot(aes(year, effort)) + 
+  #   geom_line() + 
+  #   facet_wrap(~area, scales = "free_y")
+  # 
+  # 
+  # ram_comp_data %>% 
+  #   group_by(year, fao_area_code) %>% 
+  #   summarise(effort = mean(effort_index, na.rm = TRUE)) %>% 
+  #   ungroup() %>% 
+  #   ggplot(aes(year, effort)) + 
+  #   geom_line() + 
+  #   facet_wrap(~fao_area_code, scales = "free_y")
+  # 
   future::plan(multisession, workers = n_cores)
   
   ram_status_fits <- ram_comp_data %>%
@@ -1828,12 +1829,12 @@ if (run_ram_comparison == TRUE) {
         default_initial_state_cv = NA,
         min_effort_year = 1975,
         engine = "stan",
-        cores = 2,
+        cores = 1,
        estimate_shape = FALSE,
-       cmsy_cores = 4,
+       cmsy_cores = 1,
         .progress = TRUE,
         .options = future_options(
-          globals = TRUE,
+          globals = FALSE,
           packages = c("tidyverse", "sraplus", "portedcmsy")
         )
       )
@@ -1882,13 +1883,13 @@ ram_status_fits <- ram_status_fits %>%
   mutate(performance = map2(data, fits, compare_to_ram))
 
 i = 24
- ram_status_fits$performance[[i]] %>%
-  ggplot() +
-  geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) +
-   geom_line(aes(year, mean, color = data)) +
-  facet_wrap(~data) +
-  scale_x_continuous(name = "B/Bmsy") +
-  labs(title = ram_status_fits$stockid[[i]])
+ # ram_status_fits$performance[[i]] %>%
+ #  ggplot() +
+ #  geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) +
+ #   geom_line(aes(year, mean, color = data)) +
+ #  facet_wrap(~data) +
+ #  scale_x_continuous(name = "B/Bmsy") +
+ #  labs(title = ram_status_fits$stockid[[i]])
 
 assess_ram_fits <- ram_status_fits %>% 
   select(stockid, performance) %>% 
@@ -1917,13 +1918,13 @@ write_rds(assess_ram_fits, path = file.path(results_path,"assess_ram_fits.rds"))
 
 write_rds(ram_comp_data, path = file.path(results_path,"ram_comp_data.rds"))
 
-assess_ram_fits %>% 
-  ggplot(aes(pmin(5,ram_b_v_bmsy),pmin(5,mean))) + 
-  geom_hex(binwidth = c(0.33, 0.33), color = "white") + 
-  geom_smooth(method = "lm", aes(color = "fit")) +
-  geom_abline(slope = 1, intercept = 0) +
-  facet_wrap(~data, scales = "free") 
-  
+# assess_ram_fits %>% 
+#   ggplot(aes(pmin(5,ram_b_v_bmsy),pmin(5,mean))) + 
+#   geom_hex(binwidth = c(0.33, 0.33), color = "white") + 
+#   geom_smooth(method = "lm", aes(color = "fit")) +
+#   geom_abline(slope = 1, intercept = 0) +
+#   facet_wrap(~data, scales = "free") 
+#   
 
 ram_v_sraplus_plot <- assess_ram_fits %>% 
   ggplot(aes(pmin(ram_b_v_bmsy,5), pmin(mean,5))) +
