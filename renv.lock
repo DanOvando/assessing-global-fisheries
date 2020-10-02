@@ -35,13 +35,12 @@
       "Version": "2.0.0",
       "Source": "GitHub",
       "RemoteType": "github",
-      "Remotes": "james-thorson/utilities, kaskr/TMB_contrib_R/TMBhelper",
       "RemoteHost": "api.github.com",
+      "RemoteUsername": "James-Thorson-NOAA",
       "RemoteRepo": "FishLife",
-      "RemoteUsername": "james-thorson",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "62ddde0477fe71e595497fee13a54f33c621966d",
-      "Hash": "f356383c1e7b5835d03b6fee3a41b3ba"
+      "RemoteRef": "master",
+      "RemoteSha": "f3c9739c078cc479e0ae62a6f3514f2e87d05e28",
+      "Hash": "93a23cf1e35606f46f3f5e6a65f92bf8"
     },
     "HDInterval": {
       "Package": "HDInterval",
@@ -144,9 +143,15 @@
     "TMB": {
       "Package": "TMB",
       "Version": "1.7.18",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "1500330bbd3c378400d65a5010aa7ce5"
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "adcomp",
+      "RemoteUsername": "kaskr",
+      "RemoteRef": "quote_path",
+      "RemoteSha": "4e5c76dcd7d6822ad635a8823abb2079461fe8c4",
+      "RemoteSubdir": "TMB",
+      "Hash": "cee0002c75c973672485f50d020b928e"
     },
     "TMBhelper": {
       "Package": "TMBhelper",
@@ -1109,12 +1114,12 @@
       "Version": "1.0",
       "Source": "GitHub",
       "RemoteType": "github",
+      "RemoteHost": "api.github.com",
       "RemoteUsername": "danovando",
       "RemoteRepo": "portedcmsy",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "f80cae2367f70580d1187417e47f740c767c3bdf",
-      "RemoteHost": "api.github.com",
-      "Hash": "762e645add1c69a6365a390e406f6beb"
+      "RemoteRef": "master",
+      "RemoteSha": "79a7b6ea7d4617964c4fc96a0b52ac64af353c95",
+      "Hash": "c455266033c5c6b584a41c28e30d8376"
     },
     "praise": {
       "Package": "praise",
@@ -1164,6 +1169,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "97def703420c8ab10d8f0e6c72101e02"
+    },
+    "purrrlyr": {
+      "Package": "purrrlyr",
+      "Version": "0.0.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "5e8c6846a92451b8044e7e2d0da4045c"
     },
     "quadprog": {
       "Package": "quadprog",
@@ -1508,15 +1520,15 @@
     },
     "sraplus": {
       "Package": "sraplus",
-      "Version": "3.7.1",
+      "Version": "3.7.2",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteUsername": "danovando",
       "RemoteRepo": "sraplus",
       "RemoteRef": "master",
-      "RemoteSha": "6d6f9534a1c4de2269598ba9595b37593a1fc574",
-      "Hash": "184e28f94ad2537fc93147c344b2f273"
+      "RemoteSha": "7c7df24f72126a270b4032e4406edf711f964766",
+      "Hash": "f9d49e3829d3a6d98a0627ffbb05fb2a"
     },
     "statmod": {
       "Package": "statmod",

@@ -25,6 +25,7 @@ library(rstan)
 library(rstanarm)
 library(sf)
 library(portedcmsy)
+extrafont::loadfonts()
 
 Sys.unsetenv("PKG_CXXFLAGS")
 
@@ -65,19 +66,15 @@ write_results <- FALSE
 
 process_fits <- FALSE
 
-# other run options things
-
-run_continent_examples <- FALSE
-
-run_ei_example <- FALSE
+run_case_studies <- FALSE
 
 run_sofia_comparison <- FALSE
 
 run_ram_tests <- FALSE
 
-run_ram_comparison <- FALSE
+run_ram_comparison <- TRUE
 
-knit_paper <- TRUE
+knit_paper <- FALSE
 
 warning("Running full analysis takes upwards of 24 hours on 2 cores. Recommend starting on a Friday night having a nice weekend. Given memory constraints of models, more than 2 cores is not recommended (memory routinley runs out on a 16 core 36GB machine when cores > 2)")
 
@@ -166,12 +163,12 @@ if (run_voi_models == TRUE) {
     initial_state_cv =  runif(draws, 0.05, 0.2),
     use_terminal_state = sample(c(TRUE, FALSE),  draws, replace = TRUE),
     terminal_state_cv = runif(draws, 0.05, 0.2),
-    error_cv = sample(c(0, 1), draws, replace = TRUE),
+    error_cv = sample(c(0), draws, replace = TRUE),
     stockid = sample(unique(ram_data$stockid), draws, replace = TRUE),
     use_u_priors =  sample(c(TRUE, FALSE),  draws, replace = TRUE),
     u_cv = runif(draws, 0.05, 0.2),
     index_window = sample(c(1, 0.25, .5), draws, replace = TRUE),
-    index_freq = sample(c(1, 2), draws, replace = TRUE),
+    index_freq = sample(c(1), draws, replace = TRUE),
     u_window = sample(c("snapshot", "recent", "complete"), draws, replace = TRUE),
     b_ref_type = sample(c("k", "b"),  draws, replace = TRUE),
     f_ref_type = sample(c("f", "fmsy"),  draws, replace = TRUE),
@@ -250,7 +247,7 @@ if (run_voi_models == TRUE) {
           estimate_initial_state = !initial_state_type == "unfished"
         ),
         safely(run_assessments),
-        assessments = c("cmsy", "sraplus"),
+        assessments = c("sraplus"),
         model = "sraplus_tmb",
         results_name = results_name,
         write_results = write_results,
@@ -431,31 +428,44 @@ if (run_voi_models == TRUE) {
   
   
   # plot diagnostics --------------------------------------------------------
-  
   noerror_data <- fits %>%
     filter(error_cv == min(error_cv),
-           fit_name != 'cmsy')
+           fit_name != 'cmsy') %>%
+    mutate(index = index_window * use_index,
+           shape = case_when(estimate_shape == FALSE ~  "Fixed", 
+                             TRUE ~ shape_prior_source)) %>%
+    mutate(
+      index = case_when(
+        index == 0 ~ "No Abundance Index",
+        index == 0.25 ~ "Abundance Index (1/4)",
+        index == 0.5 ~ "Abundance Index (1/2)",
+        index == 1 ~ "Abundance Index"
+      )
+    ) %>% 
+    mutate(index = fct_relevel(index, "No Abundance Index")) %>% 
+    mutate(shape = fct_relevel(shape, "Fixed"))
+  
   
   
   voi_data <- fits %>%
     filter(fit_name != "cmsy")
   
   
-  voi_data %>%
-    filter(use_index == FALSE,
-           metric == "b_v_bmsy",
-           b_ref_type == "b") %>%
-    ggplot(aes(rmse, fill = use_terminal_state)) +
-    geom_density(position = "dodge")
+  # voi_data %>%
+  #   filter(use_index == FALSE,
+  #          metric == "b_v_bmsy",
+  #          b_ref_type == "b") %>%
+  #   ggplot(aes(rmse, fill = use_terminal_state)) +
+  #   geom_density(position = "dodge")
   
   
   
-  noerror_data %>%
-    filter(use_index == FALSE,
-           metric == "b_v_bmsy",
-           b_ref_type == "b") %>%
-    ggplot(aes(observed, predicted, color = use_terminal_state)) +
-    geom_point()
+  # noerror_data %>%
+  #   filter(use_index == FALSE,
+  #          metric == "b_v_bmsy",
+  #          b_ref_type == "b") %>%
+  #   ggplot(aes(observed, predicted, color = use_terminal_state)) +
+  #   geom_point()
   
   obs_v_pred_plot <- noerror_data %>%
     filter(metric == "b_v_bmsy") %>%
@@ -514,51 +524,73 @@ if (run_voi_models == TRUE) {
     scale_y_continuous(limits = c(-.5, .5))  +
     scale_fill_viridis(option = "A")
 
-  b_rmse_fit <-
-    rstanarm::stan_glmer(
-      log(rmse) ~ fit_name + (1 | stockid),
-      data = noerror_data %>% filter(metric == "b_v_bmsy"),
-      cores = 4
-    )
+  # b_rmse_fit <-
+  #   rstanarm::stan_glmer(
+  #     log(rmse) ~ fit_name + (1 | stockid),
+  #     data = noerror_data %>% filter(metric == "b_v_bmsy"),
+  #     cores = 4
+  #   )
   
-  b_rmse_fit_posterior <- as.array(b_rmse_fit)
+  # b_rmse_fit_posterior <- as.array(b_rmse_fit)
   
-  b_rmse_plot <- bayesplot::mcmc_areas(
-    b_rmse_fit_posterior,
-    regex_pars = "fit_name",
-    prob = 0.8,
-    # 80% intervals
-    prob_outer = 0.99,
-    # 99%
-    point_est = "mean"
-  ) +
-    scale_x_percent(name = "Percent change in B/Bmsy RMSE")
-  
-  
-  
+  # b_rmse_plot <- bayesplot::mcmc_areas(
+  #   b_rmse_fit_posterior,
+  #   regex_pars = "fit_name",
+  #   prob = 0.8,
+  #   # 80% intervals
+  #   prob_outer = 0.99,
+  #   # 99%
+  #   point_est = "mean"
+  # ) +
+  #   scale_x_percent(name = "Percent change in B/Bmsy RMSE")
+  # 
+  # 
+  # 
   # value of information regressions
   
   b_voi_fit <-
-    rstanarm::stan_glmer(
-      rmse ~  initial_state_type  + use_index +  u_window + estimate_shape + estimate_proc_error + use_terminal_state + shape_prior_source + (1 |
-                                                                                                                                                stockid),
+    rstanarm::stan_glm(
+      rmse ~  initial_state_type  + index +  u_window + shape + use_terminal_state,
       data = noerror_data %>% filter(metric == "b_v_bmsy"),
       cores = 4,
       family = Gamma(link = "log")
     )
   
-  b_voi_plot <- bayesplot::mcmc_areas(
-    as.array(b_voi_fit),
-    regex_pars = c("use", "state", "estimate", "index", "u_","prior_"),
-    prob = 0.8,
-    # 80% intervals
-    prob_outer = 0.95,
-    # 99%
-    point_est = "mean",
-    transformations = function(x)
-      exp(x) - 1
-  ) +
-    scale_x_percent(name = "% Change in RMSE")
+  a = b_voi_fit %>%
+    tidy_draws() %>%
+    select(
+      -contains("b["),
+      -contains("__"),
+      -contains("Sigma"),
+      -contains("shape"),
+      -contains("(Intercept)"),
+      -contains("proc")
+    ) %>%
+    pivot_longer(-contains("."), names_to = "variable", values_to = "value") %>% 
+    mutate(value = exp(value) - 1)
+  
+  b_voi_plot <-  a %>%
+    mutate(
+      clean_var = case_when(
+        variable == "use_terminal_stateTRUE" ~ "Most Recent B/Bmsy",
+        variable == "indexAbundance Index" ~ "Abundance Index (Complete)",
+        variable == "indexAbundance Index (1/4)" ~ "Abundance Index (1/4)",
+        variable == "indexAbundance Index (1/2)" ~ "Abundance Index (1/2)",
+        variable == "u_windowsnapshot" ~ "F/Fmsy (Most Recent)",
+        variable == "u_windowrecent" ~ "F/Fmsy (Last Five Years)",
+        variable == "u_windowcomplete" ~ "F/Fmsy (Complete Series)",
+        variable == "initial_state_typeunfished" ~ "Initial State Unfished" ,
+        variable == "initial_state_typeprior" ~ "Initial State Informed by Catch",
+        variable == "initial_state_typeknown" ~ "Initial State Known",
+        TRUE ~ variable
+      )
+    ) %>%
+    ggplot() +
+    geom_vline(aes(xintercept = 0)) +
+    ggdist::stat_halfeye(aes(value, clean_var)) +
+    scale_x_percent(name = "% Change in RMSE") + 
+    scale_y_discrete(name = '')
+  
   
   # u_voi_fit <-
   #   rstanarm::stan_glmer(
@@ -694,84 +726,26 @@ if (run_voi_models == TRUE) {
   
 } # close fit voi models
 
-# run asia-eu comparison ------------------------------------------------------
 
 
-support_data <- list(effort_data = effort_data,
-                     effort_region_to_country = effort_region_to_country)
+# run case study ----------------------------------------------------------
 
 
-
-total_nominal_effort <- rous_data %>%
-  left_join(effort_region_to_country, by = "country") %>%
-  group_by(region, year) %>%
-  summarise(total_effort = sum(effort_cell_reported_nom, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(region = tolower(region))
-
-
-# total_effecive_effort <- effort_data %>%
-#   filter(effort_type == "effective") %>%
-#   group_by(region,year) %>%
-#   summarise(total_effort = sum(effort)) %>%
-#   ungroup() %>%
-#   mutate(region = tolower(region))
-
-
-total_nominal_effort %>%
-  ggplot(aes(year, total_effort, color = region)) +
-  geom_line()
-
-sfe <- safely(fit_continent_examples)
-
-continent_countries <- effort_region_to_country %>%
-  filter(region %in% c("Northeast Asia", "Europe"))
-
-total_stocks <- fao %>%
-  filter(country %in% continent_countries$country,
-         continent %in% c("Asia", "Europe")) %>%
-  mutate(continent = case_when(continent == "Asia" ~ "Northeast Asia",
-                               TRUE ~ continent)) %>%
-  group_by(year, scientific_name, continent) %>%
-  summarise(total_catch = sum(capture, na.rm = TRUE)) %>%
-  ungroup() %>%
-  group_by(scientific_name, continent) %>%
-  mutate(
-    lifetime_catch = sum(total_catch),
-    min_catch = min(total_catch),
-    catch_length = length(total_catch)
+exs <- ram_data %>%
+  filter(
+    stockid %in% unique(sraplus::fmi$stockid) &
+      stockid %in% unique(sraplus::sar$stockid)
   ) %>%
-  ungroup() %>%
-  filter(lifetime_catch > 1e5, min_catch > 1e3, catch_length >= 20) %>%
-  mutate(continent = tolower(continent)) %>%
-  left_join(total_nominal_effort, by = c("year", "continent" = "region"))
+  mutate(fao_area_code = as.numeric(primary_FAOarea),
+         country = as.character(primary_country)) %>%
+  mutate(country =
+           countrycode::countrycode(country, "country.name", "un.name.en"))
 
-
-
-total_stocks %>%
-  group_by(continent, year) %>%
-  summarise(cpue = mean(total_catch / total_effort, na.rm = TRUE)) %>%
-  ggplot(aes(year, cpue, color = continent)) +
-  geom_line()
-
-total_stocks %>%
-  group_by(continent, year, scientific_name) %>%
-  summarise(catch = sum(total_catch)) %>%
-  group_by(continent, scientific_name) %>%
-  mutate(catch = scale(catch)) %>%
-  ggplot(aes(year, catch)) +
-  geom_smooth(show.legend = FALSE) +
-  facet_wrap( ~ continent)
-
-
-# future::plan(future::multiprocess, workers = 4)
-
-
-comp_stocks <- total_stocks %>%
-  select(scientific_name) %>%
+comp_stocks <- exs %>%
+  select(scientificname) %>%
   unique() %>%
   mutate(fishbase_vuln = map_dbl(
-    scientific_name,
+    scientificname,
     ~ rfishbase::species(.x, fields = "Vulnerability")$Vulnerability
   )) %>%
   mutate(
@@ -780,298 +754,132 @@ comp_stocks <- total_stocks %>%
       fishbase_vuln >= 66 ~ "High",
       TRUE ~ "Medium"
     )
-  ) %>% 
-  select(scientific_name, resilience)
+  ) %>%
+  select(scientificname, resilience)
 
-total_stocks <- total_stocks %>% 
-  left_join(comp_stocks, by = "scientific_name") %>% 
-  mutate(resilience = ifelse(is.na(resilience), "Medium",resilience))
-if (run_continent_examples == TRUE) {
-  set.seed(24)
+
+# exs %>%
+#   ggplot(aes(year, b_v_bmsy, color = stockid)) +
+#   geom_line(show.legend = FALSE)
+
+total_nominal_effort <- rous_data %>%
+  left_join(effort_region_to_country, by = "country") %>%
+  rename(fao_area_code = area) %>%
+  group_by(fao_area_code, year, country) %>%
+  summarise(total_effort = sum(effort_cell_reported_nom, na.rm = TRUE)) %>%
+  ungroup()
+
+matched_fmi <- sraplus::fmi %>%
+  filter(stockid %in% unique(exs$stockid)) %>%
+  group_by(stockid) %>%
+  nest() %>%
+  ungroup() %>%
+  mutate(tmp = map(data, ~ map_df(.x[,c("research", "management", "enforcement","socioeconomics")], mean))) %>%
+  select(-data) %>%
+  unnest(cols = tmp) %>%
+  select(stockid, research, management, enforcement, socioeconomics)
+
+
+matched_sar <- sraplus::sar %>%
+  filter(stockid %in% unique(exs$stockid)) %>%
+  group_by(stockid) %>%
+  nest() %>%
+  ungroup() %>%
+  mutate(tmp = map(data, ~ purrrlyr::dmap_at(.x, c("sar"), mean))) %>%
+  select(-data) %>%
+  unnest(cols = tmp) %>%
+  select(stockid, sar)
+
+
+exs <- exs %>%
+  left_join(total_nominal_effort, by = c("fao_area_code", "year", "country")) %>%
+  left_join(matched_fmi, by = "stockid") %>%
+  left_join(matched_sar, by = "stockid") %>%
+  left_join(comp_stocks, by = "scientificname")
+
+
+if (run_case_studies){
   
-  continent_fits <- total_stocks %>%
-    group_by(scientific_name, continent) %>%
+  exs <- exs %>%
+    group_by(stockid) %>%
     nest() %>%
-    ungroup() #%>%
-  # sample_n(3)
+    ungroup() %>% 
+    mutate(fit = map(data,
+                     safely(fit_case_studies)))
   
-  sfe <- safely(fit_continent_examples)
+  write_rds(exs, path = file.path(results_path, "raw-case-study-fits.rds"))
   
-  continent_fits = continent_fits %>%
-    # filter(scientific_name == "Lateolabrax japonicus") %>%
-    mutate(
-      ex_fits = pmap(
-        list(scientific_name = scientific_name,
-             data = data),
-        sfe,
-        model = "sraplus_tmb",
-        engine = "stan",
-        estimate_proc_error = TRUE,
-        estimate_qslope = FALSE,
-        estimate_shape = FALSE,
-        first_effort_year = 1960,
-        cmsy_cores = 8
-      )
-    )
-  
-  
-  # future::plan(future::sequential, workers = 1)
-  
-  write_rds(continent_fits, path =  file.path(results_path, "continent-fits.rds"))
 } else {
-  continent_fits <-
-    read_rds(path =  file.path(results_path, "continent-fits.rds"))
+  
+  exs <- read_rds(path = file.path(results_path, "raw-case-study-fits.rds"))
   
 }
 
 fit_worked <-
-  continent_fits$ex_fits %>% map("error") %>% map_lgl(is.null)
-
-total_stocks %>%
-  group_by(year, continent) %>%
-  summarise(`Total Catch` = sum(total_catch)) %>%
-  left_join(total_nominal_effort, by = c("continent" = "region", "year")) %>%
-  mutate(CPUE = `Total Catch` / total_effort) %>%
-  rename(Effort = total_effort) %>%
-  gather(metric, value, `Total Catch`:CPUE) %>%
-  ggplot(aes(year, value, color = continent)) +
-  geom_line(size = 2, alpha = 0.75) +
-  facet_wrap( ~ metric, scales = "free_y") +
-  labs(x = "Year", y = "") +
-  scale_color_discrete(name = "Region") +
-  theme_minimal() +
-  scale_y_comma()
+  exs$fit %>% map("error") %>% map_lgl(is.null)
 
 
-# total_stocks %>%
-#   group_by(year, continent, scientific_name) %>%
-#   summarise(`Total Catch` = sum(total_catch)) %>%
-#   left_join(total_effecive_effort, by = c("continent" = "region", "year")) %>%
-#   mutate(CPUE = `Total Catch` / total_effort) %>%
-#   group_by(scientific_name, continent) %>%
-#   mutate(CPUE = scale(CPUE),
-#          lifetime_catch = sum(`Total Catch`)) %>%
-#   rename(Effort = total_effort) %>%
-#   gather(metric, value, `Total Catch`:CPUE) %>%
-#   filter(metric == "CPUE") %>%
-#   ggplot(aes(year, value, color = scientific_name, alpha = lifetime_catch)) +
-#   geom_line(size = 1, show.legend = FALSE) +
-#   facet_wrap(~continent, scales = "free_y") +
-#   labs(x = "Year", y = "Centered and Scaled Effective Abundance Index") +
-#   scale_color_discrete(name = "Region") +
-#   theme_minimal() +
-#   scale_y_comma()
+truth <- exs %>% 
+  select(stockid, data) %>% 
+  unnest(cols = data) %>% 
+  select(stockid, year, catch, b_v_bmsy, u_v_umsy) %>% 
+  group_by(stockid) %>% 
+  filter(year == max(year)) %>% 
+  ungroup()
 
-
-
-a <- continent_fits %>%
-  mutate(lifetime_catch = map_dbl(data,  ~ unique(.x$lifetime_catch))) %>%
-  select(scientific_name, ex_fits, continent, lifetime_catch) %>%
+tmp <- exs %>%
+  mutate(lifetime_catch = map_dbl(data,  ~ sum(.x$catch))) %>%
+  select(stockid, fit, lifetime_catch) %>%
   filter(fit_worked) %>%
-  mutate(ex_fits = map(ex_fits, "result")) %>%
-  unnest(cols = ex_fits) %>%
-  filter(year == 2016)
-
-
-continent_kobe_plot <- a %>%
-  filter(variable %in% c("b_div_bmsy", "u_div_umsy")) %>%
-  group_by(scientific_name, continent) %>%
+  mutate(fit = map(fit, "result")) %>%
+  unnest(cols = fit) %>%
+  group_by(stockid) %>%
   filter(year == max(year)) %>%
+  filter(variable %in% c("b_div_bmsy", "u_div_umsy")) %>%
   ungroup() %>%
-  mutate(year = as.factor(year)) %>%
-  select(scientific_name,
+  select(stockid,
          year,
          variable,
          mean,
          data,
-         continent,
-         lifetime_catch) %>%
-  spread(variable, mean) %>%
+         lifetime_catch) %>% 
+  pivot_wider(names_from = variable, values_from = mean)
+
+
+case_study_fits <- tmp %>%
+  left_join(
+    truth %>% rename(ram_b_v_msy = b_v_bmsy, ram_u_v_umsy = u_v_umsy),
+    by = c("stockid", "year")
+  )
+
+write_rds(case_study_fits, path = file.path(results_path, "case-study-fits.rds"))
+
+ex_kobe_plot <- tmp %>%
+  mutate(data = fct_relevel(data, c("CMSY", "SAR & FMI"))) %>% 
   ggplot() +
   geom_hline(aes(yintercept = 1), linetype = 2) +
   geom_vline(aes(xintercept = 1), linetype = 2) +
   geom_hline(aes(yintercept = 0), linetype = 1) +
-  geom_vline(aes(xintercept = 0), linetype = 1) +
   # geom_density2d(alpha = 0.5) +
-  geom_hex(aes(pmin(4, b_div_bmsy), pmin(4, u_div_umsy)), binwidth = c(0.5,.5), show.legend = FALSE, alpha = 0.9) +
-  geom_point(aes(pmin(4, b_div_bmsy), pmin(4, u_div_umsy), color = continent,size = lifetime_catch),
+  geom_hex(data = truth,aes(pmin(4, b_v_bmsy), pmin(4, u_v_umsy)), binwidth = c(0.5,.5), show.legend = FALSE, alpha = 0.9) +
+  geom_point(aes(pmin(4, b_div_bmsy), pmin(4, u_div_umsy), color = data,size = lifetime_catch),
              alpha = 0.5,
              show.legend = FALSE) +
   scale_size(range = c(2,7)) +
   scale_x_continuous(limits = c(-.1, 4), name = "B/Bmsy") +
-  scale_y_continuous(limits = c(-.1, 4), name = "U/Umsy") +
-  facet_grid(continent ~ data) +
+  scale_y_continuous(limits = c(-.1, 4), name = "F/Fmsy") +
+  facet_wrap(~ data) +
   scale_fill_continuous(low = "gainsboro", high = "black") +
   ggsci::scale_color_d3(name = "Region") +
   guides(size = FALSE)
 
-continent_distribution_plot <- a %>%
-  filter(variable %in% c("b_div_bmsy", "u_div_umsy")) %>%
-  group_by(scientific_name, continent) %>%
-  filter(year == max(year)) %>%
-  ungroup() %>%
-  mutate(year = as.factor(year)) %>%
-  select(scientific_name,
-         year,
-         variable,
-         mean,
-         data,
-         continent,
-         lifetime_catch) %>%
-  ggplot() +
-  geom_density_ridges(
-    aes(
-      x = pmin(4, mean),
-      y = continent,
-      fill = continent
-    ),
-    show.legend = FALSE,
-    alpha = 0.75
-  ) +
-  facet_grid(Region ~ variable) +
-  scale_x_continuous(limits = c(0, NA))
+sraplus_v_truth <- tmp %>% 
+  left_join(truth, by = c("stockid","year")) %>% 
+  filter(data == "cpue") 
 
-continent_kobe_plot
-
-
-
-# run east-india analysis -----------------------------------------------------
-
-fao_names <- fao %>%
-  select(common_name, scientific_name) %>%
-  unique()
-
-
-ei_data <- ei_capture %>%
-  mutate(capture = dplyr::case_when(is.na(capture) ~ 0,
-                                    TRUE ~ capture)) %>%
-  group_by(species_asfis_species) %>%
-  mutate(first_year = year[capture > 0][1],
-         total_capture = sum(capture)) %>%
-  filter(year >= first_year) %>%
-  ungroup() %>%
-  mutate(capture_rank = percent_rank(total_capture)) %>%
-  filter(capture_rank > 0.25) %>%
-  left_join(ei_cpue, by = "year") %>%
-  left_join(fao_names, by = c("species_asfis_species" = "common_name")) %>%
-  ungroup() %>%
-  filter(!is.na(scientific_name)) 
-
-comp_stocks <- ei_data %>%
-  select(scientific_name) %>%
-  unique() %>%
-  mutate(fishbase_vuln = map_dbl(
-    scientific_name,
-    ~ rfishbase::species(.x, fields = "Vulnerability")$Vulnerability
-  )) %>%
-  mutate(
-    resilience = dplyr::case_when(
-      fishbase_vuln < 33 ~ "Low",
-      fishbase_vuln >= 66 ~ "High",
-      TRUE ~ "Medium"
-    )
-  ) %>% 
-  select(scientific_name, resilience)
-
-ei_data <- ei_data %>% 
-  left_join(comp_stocks, by = "scientific_name") %>% 
-  mutate(resilience = ifelse(is.na(resilience), "Medium",resilience)) %>% 
-  group_by(species_asfis_species, scientific_name) %>%
-  nest() %>%
-  ungroup()
-
-if (run_ei_example == TRUE) {
-  set.seed(42)
-  
-  # future::plan(future::multiprocess, workers = n_cores)
-  
-  sfi <- safely(fit_india)
-  
-  ei_fits <- ei_data %>%
-    # sample_n(4) %>%
-    # filter(scientific_name == "Sphyraena spp") %>%
-    mutate(ex_fits = map2(
-      scientific_name,
-      data,
-      ~ sfi(
-        scientific_name = .x,
-        catches = .y$capture,
-        years = .y$year,
-        index = .y$cpue[!is.na(.y$cpue) & .y$year >= 1990],
-        index_years = .y$year[!is.na(.y$cpue) & .y$year >= 1990],
-        support_data = support_data,
-        country = "India",
-        engine = "stan",
-        sar = 18.7,
-        chains = 1,
-        cores = 1,
-        n_keep = 2500
-      )
-    ))
-  
-  # future::plan(future::sequential, workers = 1)
-  
-  write_rds(ei_fits, path = file.path(results_path, "ei_fits.rds"))
-} else {
-  ei_fits <-   read_rds(path = file.path(results_path, "ei_fits.rds"))
-  
-}
-
-fit_worked <- ei_fits$ex_fits %>% map("error") %>% map_lgl(is.null)
-
-a <- ei_fits %>%
-  select(scientific_name, ex_fits) %>%
-  filter(fit_worked) %>%
-  mutate(ex_fits = map(ex_fits, "result")) %>%
-  unnest(cols = ex_fits) %>%
-  mutate(data = ifelse(data == "cpue", "cpue + sar", data))
-
-# a %>%
-#   filter(scientific_name == "Sphyraena spp") %>%
-#   filter(variable == "dep", data == "cpue + sar") %>%
-#   ggplot(aes(seq_along(mean), mean)) +
-#   geom_line()
-
-# ei_data %>%
-#   filter(scientific_name == "Sphyraena spp") %>%
-#   unnest() %>%
-#   ggplot(aes(year, capture)) +
-#   geom_line()a
-
-ei_kobe_plot <- a %>%
-  filter(year == max(year)) %>%
-  filter(variable %in% c("b_div_bmsy", "u_div_umsy")) %>%
-  group_by(scientific_name) %>%
-  filter(year == max(year)) %>%
-  ungroup() %>%
-  mutate(year = as.factor(year)) %>%
-  select(scientific_name, year, variable, mean, data) %>%
-  spread(variable, mean) %>%
-  ggplot(aes(pmin(2, b_div_bmsy), pmin(4, u_div_umsy))) +
-  geom_hline(aes(yintercept = 0), linetype = 1) +
-  geom_vline(aes(xintercept = 0), linetype = 1) +
-  geom_hline(aes(yintercept = 1), linetype = 2) +
-  geom_vline(aes(xintercept = 1), linetype = 2) +
-  geom_hex(binwidth = c(0.5,0.5), alpha = 0.9, show.legend = FALSE) +
-  geom_point(
-    show.legend = FALSE,
-    size = 4,
-    alpha = 0.5
-  ) +
-  scale_x_continuous(limits = c(-.1, 2), name = "B/Bmsy") +
-  scale_y_continuous(limits = c(-.1, 4), name = "U/Umsy") +
-  scale_fill_continuous(low = "gainsboro", high = "black") +
-  facet_wrap( ~ data)
-
-ei_kobe_plot
-
-
-
-ei_cpue_plot <- ei_cpue %>%
-  ggplot(aes(year, cpue)) +
-  geom_line(size = 2) +
-  labs(x = "Year", y = "CPUE (kg/hour)")
-
+# sraplus_v_truth %>% 
+#   ggplot(aes(catch, b_div_bmsy)) + 
+#   geom_point(size = 2)
 
 
 # run sofia-comparison --------------------------------------------------------
@@ -1135,100 +943,6 @@ mean_regional_isscaap_fmi <- fmi %>%
   pivot_wider(names_from = metric, values_from = mean_value)
 
 # pull in fao classification data
-
-sofia_status <-
-  read_csv(here("data", "StockSTatus_FAOSofia.csv")) %>%
-  janitor::clean_names() %>%
-  select(area, sp_group, name, species, x2017) %>%
-  rename(
-    status = x2017,
-    bad_fao_code = area,
-    isscaap_number = sp_group,
-    common_name = name,
-    scientific_name = species
-  ) %>%
-  mutate(fao_area_code = as.numeric(bad_fao_code)) %>%
-  filter(!is.na(status), status != "?",!is.na(fao_area_code)) %>%
-  mutate(
-    stock_complex = paste(common_name, isscaap_number, fao_area_code, sep = '_'),
-    full_status = status
-  )
-
-stats <-
-  str_trim(str_split(sofia_status$status, pattern = "[[:punct:]]", simplify = TRUE)[, 1])
-
-
-sofia_status$status <- stats
-
-# there are many mispellings of scientific names in SOFIA that need correcting
-
-correct_sofia <- sofia_status %>% 
-  select(common_name, scientific_name) %>% 
-  rename(bad_scientific_name = scientific_name) %>% 
-  unique() %>% 
-  mutate(sciname = map(common_name, ~ taxize::comm2sci(com = .x, db = "worms")[[1]]))
-
-correct_sofia <-  correct_sofia %>% 
-  mutate(sci_match = map_lgl(sciname, ~length(.x) > 0)) %>% 
-  filter(sci_match == TRUE) %>% 
-  mutate(good_scientific_name = map_chr(sciname, ~.x[1])) %>% 
-  select(common_name,good_scientific_name )
-
-
-sofia_status <- sofia_status %>%
-  left_join(correct_sofia, by = "common_name") %>%
-  mutate(scientific_name = ifelse(
-    is.na(good_scientific_name),
-    scientific_name,
-    good_scientific_name
-  )) %>% 
-  select(-good_scientific_name)
-
-# replicate rows for multiple status
-
-# tmp <- sofia_status %>%
-#   group_by(stock_complex) %>%
-#   nest() %>%
-#   ungroup()
-#
-# repfoo <- function(x){
-#
-#   statusi <- str_trim(str_split(x$status, pattern = "[[:punct:]]", simplify = TRUE))
-#
-#   out <- map_df(statusi, ~ x) %>%
-#     mutate(status = statusi)
-#
-# }
-# ogss <- sofia_status
-#
-# sofia_status <- tmp %>%
-#   mutate(data = map(data, repfoo)) %>%
-#   unnest(cols = data)
-
-# merge with fao data
-
-# fuck <- sofia_status %>% 
-#   filter(fao_area_code == 67)
-# 
-# 
-# you <- fao_status <- fao %>%
-#   group_by(
-#     year,
-#     fao_area,
-#     fao_area_code,
-#     isscaap_group,
-#     isscaap_number,
-#     common_name,
-#     scientific_name
-#   ) %>%
-#   summarise(catch = sum(capture), .groups = "drop") %>% 
-#   filter(fao_area_code == 67) 
-# 
-# 
-# wtf <- you %>% 
-#   filter(scientific_name %in% unique(fuck$scientific_name))
-# 
-
 fao_status <- fao %>%
   group_by(
     year,
@@ -1599,7 +1313,7 @@ if (run_sofia_comparison == TRUE) {
     group_by(stockid) %>%
     nest() %>%
     ungroup() %>%
-    sample_n(10) %>%
+    # sample_n(10) %>%
     # slice(10) %>% 
     mutate(
       fits = future_map2(
@@ -1935,16 +1649,16 @@ compare_to_ram <- function(data, fit){
 
 ram_test_comparison <- map2_df(ram_fit_tests$data, ram_fit_tests$fit, compare_to_ram,.id = "stock")
 
-ram_test_comparison %>% 
-  ggplot(aes(observed, mean, color = stock)) + 
-  geom_point(show.legend = FALSE, alpha = 0.5) + 
-  geom_abline(slope = 1, intercept = 0)
-
-ram_test_comparison %>% 
-  ggplot(aes(observed, mean)) + 
-  geom_hex(show.legend = TRUE, alpha = 0.5, binwidth = c(0.25, 0.25)) + 
-  geom_abline(slope = 1, intercept = 0) + 
-  scale_fill_gradient(low = "lightgrey", high = "tomato")
+# ram_test_comparison %>% 
+#   ggplot(aes(observed, mean, color = stock)) + 
+#   geom_point(show.legend = FALSE, alpha = 0.5) + 
+#   geom_abline(slope = 1, intercept = 0)
+# 
+# ram_test_comparison %>% 
+#   ggplot(aes(observed, mean)) + 
+#   geom_hex(show.legend = TRUE, alpha = 0.5, binwidth = c(0.25, 0.25)) + 
+#   geom_abline(slope = 1, intercept = 0) + 
+#   scale_fill_gradient(low = "lightgrey", high = "tomato")
 
 
 # run RAM comparison  -----------------------------------------------------------
@@ -2081,24 +1795,24 @@ if (run_ram_comparison == TRUE) {
   
  
   
-  rous_data %>% 
-    group_by(year, area) %>% 
-    summarise(effort = mean(effort_cell_reported_nom, na.rm = TRUE)) %>% 
-    ungroup() %>% 
-    ggplot(aes(year, effort)) + 
-    geom_line() + 
-    facet_wrap(~area, scales = "free_y")
-  
-  
-  ram_comp_data %>% 
-    group_by(year, fao_area_code) %>% 
-    summarise(effort = mean(effort_index, na.rm = TRUE)) %>% 
-    ungroup() %>% 
-    ggplot(aes(year, effort)) + 
-    geom_line() + 
-    facet_wrap(~fao_area_code, scales = "free_y")
-  
-  future::plan(multisession, workers = 4)
+  # rous_data %>% 
+  #   group_by(year, area) %>% 
+  #   summarise(effort = mean(effort_cell_reported_nom, na.rm = TRUE)) %>% 
+  #   ungroup() %>% 
+  #   ggplot(aes(year, effort)) + 
+  #   geom_line() + 
+  #   facet_wrap(~area, scales = "free_y")
+  # 
+  # 
+  # ram_comp_data %>% 
+  #   group_by(year, fao_area_code) %>% 
+  #   summarise(effort = mean(effort_index, na.rm = TRUE)) %>% 
+  #   ungroup() %>% 
+  #   ggplot(aes(year, effort)) + 
+  #   geom_line() + 
+  #   facet_wrap(~fao_area_code, scales = "free_y")
+  # 
+  future::plan(multisession, workers = n_cores)
   
   ram_status_fits <- ram_comp_data %>%
     # filter(fao_area_code %in% 67) %>%
@@ -2115,12 +1829,12 @@ if (run_ram_comparison == TRUE) {
         default_initial_state_cv = NA,
         min_effort_year = 1975,
         engine = "stan",
-        cores = 2,
-       estimate_shape = TRUE,
-       cmsy_cores = 4,
+        cores = 1,
+       estimate_shape = FALSE,
+       cmsy_cores = 1,
         .progress = TRUE,
         .options = future_options(
-          globals = TRUE,
+          globals = FALSE,
           packages = c("tidyverse", "sraplus", "portedcmsy")
         )
       )
@@ -2169,13 +1883,13 @@ ram_status_fits <- ram_status_fits %>%
   mutate(performance = map2(data, fits, compare_to_ram))
 
 i = 24
- ram_status_fits$performance[[i]] %>%
-  ggplot() +
-  geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) +
-   geom_line(aes(year, mean, color = data)) +
-  facet_wrap(~data) +
-  scale_x_continuous(name = "B/Bmsy") +
-  labs(title = ram_status_fits$stockid[[i]])
+ # ram_status_fits$performance[[i]] %>%
+ #  ggplot() +
+ #  geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) +
+ #   geom_line(aes(year, mean, color = data)) +
+ #  facet_wrap(~data) +
+ #  scale_x_continuous(name = "B/Bmsy") +
+ #  labs(title = ram_status_fits$stockid[[i]])
 
 assess_ram_fits <- ram_status_fits %>% 
   select(stockid, performance) %>% 
@@ -2204,13 +1918,13 @@ write_rds(assess_ram_fits, path = file.path(results_path,"assess_ram_fits.rds"))
 
 write_rds(ram_comp_data, path = file.path(results_path,"ram_comp_data.rds"))
 
-assess_ram_fits %>% 
-  ggplot(aes(pmin(5,ram_b_v_bmsy),pmin(5,mean))) + 
-  geom_hex(binwidth = c(0.33, 0.33), color = "white") + 
-  geom_smooth(method = "lm", aes(color = "fit")) +
-  geom_abline(slope = 1, intercept = 0) +
-  facet_wrap(~data, scales = "free") 
-  
+# assess_ram_fits %>% 
+#   ggplot(aes(pmin(5,ram_b_v_bmsy),pmin(5,mean))) + 
+#   geom_hex(binwidth = c(0.33, 0.33), color = "white") + 
+#   geom_smooth(method = "lm", aes(color = "fit")) +
+#   geom_abline(slope = 1, intercept = 0) +
+#   facet_wrap(~data, scales = "free") 
+#   
 
 ram_v_sraplus_plot <- assess_ram_fits %>% 
   ggplot(aes(pmin(ram_b_v_bmsy,5), pmin(mean,5))) +
@@ -2337,7 +2051,7 @@ ram_mape_map_plot <- fao_area_ram_status %>%
     labels = percent,
     limits = c(0,NA),
     guide = guide_colorbar(
-      barwidth = ggplot2::unit(15, "lines"),
+      barwidth = ggplot2::unit(9, "lines"),
       axis.linewidth = 1,
       ticks.colour = "black",
       frame.colour = "black"

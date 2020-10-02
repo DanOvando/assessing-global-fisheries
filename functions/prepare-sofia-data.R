@@ -1,6 +1,6 @@
 prepare_sofia_data <- function(min_years_catch = 20,
                                crazy_b = 4,
-                               crazy_u = 5,
+                               crazy_u = 20,
                                lookup_fmi_names = FALSE,
                                q = 1e-6) {
   # min_years_catch = 20
@@ -837,5 +837,59 @@ prepare_sofia_data <- function(min_years_catch = 20,
     mutate(year = as.numeric(str_replace_all(year, "\\D", "")))
  
   assign("ei_capture",ei_capture, envir = .GlobalEnv )
+  
+  
+  # sofia status
+  
+  sofia_status <-
+    read_csv(here("data", "StockSTatus_FAOSofia.csv")) %>%
+    janitor::clean_names() %>%
+    select(area, sp_group, name, species, x2017) %>%
+    rename(
+      status = x2017,
+      bad_fao_code = area,
+      isscaap_number = sp_group,
+      common_name = name,
+      scientific_name = species
+    ) %>%
+    mutate(fao_area_code = as.numeric(bad_fao_code)) %>%
+    filter(!is.na(status), status != "?",!is.na(fao_area_code)) %>%
+    mutate(
+      stock_complex = paste(common_name, isscaap_number, fao_area_code, sep = '_'),
+      full_status = status
+    )
+  
+  stats <-
+    str_trim(str_split(sofia_status$status, pattern = "[[:punct:]]", simplify = TRUE)[, 1])
+  
+  
+  sofia_status$status <- stats
+  
+  # there are many mispellings of scientific names in SOFIA that need correcting
+  
+  correct_sofia <- sofia_status %>% 
+    select(common_name, scientific_name) %>% 
+    rename(bad_scientific_name = scientific_name) %>% 
+    unique() %>% 
+    mutate(sciname = map(common_name, ~ taxize::comm2sci(com = .x, db = "worms")[[1]]))
+  
+  correct_sofia <-  correct_sofia %>% 
+    mutate(sci_match = map_lgl(sciname, ~length(.x) > 0)) %>% 
+    filter(sci_match == TRUE) %>% 
+    mutate(good_scientific_name = map_chr(sciname, ~.x[1])) %>% 
+    select(common_name,good_scientific_name )
+  
+  
+  sofia_status <- sofia_status %>%
+    left_join(correct_sofia, by = "common_name") %>%
+    mutate(scientific_name = ifelse(
+      is.na(good_scientific_name),
+      scientific_name,
+      good_scientific_name
+    )) %>% 
+    select(-good_scientific_name)
+  
+  assign("sofia_status",sofia_status, envir = .GlobalEnv )
+  
   
 }
