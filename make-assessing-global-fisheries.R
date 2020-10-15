@@ -72,7 +72,7 @@ run_sofia_comparison <- FALSE
 
 run_ram_tests <- FALSE
 
-run_ram_comparison <- TRUE
+run_ram_comparison <- FALSE
 
 knit_paper <- FALSE
 
@@ -872,6 +872,37 @@ ex_kobe_plot <- tmp %>%
   scale_fill_continuous(low = "gainsboro", high = "black") +
   ggsci::scale_color_d3(name = "Region") +
   guides(size = FALSE)
+
+
+tmp2 <-  tmp %>%
+  pivot_longer(contains("div"), names_to = "variable", values_to = "value")
+
+truth2 <- truth %>%
+  select(stockid, year, contains("_v_")) %>%
+  pivot_longer(contains("_v_"), names_to = "variable", values_to = "truth")  %>%
+  mutate(variable = str_replace_all(variable, "_v_", "_div_"))
+
+
+tmp2 <- tmp2 %>%
+  left_join(truth2, by = c("stockid", "year", "variable")) %>%
+  mutate(
+    variable = case_when(
+      variable == "b_div_bmsy" ~ "B/Bmsy",
+      variable == "u_div_umsy" ~ "F/Fmsy",
+      TRUE ~ variable
+    )
+  )
+
+ex_scatter_plot <- tmp2 %>% 
+  ggplot(aes(truth, value, size = lifetime_catch)) + 
+  geom_vline(aes(xintercept = 0)) + 
+  geom_hline(aes(yintercept = 0)) +
+  geom_abline(aes(slope = 1, intercept = 0),linetype = 2) +
+  geom_point(alpha = 0.75) + 
+  facet_grid(variable ~ data, scales = "free_y")  + 
+  scale_size(trans = "sqrt", name = "Lifetime Catch") +
+  scale_x_continuous(name = "RAM Value", expand = expansion(add = c(0, .1))) + 
+  scale_y_continuous("Estimated Value", expand = expansion(add = c(0, .1)))
 
 sraplus_v_truth <- tmp %>% 
   left_join(truth, by = c("stockid","year")) %>% 
