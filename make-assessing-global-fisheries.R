@@ -894,13 +894,13 @@ tmp2 <- tmp2 %>%
   )
 
 ex_scatter_plot <- tmp2 %>% 
-  ggplot(aes(truth, value, size = lifetime_catch)) + 
+  ggplot(aes(truth, value)) + 
   geom_vline(aes(xintercept = 0)) + 
   geom_hline(aes(yintercept = 0)) +
   geom_abline(aes(slope = 1, intercept = 0),linetype = 2) +
   geom_point(alpha = 0.75) + 
   facet_grid(variable ~ data, scales = "free_y")  + 
-  scale_size(trans = "sqrt", name = "Lifetime Catch") +
+  # scale_size(trans = "sqrt", name = "Lifetime Catch") +
   scale_x_continuous(name = "RAM Value", expand = expansion(add = c(0, .1))) + 
   scale_y_continuous("Estimated Value", expand = expansion(add = c(0, .1)))
 
@@ -1938,7 +1938,7 @@ assess_ram_fits <- ram_status_fits %>%
 null_model <- assess_ram_fits %>% 
   filter(data == "cmsy") %>% 
   mutate(mean = sample(c(.4,1,1.6), n(), replace = TRUE)) %>% 
-  mutate(data = "Guess") %>% 
+  mutate(data = "guess") %>% 
   mutate(resid = ram_b_v_bmsy - mean,
          ae = abs(resid))
 
