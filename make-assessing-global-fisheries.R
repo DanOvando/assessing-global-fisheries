@@ -52,7 +52,7 @@ n_cores <- 2
 
 # options(mc.cores = 1)
 
-results_name <- "v0.5"
+results_name <- "v1.0"
 
 
 results_description <-
@@ -894,13 +894,13 @@ tmp2 <- tmp2 %>%
   )
 
 ex_scatter_plot <- tmp2 %>% 
-  ggplot(aes(truth, value, size = lifetime_catch)) + 
+  ggplot(aes(truth, value)) + 
   geom_vline(aes(xintercept = 0)) + 
   geom_hline(aes(yintercept = 0)) +
   geom_abline(aes(slope = 1, intercept = 0),linetype = 2) +
   geom_point(alpha = 0.75) + 
-  facet_grid(variable ~ data, scales = "free_y")  + 
-  scale_size(trans = "sqrt", name = "Lifetime Catch") +
+  facet_grid(variable ~ data, scales = "free_x")  + 
+  # scale_size(trans = "sqrt", name = "Lifetime Catch") +
   scale_x_continuous(name = "RAM Value", expand = expansion(add = c(0, .1))) + 
   scale_y_continuous("Estimated Value", expand = expansion(add = c(0, .1)))
 
@@ -1938,7 +1938,7 @@ assess_ram_fits <- ram_status_fits %>%
 null_model <- assess_ram_fits %>% 
   filter(data == "cmsy") %>% 
   mutate(mean = sample(c(.4,1,1.6), n(), replace = TRUE)) %>% 
-  mutate(data = "Guess") %>% 
+  mutate(data = "guess") %>% 
   mutate(resid = ram_b_v_bmsy - mean,
          ae = abs(resid))
 
@@ -2028,6 +2028,19 @@ fao_area_ram_status %>%
   arrange(mape)
 
 
+ram_labeller <- c(
+  "ram-data" = "RAM Index",
+  "sar" = "SAR",
+  "fmi" = "FMI",
+  "cpue" = "Effective CPUE",
+  "cpue-plus" = "Effective CPUE+",
+  "nominal-cpue" = "Nominal CPUE",
+  "nominal-cpue-plus" = "Nominal CPUE+",
+  "cmsy" = "CMSY",
+  "guess" = "Guess",
+  "u_umsy" = "RAM U/Umsy"
+)
+
 ram_mpe_map_plot <- fao_area_ram_status %>%
   filter(!is.na(data)) %>% 
   mutate(data = fct_reorder(data, abs(mpe), .fun = median)) %>% 
@@ -2039,7 +2052,7 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
     color = "black",
     size = 0.01
   ) +
-  facet_wrap(~ data) +
+  facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
   scale_fill_gradient2(
     low = "steelblue",
     high = "tomato",
@@ -2072,7 +2085,7 @@ ram_mape_map_plot <- fao_area_ram_status %>%
     color = "black",
     size = 0.01
   ) +
-  facet_wrap(~ data) +
+  facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
   scale_fill_gradient(
     low = "white",
     # mid = "orange",
@@ -2106,7 +2119,7 @@ ram_acc_map_plot <- fao_area_ram_status %>%
     color = "black",
     size = 0.01
   ) +
-  facet_wrap(~ data) +
+  facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
   scale_fill_viridis(
     limits = c(0,1),
     breaks = c(0,.33, .66,1),
@@ -2146,7 +2159,7 @@ ram_b_map_plot <- combo %>%
     color = "black",
     size = 0.01
   ) +
-  facet_wrap( ~ data) +
+  facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
   scale_fill_viridis(
     limits = c(0, NA),
     name = "Median B/Bmsy",
