@@ -1,3 +1,12 @@
-# assessing-global-fisheries
-
-  Assessments of the global state of fisheries play an important role in shaping the public narrative around ocean health, motivating future directions of research and funding, formulating evidence-based policy and tracking the implementation of the United Nations Sustainable Development Goals. Numerous high-profile publications featuring a range of statistical methods have produced estimates of the global status of fisheries, but limited quantity and quality of data along with methdological differences have produced counterintuitive and conflicting results and therefore, high uncertainties in our understanding of global fisheries. This is especially true in areas such as Southeast Asia and Africa which are also regions that have high dependence on fishery resources. How can we effectively estimate the state of global fishery sustainability and track progress towards the Sustainable Development Goals targets? We developed a new flexible assessment model to assess the value of different kinds, quantities, and quality of data in improving estimates of fishery stock status. We then explore avenues for obtaining potentially impactful data, including through the use of local expert opinion through Fisheries Management Index scores, and increasingly available but historically underutilized data such as trawl footprints and effort data. These data are then used to illustrate how different types of information paint starkly different pictures of the state of fisheries around the world, and to identify priority data types for future collection. We show that our ability to obtain reliable estimates of stock status for the world's unassessed fisheries depends on prioritizing the collection of key data at a global scale, not on the development of new modeling methods alone.
+# Global Assessments of Fishery Status need Better Data more than Better Models 
+  
+  - Daniel Ovando
+  - Ray Hilborn
+  - Cole Monnahan
+  - Merrill Rudd
+  - Rishi Sharma
+  - James Thorson
+  - Yannick Rousseau
+  - Yimin Ye
+  
+Assessments of the global state of fisheries play an important role in tracking the implementation of the United Nations Sustainable Development Goals. While we have reliable estimates of stock status for fisheries accounting for 49% of global catch, our knowledge of the state of the remaining 51%, the worlds 'unassessed' fisheries, is poor. Numerous high-profile publications have produced estimates of the global status of these unassessed fisheries, but limited quantity and quality of data along with methodological differences have produced counterintuitive and conflicting results. Here, we show that despite numerous efforts, our understanding of the status of global fisheries remains poor, even when new sources of broadly available data are added. Obtaining accurate estimates of stock status for the world's fisheries depends on prioritizing the collection of high-priority data at a global scale, not on the development of new modeling methods alone.
