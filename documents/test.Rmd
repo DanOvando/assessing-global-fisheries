@@ -1,0 +1,38 @@
+---
+title: |
+  | Status of Unassessed Fish Stocks will Remain Highly Uncertain
+  | until Better Data are Available
+author: 
+  - Daniel Ovando
+  - Ray Hilborn
+  - Cole Monnahan
+  - Merrill Rudd
+  - Rishi Sharma
+  - James Thorson
+  - Yannick Rousseau
+  - Yimin Ye
+date: "`r Sys.Date()`"
+bibliography: ["../references.bib"]
+csl: nature.csl
+output: 
+  bookdown::word_document2:
+    reference_docx: SA_MS_Template_2020.docx
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+params:
+  results_name: ["v1.0"]
+  min_years_catch: [25]
+abstract: |
+  Assessments of the global state of fisheries play an important role in tracking the implementation of the United Nations Sustainable Development Goals. While we have reliable estimates of stock status for fisheries accounting for half of recent global catch, our knowledge of the state of the majority of the word's 'unassessed' fisheries remains highly uncertain Numerous high-profile publications have produced estimates of the global status of these unassessed fisheries, but limited quantity and quality of data along with methodological differences have produced counterintuitive and conflicting results. Here, we show that despite numerous efforts, our understanding of the status of global fisheries remains incpmplete, even when new sources of broadly available data are added. Obtaining accurate estimates of stock status for the world's fisheries depends on prioritizing the collection of high-priority data at around the globe, rather than the development of new modeling methods alone.
+always_allow_html: true
+linkcolor: blue
+header-includes:
+  - \usepackage{draftwatermark}
+  - \SetWatermarkText{DRAFT}
+---
+
+@fao2020
+
+
+
+

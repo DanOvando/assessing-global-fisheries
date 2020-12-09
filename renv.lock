@@ -1305,10 +1305,10 @@
     },
     "rmarkdown": {
       "Package": "rmarkdown",
-      "Version": "2.3",
+      "Version": "2.5",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "202260e1b2c410edc086d5b8f1ed946e"
+      "Hash": "20a0a94af9e8f7040510447763aab3e9"
     },
     "rnaturalearth": {
       "Package": "rnaturalearth",
@@ -1369,16 +1369,9 @@
     "rstan": {
       "Package": "rstan",
       "Version": "2.21.2",
-      "Source": "GitHub",
+      "Source": "Repository",
       "Repository": "CRAN",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "rstan",
-      "RemoteUsername": "stan-dev",
-      "RemoteRef": "develop",
-      "RemoteSha": "a9a44bb16232ed8aacbd94f76a2ab42fb93ac4cb",
-      "RemoteSubdir": "rstan/rstan",
-      "Hash": "9e454c0702529d422781f200cbd91d09"
+      "Hash": "52772d81aa532a6331fd535701882c12"
     },
     "rstanarm": {
       "Package": "rstanarm",
@@ -1522,8 +1515,8 @@
       "RemoteUsername": "danovando",
       "RemoteRepo": "sraplus",
       "RemoteRef": "master",
-      "RemoteSha": "7c7df24f72126a270b4032e4406edf711f964766",
-      "Hash": "f9d49e3829d3a6d98a0627ffbb05fb2a"
+      "RemoteSha": "72fb94effc4699f98439e2ed79e9ed0977b66e78",
+      "Hash": "89e4ec562ca09a0354c1a754ad849580"
     },
     "statmod": {
       "Package": "statmod",
@@ -1569,10 +1562,10 @@
     },
     "systemfonts": {
       "Package": "systemfonts",
-      "Version": "0.2.3",
+      "Version": "0.3.2",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "86e3c704ca4e498330d0d8730b437a4d"
+      "Hash": "046e821d454edb3722192f588f4d7884"
     },
     "taxize": {
       "Package": "taxize",
