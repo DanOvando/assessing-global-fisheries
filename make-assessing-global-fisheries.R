@@ -2188,8 +2188,15 @@ save(file = here("results", results_name, "paper_plots.Rdata"),
 if (knit_paper == TRUE){
   
   rmarkdown::render(
-    here::here("documents", "ovando-etal-assessing-global-fisheries.Rmd"),
+    here::here("documents", "ovando-etal-assessing-global-fisheries-short.Rmd"),
     params = list(results_name = results_name,
                   min_years_catch = 25)
   )
+  
+  rmarkdown::render(
+    here::here("documents", "ovando-etal-assessing-global-fisheries-si.Rmd"),
+    params = list(results_name = results_name,
+                  min_years_catch = 25)
+  )
+  
 }

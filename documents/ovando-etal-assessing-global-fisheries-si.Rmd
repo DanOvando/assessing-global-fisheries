@@ -1,0 +1,463 @@
+---
+title: Status of Global Unassessed Fisheries will Remain Highly Uncertain without Better Data
+subtitle: Supplementary Information
+author: 
+  - Daniel Ovando
+  - Ray Hilborn
+  - Cole Monnahan
+  - Merrill Rudd
+  - Rishi Sharma
+  - James Thorson
+  - Yannick Rousseau
+  - Yimin Ye
+date: "`r Sys.Date()`"
+bibliography: ["../references.bib"]
+csl: proceedings-of-the-royal-society-b.csl
+output: 
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+  bookdown::word_document2:
+    reference_docx: template.docx
+params:
+  results_name: ["v1.0"]
+  min_years_catch: [25]
+always_allow_html: true
+linkcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, dpi = 600,
+                      cache = FALSE, fig.width = 6, fig.asp = .75, dev = "png")
+library(tidyverse)
+library(viridis)
+library(sf)
+library(hrbrthemes)
+library(extrafont)
+library(scales)
+library(patchwork)
+library(rstanarm)
+library(bayesplot)
+library(here)
+library(sraplus)
+extrafont::loadfonts()
+
+functions <- list.files(here::here("functions"))
+
+purrr::walk(functions, ~ source(here::here("functions", .x)))
+
+results_name <- params$results_name
+
+results_path <- here("results",results_name)
+
+min_years_catch <- params$min_years_catch
+
+prepare_sofia_data(lookup_fmi_names = FALSE)
+
+ram_comp_data <- ram_data %>%
+  mutate(has_things = !(is.na(catch) | catch == 0)) %>%
+  filter(has_things) %>%
+  group_by(stockid) %>%
+  mutate(delta_year = as.integer(year - lag(year))) %>%
+  mutate(delta_year = case_when(year == min(year) ~ as.integer(1),
+                                TRUE ~ delta_year)) %>%
+  mutate(missing_gaps = any(delta_year > 1)) %>%
+  filter(missing_gaps == FALSE) %>%
+  group_by(stockid) %>%
+  mutate(n = length(catch)) %>%
+  filter(n >= min_years_catch) %>%
+  ungroup()
+
+ram_comp_data <- ram_comp_data %>%
+  select(
+    year,
+    stockid,
+    country,
+    primary_FAOarea,
+    scientificname,
+    commonname,
+    year,
+    catch,
+    b_v_bmsy,
+    u_v_umsy,
+    total_biomass
+  ) %>%
+  rename(scientific_name = scientificname) %>% 
+  mutate(fao_area_code = as.numeric(primary_FAOarea)) %>% 
+  left_join(fao_species, by = "scientific_name")
+
+
+assess_ram_fits <- read_rds(path = file.path(results_path,"assess_ram_fits.rds"))
+
+ram_v_sraplus_area <- read_rds(path = file.path(results_path,"ram_v_sraplus_area.rds"))
+
+ram_comp_data <- read_rds(path = file.path(results_path,"ram_comp_data.rds"))
+
+fao_sraplus_comp_data <- read_rds(path = file.path(results_path, "fao_sraplus_comp_data.rds"))
+
+
+load(file = file.path(results_path, "paper_plots.Rdata"))
+
+load(file = file.path(results_path, "voi_fits.RData"))
+
+  exs <- read_rds(path = file.path(results_path, "raw-case-study-fits.rds"))
+
+
+breaks <- c(0.8, 1.2)
+
+breaks <- c(0, breaks, Inf)
+
+labels <- c("over", "fully", "under")
+
+
+# rand_fits <- assess_ram_fits %>%
+#   filter(data == "ram-data") %>%
+#   mutate(mean = sample(c(0.1, 1, 2), n(), replace = TRUE),
+#          data = "guess")
+
+
+perf <- assess_ram_fits %>% 
+  # bind_rows(rand_fits) %>% 
+  mutate(sraplus_bin = cut(mean, breaks = breaks, labels = labels)) %>%
+  mutate(ram_bin = cut(ram_b_v_bmsy, breaks = breaks, labels = labels)) %>%
+  mutate(data = as.factor(data)) %>% 
+  mutate(data = forcats::fct_recode(data, 
+                                    "RAM Index" = "ram-data",
+                                    "SAR" = "sar",
+                                    "FMI" = "fmi",
+                                    "Effective CPUE" = "cpue",
+                                    "Effective CPUE+" = "cpue-plus",
+                                    "Nominal CPUE" = "nominal-cpue",
+                                    "Nominal CPUE+" ="nominal-cpue-plus",
+                                    "CMSY" = "cmsy",
+                                    "Guess" = "guess",
+                                    "RAM U/Umsy" = "u_umsy"
+                                     
+                                    )) %>% 
+  group_by(data) %>% 
+  summarise(
+    mpe = median((mean - ram_b_v_bmsy ) / ram_b_v_bmsy),
+    mape = median(abs(mean - ram_b_v_bmsy ) / ram_b_v_bmsy),
+    accuracy = mean(ram_bin == sraplus_bin, na.rm = TRUE)
+  ) %>% 
+  arrange((mape)) %>% 
+  rename("Data Used" = "data")
+
+
+
+fao_area_codes <- fao %>% 
+  ungroup() %>% 
+  select(fao_area, fao_area_code) %>% 
+  unique()
+
+
+
+pub_theme <- theme_ipsum(base_size = 10,
+                         axis_text_size = 10,
+                         axis_title_size = 12) +
+    theme(panel.spacing = unit(.5,"lines"))
+
+theme_set(pub_theme)
+
+
+```
+
+
+
+# Supplementary Information {.unnumbered}
+
+
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+\setcounter{figure}{0}
+
+\renewcommand{\thetable}{S\arabic{table}}
+
+\setcounter{table}{0}
+
+## Data Sources Used {.unnumbered}
+
+
+
+```{r dat-desc}
+dat_description <- tribble(~`Data Name`, ~Description,
+        "RAM Index", "Fit to abundance index from RAM",
+        "SAR", "Prior on terminal F/Fmsy set by regional swept area ratio",
+        "FMI", "Prior on terminal F/Fmsy set by regional fisheries management index scores",
+        "EFfective CPUE", "Fit to CPUE index created from RAM catch and regional effort index. 2.6% technology creep",
+        "Effective CPUE+", "Fit to CPUE index created from RAM catch and regional effort index with priors informed by SAR and FMI. 2.6% tech. creep",
+        "Nominal CPUE", "Fit to CPUE index created from RAM catch and regional effort index. 0% tech. creep",
+         "Nominal CPUE+", "Fit to CPUE index created from RAM catch and regional effort index with priors informed by SAR and FMI. 0% tech. creep",
+        "Guess", "Priors on terminal B/Bmsy randomly sampled from .4,1,1.6")
+
+knitr::kable(dat_description,
+             caption = "Data sources used for terminal stock status estimate",
+             format = "pipe")
+# %>%
+#   kableExtra::kable_styling(full_width = T, font_size = 9) %>%
+#   kableExtra::row_spec(0, bold = T)
+```
+
+
+## Population Model {.unnumbered}
+
+
+The core of our model is a Pella-Tomlinson [@pella1969] production model in the manner of [@winker2018]. While models of these kinds abstract away many important details of fish biology and fleet behavior, they are the highest resolution model that the potential data evaluated here will support.
+
+```{r si-prior-tab}
+cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "K", `Default Prior` = "$logn(10\\times{max(catch)},4)$") %>%
+  rbind(c("Growth rate", "r", "$logn(r_{fishlife}, \\sigma_{r,fishlife})$")) %>%
+  rbind(c("Shape parameter", "m", "$logn(1.01, 0.25)$")) %>%
+  rbind(c("Catchability", "q", "$logn(1e^{-3}, 0.3)$")) %>%
+  rbind(c("Observation Error", "$\\sigma_{obs}$", "$logn(.05,2)$")) %>%
+  rbind(c("Process Error", "$\\sigma_{proc}$", "$logn(.05,0.5)$")) %>% 
+  rbind(c("Tech Creep", "$creep$", "$logn(0.025,0.2)$"))
+
+ 
+knitr::kable(
+  cd,
+  "latex",
+  align = "l",
+  booktabs = TRUE,
+  escape = F,
+  row.names = F,
+  caption = "Potential parameters included in sraplus, abbreviations, and default priors"
+) %>%
+  kableExtra::kable_styling(full_width = T, font_size = 9) %>%
+  kableExtra::row_spec(0, bold = T)
+```
+
+The population growth equation is
+
+\begin{equation}
+  f(x)=\begin{cases}
+      B_{t + 1} = \left(B_{t} + B_{t}\frac{r}{m - 1}\left(1 - \left(\frac{B_t}{K}\right)^{m- 1}\right) - \hat{c_t}\right)p_t
+, & \text{if $B_t>0.25 \times K$}.\\
+     B_{t + 1} = \left(B_{t} + \frac{B_{t}}{0.25 \times K}\left(B_{t}\frac{r}{m - 1}\left(1 - \left(\frac{B_t}{K}\right)^{m- 1}\right) - \hat{c_t}\right)\right)p_t, & \text{otherwise}.
+  \end{cases}
+  (\#eq:sihockey)
+\end{equation}
+
+## Prior Predictive Tuning {.unnumbered}
+
+The SRA algorithm works in two steps. First, the algorithm rejects any draws that resulted in the collapse of the population (biomass less than catch in a given timestep). From there a standard SRA would sample from the priors in proportion to the stated prior on recent stock status. If the bulk of the prior on terminal stock status was concentrated at 50% of *K*, combinations of *r* and *K* that produce terminal stock status near 50% of *K* are sampled proportionally more frequently. However, lower values of terminal stock status have fewer candidate values of *r* and *K*, since it becomes harder and harder to find viable pairs that come close to but do not crash the population at any time step. Conversely, in the absence of constraints higher values of stock status have infinite combinations of plausible *r* and *K* combinations: since under this model the population cannot be greater than carrying capacity, as for example *K* approaches infinity terminal stock status asymptotes at close to 100% of *K*. The net result of this is that even though individual combinations of *r* and *K* that produce higher stock status than the mean of the prior on recent stock status individually have lower probability of being sampled, there are many more opportunities for the lower-probability events that produce higher stock status to be sampled. As a result, the post-model-pre-data prior on terminal depletion will always be higher under this method than the supplied prior on stock status.
+
+We use an approximation to this problem here, similar in spirit to Bayesian melding [@poole2000]. Our solution amounts to a two-step SIR algorithm. We first run the standard SIR algorithm as described above. We then break the resulting draws into bins based on terminal stock status, and calculate the mean sampling probability of each bin.
+
+$$p(bin_i) = \frac{1}{N_i}\sum_{n = 1}^{N_i}{p(b_{n,i})}$$
+
+We then divide the sampling probability of of bin *i* evenly among each of the draws within that bin *n*
+
+$$p(n_i) = \frac{p(bin_i)}{N_i}$$
+
+And we then perform a second SIR algorithm but now sampling each observation $n_i$ in proportion to $p(n_i)$. The net result of this is a post-model-pre-data distribution of parameters *r* and *K* that produce a distribution of recent stock status that roughly matches the supplied prior on recent stock status. In effect, this process answers the question "given the model, what combinations of parameters produce my prior on recent stock status". This is only an approximate solution, but it helps ensure that the post-model-pre-data distribution of stock status much more closely matches the stated prior on recent stock status, and reduced the positive bias resulting from use of the raw SRA algorithm (Fig.\@ref(fig:bias-plot), Fig.S1).
+
+```{r bias-plot, fig.cap = "Post-model-pre-data distribution of depletion (biomass relative to carrying capacity) from raw SRA algorithm (untuned, top row), from SRA algorithm with approximate tuning applied (tuned, middle row), compared to the supplised prior on depletion (bottom row). Black vertical line indicates median value. "}
+
+id = unique(ram_comp_data$stockid)
+
+ex <- ram_data %>% 
+  filter(stockid %in% id[[1]]) 
+
+# fit using catch heuristic
+
+co_driors <- sraplus::format_driors(taxa = unique(ex$scientificname),
+                                 catch = ex$catch, 
+                                 years = ex$year,
+                                 terminal_state = 0.25,
+                                 terminal_state_cv = 0.5,
+                                 b_ref_type = "k")
+
+biased_co_fit <- sraplus::fit_sraplus(driors = co_driors, tune_prior_predictive = FALSE,
+                                      estimate_shape = FALSE, estimate_proc_error = TRUE)
+
+biased_depletion <- biased_co_fit$fit %>% 
+  filter(variable == "dep_t") %>%
+  filter(year == max(year)) %>% 
+  mutate(set = "Untuned Post-Model-Pre-Data") %>% 
+  select(year, value, set)
+
+
+co_fit <- sraplus::fit_sraplus(driors = co_driors, tune_prior_predictive = TRUE,
+                                      estimate_shape = FALSE, 
+                               estimate_proc_error = TRUE)
+
+tuned_depletion <- co_fit$fit %>% 
+  filter(year == max(year), variable == "dep_t") %>% 
+  mutate(set = "Tuned Post-Model-Pre-Data") %>% 
+  select(year, value, set)
+
+prior <- tuned_depletion %>% 
+  mutate(value = rlnorm(n(), log(0.25), 0.5)) %>% 
+    mutate(set = "Prior")
+
+comps <- biased_depletion %>% 
+  bind_rows(tuned_depletion) %>% 
+  bind_rows(prior) %>% 
+  group_by(set) %>% 
+  mutate(valrank = percent_rank(value)) %>% 
+  filter(between(valrank, .05, .95))
+
+comps %>% 
+  ggplot(aes(x = value, y = set)) + 
+  ggridges::geom_density_ridges(alpha = 0.9,
+                                quantile_lines = TRUE, quantiles = 2) +
+  scale_x_continuous(limits = c(0, 1.2), name = "Depletion (B/K)") + 
+  scale_y_discrete(name = '')
+
+
+```
+
+## Sample Prior Posterior Plots {.unnumbered}
+
+
+```{r ppplot, fig.cap="Prior posterior plots of fits for case study fishery in Fig.6"}
+
+a = get_prior_posterior(co_fit, co_driors)
+
+a$prior_posterior %>% 
+  ggplot(aes(x = variable, y = mean, ymin = lower, ymax = upper, color = source)) + 
+  geom_pointrange(position = position_dodge(width = 0.1)) + 
+  facet_wrap(~variable, scales = "free") + 
+  theme(axis.text.x = element_blank()) + 
+  scale_color_discrete(name = '') + 
+  scale_y_continuous(name = "Value") + 
+  scale_x_discrete(name = '') + 
+  theme_minimal()
+
+
+```
+
+
+
+
+## Prior Generating Regressions {.unnumbered}
+
+
+
+#### Catch-Only Priors {.unnumbered}
+
+
+Many of the current methods for estimating global stock status of unassessed stocks are based on predicting stock status from characteristics of the catch history [@costello2012b; @costello2016a; @pauly2007; @rosenberg2018]. While these catch-only methods have been shown to have serious shortcomings [@free2020], we include them as a point of reference given their ubiquity in the global assessment literature.
+
+We used data from the RAM Legacy Stock Assessment Database to estimate a regression of stock status as a function of catch history characteristics. To facilitate the process, we first fit a spectral clustering algorithm to the scaled catch histories of fisheries in RAM, in order identify four possible clusters of catch history types within the the data. Emergent clusters show for example one built around a downward "one way trip" style catch histories, others with a boom and bust pattern, others with stable but fluctuating catches.
+
+We then trained a classification algorithm to predict which catch cluster a given fishery would fall into based on the shape of its catch history. This algorithm was then used to assign fisheries to one of the four identified catch history types, and the catch history type was then used as a hierarchical term within our catch-based regressions (where *s* refers to a smoothing term). For the first regression, we restrict the data to the first year of data available for each fishery *i*, in order to estimate initial stock status
+
+$$log(value_i) \sim normal(s(\frac{first(catch)}{max(catch)} | cluster_i) + s(log(lengthi)|cluster_i) + 1, \sigma)$$
+
+For the second regression, we included data for all available years *y* for fishery *i*. The model is then used to construct a prior on fishery status in the terminal year of the data
+
+$$log(value_{i,y}) \sim normal(s(fyear | cluster_i) + s(\frac{catch_{i,y}}{max(catch_i)} | cluster_i) + cluster_i, \sigma)$$
+
+where *fyear* is the year of the fishery, starting from 0.
+
+#### Fisheries Management Index Priors {.unnumbered}
+
+
+The Fisheries Management Index (FMI), as presented in [@melnychuk2017], utilizes surveys filled out by regional experts to score a fishery against a set of 46 specific questions for individual species about what elements of fisheries management were in place. These questions are then aggregated into broader categories of science, enforcement, management, and socioeconomic. The higher the score, the better the expert judges that a given metric is met in that fishery. Importantly, FMI surveys can be filled out in the absence of stock assessments. This allows us to explore how FMI values map onto stock status, and explore the ability then to use FMI scores to produce priors on stock status for unassessed fisheries (in a manner similar to [@osio2015] and [@cope2015]).
+
+The final selected model relating FMI variable to stock status metrics was a generalized additive model (GAM) of the form
+
+$$log(value_i) \sim N(s(research_i) + s(management_i) +
+s(enforcement_i) + s(socioeconomics_i) + \frac{catch_i}{max(catch)_i)} + 1,\sigma_{SAR})$$
+
+#### Swept Area Ratio Priors {.unnumbered}
+
+
+[@amoroso2018] provides an extensive database of trawling footprints throughout the world, including both regions heavily covered by stock assessments and largely unassessed areas. This makes the trawl footprint data an ideal candidate for supporting global stock assessment efforts. As illustrated in [@amoroso2018], there is an evident positive relationship between the swept area ratio (SAR,the total annual area trawled divided by the total area of the region) and U/U~MSY~. Note that SAR can be greater than 1 since the same area can be trawled multiple times in a year, e.g. if all trawl-able areas are trawled twice a year then the SAR will be 2. Also note the skewed distribution of SAR values with most concentrated well below 1 and only a handful above 1.
+
+The final selected model relating SAR to to stock status metrics was
+
+$$log(value_i) \sim normal(s(SAR_i) + s(\frac{catch_i}{max(catch)_i)}) + 1,\sigma_{SAR}) $$
+
+
+### Swept Area Ratio {.unnumbered}
+
+
+```{r sar-fit, fig.cap = "Observed (x-axis) vs posterior predictive (y-axis) F/F~MSY~ for regression of swept area ratio (SAR) on F/F~MSY~"}
+fit <- sraplus::sar_models$fit[sraplus::sar_models$metric == "mean_uumsy"][[1]]
+
+fit_data <- fit$data
+
+pp <- posterior_predict(fit, draws = 1000)
+
+r2_plot <- tibble(r2 = bayes_R2(fit)) %>% 
+  ggplot(aes(r2)) + 
+  geom_histogram() + 
+  labs(subtitle = "B) Bayesian R2")
+
+pi_plot <- ppc_intervals(y = fit_data$log_value, yrep = pp, x = fit_data$log_value) + 
+  scale_x_continuous(name = "Observed Log F/Fmsy") + 
+  scale_y_continuous(name = "Posterior Predictive F/Fmsy") +
+  labs(subtitle = "A) Observed vs. Posterior Predictive") +
+ pub_theme
+
+pi_plot + r2_plot
+
+```
+
+### Fisheries Management Index {.unnumbered}
+
+
+```{r fmi-fit, fig.cap = "Observed (x-axis) vs posterior predictive (y-axis) F/F~MSY~ for regression of fisheries management index (FMI) on F/F~MSY~"}
+
+fit <- sraplus::fmi_models$fit[sraplus::fmi_models$metric == "mean_uumsy"][[1]]
+
+fit_data <- fit$data
+
+pp <- posterior_predict(fit, draws = 1000)
+
+r2_plot <- tibble(r2 = bayes_R2(fit)) %>% 
+  ggplot(aes(r2)) + 
+  geom_histogram() + 
+  labs(subtitle = "B) Bayesian R2")
+
+pi_plot <- ppc_intervals(y = fit_data$log_value, yrep = pp, x = fit_data$log_value) + 
+  scale_x_continuous(name = "Observed Log F/Fmsy") + 
+  scale_y_continuous(name = "Posterior Predictive F/Fmsy") +
+  labs(subtitle = "A) Observed vs. Posterior Predictive") +
+ pub_theme
+
+pi_plot + r2_plot
+```
+
+## Value of Information Calculation {.unnumbered}
+
+
+We performed a value-of-information (VOI) assessment to determine what types of data may be most beneficial to acquire at a global scale if we are to improve our knowledge of the state of global fisheries. The VOI analysis was performed by using sraplus to generate estimates of stock status (B/B~MSY~) for stocks in the RAM legacy stock assessment, and comparing the estimated values to the values reported in RAM. We generate fits for 3000 combinations of a RAM stock and available data. For any one draw, we randomly sample a RAM stock and a list of available data and data quality. For example, we might sample stock *A* with information on recent fishing mortality rates for the first iteration, and stock *A* again for the second iteration but now with information on recent fishing mortality rates and a recent index of abundance. The result is a set of model performance estimates where the characteristics of the stock and the data made available to the model are randomized.
+
+
+Using this set of fits, we assess performance as the root-mean-squared-error of B/B~MSY~ over the most recent 5 years of the fishery, in order to evaluate the ability of the model to capture the recent trends in stock status and not just the most recent year. We evaluate the contributing of each data type to RMSE using a Gamma GLM with a log link of the form
+
+$$rmse \sim  Gamma(\pmb{\beta}{\pmb{X}} + (1 | stock), shape, scale)$$
+
+Where $\pmb{\beta}$ is the vector of coefficients associated with the matrix of dummy variables marking the use of different data types in the vector $\pmb{X}$
+
+## Catch History {.unnumbered}
+
+
+```{r catch-reg,fig.cap = "Observed (x-axis) vs posterior predictive (y-axis) B/B~MSY~ for regression of catch on B/B~MSY~"}
+
+fit <- sraplus::catch_b_model
+
+fit_data <- fit$data %>% 
+  group_by(stockid) %>% 
+  filter(year == max(year))
+
+pp <- posterior_predict(fit, draws = 1000, newdata = fit_data)
+
+r2_plot <- tibble(r2 = bayes_R2(fit)) %>% 
+  ggplot(aes(r2)) + 
+  geom_histogram() + 
+  labs(subtitle = "B) Bayesian R2")
+
+pi_plot <- ppc_scatter_avg(y = fit_data$log_value, yrep = pp) + 
+  coord_flip() +
+  scale_y_continuous(name = "Observed Log B/Bmsy") + 
+  scale_x_continuous(name = "Posterior Predictive B/Bmsy") +
+  labs(subtitle = "A) Observed vs. Posterior Predictive") +
+ pub_theme
+
+
+pi_plot + r2_plot
+```
