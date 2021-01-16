@@ -58,7 +58,7 @@ results_name <- "v1.0"
 results_description <-
   "publication version of results"
 
-run_voi_models <- TRUE
+run_voi_models <- FALSE
 # sub options for run_voi_models
 fit_models <- FALSE
 
@@ -74,7 +74,7 @@ run_ram_tests <- FALSE
 
 run_ram_comparison <- FALSE
 
-knit_paper <- FALSE
+knit_paper <- TRUE
 
 warning("Running full analysis takes upwards of 24 hours on 2 cores. Recommend starting on a Friday night having a nice weekend. Given memory constraints of models, more than 2 cores is not recommended (memory routinley runs out on a 16 core 36GB machine when cores > 2)")
 
@@ -2188,7 +2188,7 @@ save(file = here("results", results_name, "paper_plots.Rdata"),
 if (knit_paper == TRUE){
   
   rmarkdown::render(
-    here::here("documents", "ovando-etal-assessing-global-fisheries-short.Rmd"),
+    here::here("documents", "ovando-etal-assessing-global-fisheries.Rmd"),
     params = list(results_name = results_name,
                   min_years_catch = 25)
   )
