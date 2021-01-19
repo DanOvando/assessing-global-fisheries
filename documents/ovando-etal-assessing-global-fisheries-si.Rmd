@@ -459,19 +459,7 @@ pi_plot <- ppc_intervals(y = fit_data$log_value, yrep = pp, x = fit_data$log_val
 pi_plot + r2_plot
 ```
 
-## Value of Information Calculation {.unnumbered}
-
-
-We performed a value-of-information (VOI) assessment to determine what types of data may be most beneficial to acquire at a global scale if we are to improve our knowledge of the state of global fisheries. The VOI analysis was performed by using sraplus to generate estimates of stock status (B/B~MSY~) for stocks in the RAM legacy stock assessment, and comparing the estimated values to the values reported in RAM. We generate fits for 3000 combinations of a RAM stock and available data. For any one draw, we randomly sample a RAM stock and a list of available data and data quality. For example, we might sample stock *A* with information on recent fishing mortality rates for the first iteration, and stock *A* again for the second iteration but now with information on recent fishing mortality rates and a recent index of abundance. The result is a set of model performance estimates where the characteristics of the stock and the data made available to the model are randomized.
-
-
-Using this set of fits, we assess performance as the root-mean-squared-error of B/B~MSY~ over the most recent 5 years of the fishery, in order to evaluate the ability of the model to capture the recent trends in stock status and not just the most recent year. We evaluate the contributing of each data type to RMSE using a Gamma GLM with a log link of the form
-
-$$rmse \sim  Gamma(\pmb{\beta}{\pmb{X}} + (1 | stock), shape, scale)$$
-
-Where $\pmb{\beta}$ is the vector of coefficients associated with the matrix of dummy variables marking the use of different data types in the vector $\pmb{X}$
-
-## Catch History {.unnumbered}
+### Catch History {.unnumbered}
 
 
 ```{r catch-reg,fig.cap = "Observed (x-axis) vs posterior predictive (y-axis) B/B~MSY~ for regression of catch on B/B~MSY~"}
@@ -499,3 +487,17 @@ pi_plot <- ppc_scatter_avg(y = fit_data$log_value, yrep = pp) +
 
 pi_plot + r2_plot
 ```
+
+
+## Value of Information Calculation {.unnumbered}
+
+
+We performed a value-of-information (VOI) assessment to determine what types of data may be most beneficial to acquire at a global scale if we are to improve our knowledge of the state of global fisheries. The VOI analysis was performed by using sraplus to generate estimates of stock status (B/B~MSY~) for stocks in the RAM legacy stock assessment, and comparing the estimated values to the values reported in RAM. We generate fits for 3000 combinations of a RAM stock and available data. For any one draw, we randomly sample a RAM stock and a list of available data and data quality. For example, we might sample stock *A* with information on recent fishing mortality rates for the first iteration, and stock *A* again for the second iteration but now with information on recent fishing mortality rates and a recent index of abundance. The result is a set of model performance estimates where the characteristics of the stock and the data made available to the model are randomized.
+
+
+Using this set of fits, we assess performance as the root-mean-squared-error of B/B~MSY~ over the most recent 5 years of the fishery, in order to evaluate the ability of the model to capture the recent trends in stock status and not just the most recent year. We evaluate the contributing of each data type to RMSE using a Gamma GLM with a log link of the form
+
+$$rmse \sim  Gamma(\pmb{\beta}{\pmb{X}} + (1 | stock), shape, scale)$$
+
+Where $\pmb{\beta}$ is the vector of coefficients associated with the matrix of dummy variables marking the use of different data types in the vector $\pmb{X}$
+
