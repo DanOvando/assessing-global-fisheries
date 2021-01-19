@@ -203,6 +203,30 @@ knitr::kable(dat_description,
 
 The core of our model is a Pella-Tomlinson [@pella1969] production model in the manner of [@winker2018]. While models of these kinds abstract away many important details of fish biology and fleet behavior, they are the highest resolution model that the potential data evaluated here will support.
 
+```{r param-tab}
+cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "$K$", `Default Prior` = "Prior predictive tuning") %>%
+  rbind(c("Growth rate", "$r$", "Thorson, 2020 [@thorson2020] updated by prior predictive tuning")) %>%
+  rbind(c("Shape parameter", "$m$", "Drawn from Thorson et al. 2012 (@thorson2012)")) %>%
+  rbind(c("Catchability", "$q$", "$logn(1e^{-3}, 1)$")) %>%
+  rbind(c("Observation Error", "$\\sigma_{obs}$", "$logn(.05,1)$")) %>%
+  rbind(c("Ratio of process to observation error", "$\\gamma$", "$logn(.5,0.25)$")) %>%
+  rbind(c("Initial State", "$B0$", "Posterior probability dist. of catch-based regressions"))
+
+ 
+knitr::kable(
+  cd,
+  align = "l",
+  escape = F,
+  row.names = F,
+  caption = "Name, abbreviations, and priors distribution for parameters potentially estimated by sraplus in this manuscript.",
+  format = "pipe"
+) %>%
+  kableExtra::kable_styling(full_width = T, font_size = 9) %>%
+  kableExtra::row_spec(0, bold = T)
+```
+
+
+
 ```{r si-prior-tab}
 cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "K", `Default Prior` = "$logn(10\\times{max(catch)},4)$") %>%
   rbind(c("Growth rate", "r", "$logn(r_{fishlife}, \\sigma_{r,fishlife})$")) %>%
@@ -238,6 +262,20 @@ The population growth equation is
 \end{equation}
 
 ## Prior Predictive Tuning {.unnumbered}
+
+
+<!-- We can think of this as a binomial process in which we fit a model of the population, conditional on catches, to the fact that we know that population existed in each time step of the catch history. Beyond that though, baring additional information or model assumptions we have no way of knowing whether these catches represent a substantial proportion of a small population or a minuscule fraction of a massive population; all we know is that the population must always have been above zero. -->
+
+
+<!-- Suppose that the only thing we observe from a fishery is a catch history. Assuming only Pella-Tomlinson population dynamics, the only thing we can learn from this catch history alone is the set of model parameters that ensure that the population still exists and never collapsed in the past.  -->
+
+In the absence of any data to fit to, the a stock reduction algorithm  (SRA) works by assuming that we know current stock status, and then finds feasible parameters to satisfy that belief given a catch history and model structure. This creates a problem for the Bayesian nature of our analysis. Consider a production model with two parameters, a growth rate *r* and a carrying capacity *K*. Once we specify prior distributions on *r* and *K*, and then apply these distributions to our model (the shape of the production function along with the catch histories), we have implicitly provided a prior on the status of the stock in all time periods, since each unique combination of *r* and *K* together with the model and the catch history produces a deterministic stock status in each time step. Doing so places two priors on recent stock status: one implicit prior through the population parameter priors, and one explicit through the users perception of recent stock status, creating a problem termed Borel's Paradox (See Poole and Raftery 2000 [@poole2000] and references therein for a discussion of Borel's Paradox in a fisheries context).
+
+This may seem like an academic concern, and indeed in our experience when the data are sufficiently informative the Bayesian version of our model subject to Borel's paradox produces effectively identical results to those produce by the same model fit by maximum likelihood.
+
+Borel's Paradox poses a particular problem  for the SRA version of sraplus. Due to the fact that there are more ways for a fishery to be relatively unexploited than for a fishery to be close to collapse but not collapsed, in this context Borel's Paradox causes the posterior distribution of stock status to be positively biased relative to the supplied prior (although other modeling choices can result in a net negative bias in stock status, @free2020). This process can also make it easy for users to accidentally supply very informative priors on stock status, without realizing that choices relating to population biology priors that may appear independent of stock status are in fact dictating the the posterior distributions of stock status resulting from the SRA algorithm.
+
+We use an approximate solution to this problem here, similar in spirit to Bayesian melding [@poole2000]. Our solution amounts to a two-step sample-importance-resampling (SIR) algorithm. We first run the standard SIR algorithm as described above. We then break the resulting draws into bins based on terminal stock status, and calculate the mean sampling probability of each bin. The net result of this is that it allows users to place explicit prior on stock status, and then adjust their priors on life history parameters to reflect this prior, rather than creating a complicated and biased prior on stock status based on a mixture of explicit and implicit priors. See Supplementary Information for a detailed explanation of this problem and our solution. 
 
 The SRA algorithm works in two steps. First, the algorithm rejects any draws that resulted in the collapse of the population (biomass less than catch in a given timestep). From there a standard SRA would sample from the priors in proportion to the stated prior on recent stock status. If the bulk of the prior on terminal stock status was concentrated at 50% of *K*, combinations of *r* and *K* that produce terminal stock status near 50% of *K* are sampled proportionally more frequently. However, lower values of terminal stock status have fewer candidate values of *r* and *K*, since it becomes harder and harder to find viable pairs that come close to but do not crash the population at any time step. Conversely, in the absence of constraints higher values of stock status have infinite combinations of plausible *r* and *K* combinations: since under this model the population cannot be greater than carrying capacity, as for example *K* approaches infinity terminal stock status asymptotes at close to 100% of *K*. The net result of this is that even though individual combinations of *r* and *K* that produce higher stock status than the mean of the prior on recent stock status individually have lower probability of being sampled, there are many more opportunities for the lower-probability events that produce higher stock status to be sampled. As a result, the post-model-pre-data prior on terminal depletion will always be higher under this method than the supplied prior on stock status.
 
