@@ -58,7 +58,7 @@ results_name <- "v1.0"
 results_description <-
   "publication version of results"
 
-run_voi_models <- FALSE
+run_voi_models <- TRUE
 # sub options for run_voi_models
 fit_models <- FALSE
 
@@ -74,9 +74,9 @@ run_ram_tests <- FALSE
 
 run_ram_comparison <- FALSE
 
-knit_paper <- TRUE
+knit_paper <- FALSE
 
-warning("Running full analysis takes upwards of 24 hours on 2 cores. Recommend starting on a Friday night having a nice weekend. Given memory constraints of models, more than 2 cores is not recommended (memory routinley runs out on a 16 core 36GB machine when cores > 2)")
+warning("Running full analysis takes upwards of 24 hours on 2 cores. Recommend starting on a Friday night and then having a nice weekend. Given memory constraints of models, more than 2 cores is not recommended (memory routinely runs out on a 16 core 36GB machine when cores > 2)")
 
 engine <-  "stan"
 
@@ -2010,7 +2010,8 @@ fao_area_ram_status <- fao_areas %>%
   left_join(ram_v_sraplus_area,
             by = c("f_area" = "primary_fao_area")) %>%
   mutate(pe = (median_sraplus - median_ram) / median_ram) %>% 
-  mutate(data = fct_relevel(data, "ram-data"))
+  mutate(data = fct_relevel(data, "ram-data")) %>% 
+  filter(data != "u_umsy")
 
 
 ram_status <- fao_area_ram_status %>% 
@@ -2069,7 +2070,7 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
       frame.colour = "black"
     )
   ) + 
-  theme(legend.position = c(.75,.1),
+  theme(legend.position = "top",
         legend.direction = "horizontal",
         panel.background = element_rect(fill = "white"),
         legend.text = element_text(size = 8))
@@ -2101,7 +2102,7 @@ ram_mape_map_plot <- fao_area_ram_status %>%
       frame.colour = "black"
     )
   ) + 
-  theme(legend.position = c(.75,.1),
+  theme(legend.position = "top",
         legend.direction = "horizontal",
         panel.background = element_rect(fill = "white"))
 
@@ -2131,7 +2132,7 @@ ram_acc_map_plot <- fao_area_ram_status %>%
       ticks.colour = "white",
       frame.colour = "black"
     )) +
-    theme(legend.position = c(.75,.1),
+    theme(legend.position = "top",
           legend.direction = "horizontal",
           panel.background = element_rect(fill = "white"))
     
@@ -2193,10 +2194,10 @@ if (knit_paper == TRUE){
                   min_years_catch = 25)
   )
   
-  rmarkdown::render(
-    here::here("documents", "ovando-etal-assessing-global-fisheries-si.Rmd"),
-    params = list(results_name = results_name,
-                  min_years_catch = 25)
-  )
-  
+  # rmarkdown::render(
+  #   here::here("documents", "ovando-etal-assessing-global-fisheries-si.Rmd"),
+  #   params = list(results_name = results_name,
+  #                 min_years_catch = 25)
+  # )
+  # 
 }
