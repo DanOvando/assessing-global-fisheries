@@ -4,6 +4,7 @@
 
 library(tidyverse)
 library(ggridges)
+library(ggtext)
 library(gganimate)
 library(rstan)
 library(mvtnorm)
@@ -893,16 +894,23 @@ tmp2 <- tmp2 %>%
     )
   )
 
+ex_performance <- tmp2 %>% 
+  group_by(variable, data) %>% 
+  summarise(r2 = round(yardstick::rsq_vec(truth, value),2)) 
+
+
 ex_scatter_plot <- tmp2 %>% 
   ggplot(aes(truth, value)) + 
   geom_vline(aes(xintercept = 0)) + 
   geom_hline(aes(yintercept = 0)) +
   geom_abline(aes(slope = 1, intercept = 0),linetype = 2) +
-  geom_point(alpha = 0.75) + 
+  geom_point(alpha = 0.5, size = 2) + 
+  ggtext::geom_richtext(data = ex_performance, aes(x = 1, y = 4, label = paste0("R<sup>2</sup> = ",r2))) +
   facet_grid(variable ~ data, scales = "free_x")  + 
   # scale_size(trans = "sqrt", name = "Lifetime Catch") +
   scale_x_continuous(name = "RAM Value", expand = expansion(add = c(0, .1))) + 
   scale_y_continuous("Estimated Value", expand = expansion(add = c(0, .1)))
+
 
 sraplus_v_truth <- tmp %>% 
   left_join(truth, by = c("stockid","year")) %>% 
@@ -2042,11 +2050,16 @@ ram_labeller <- c(
   "u_umsy" = "RAM U/Umsy"
 )
 
+
+collabs <-
+  c(paste0(seq(-100, 75, by = 25),"%"),
+    expression("" >= "100%"))
+
 ram_mpe_map_plot <- fao_area_ram_status %>%
   filter(!is.na(data)) %>% 
   mutate(data = fct_reorder(data, abs(mpe), .fun = median)) %>% 
   ggplot() +
-  geom_sf(aes(fill = mpe), size = .01) +
+  geom_sf(aes(fill = pmin(1,mpe)), size = .01) +
   geom_sf(
     data = world_map,
     fill = "darkgrey",
@@ -2055,14 +2068,13 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
   ) +
   facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
   scale_fill_gradient2(
-    low = "steelblue",
+    low = "darkblue",
     high = "tomato",
     mid = "white",
-    name = "% Bias",
-    labels = percent,
+    name = "% Bias (MPE)",
+    labels = collabs,
     midpoint = 0,
-    limits = c(-1,3.5),
-    breaks = seq(-1, 3.5, by = .5),
+    breaks = seq(-1, 1, by = .25),
     guide = guide_colorbar(
       barwidth = ggplot2::unit(15, "lines"),
       axis.linewidth = 1,
@@ -2075,11 +2087,15 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
         panel.background = element_rect(fill = "white"),
         legend.text = element_text(size = 8))
 
+collabs <-
+  c(paste0(seq(0, 75, by = 25),"%"),
+    expression("" >= "100%"))
+
 ram_mape_map_plot <- fao_area_ram_status %>%
   filter(!is.na(data)) %>% 
   mutate(data = fct_reorder(data, mape, .fun = median)) %>% 
   ggplot() +
-  geom_sf(aes(fill = mape), size = .01) +
+  geom_sf(aes(fill = pmin(1,mape)), size = .01) +
   geom_sf(
     data = world_map,
     fill = "darkgrey",
@@ -2087,14 +2103,16 @@ ram_mape_map_plot <- fao_area_ram_status %>%
     size = 0.01
   ) +
   facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
-  scale_fill_gradient(
-    low = "white",
-    # mid = "orange",
-    high = "firebrick",
-    name = "% Error",
-    # midpoint = 1.5,
-    labels = percent,
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "yellow",
+    high = "tomato",
+    name = "% Error (MAPE)",
+    labels = collabs,
+    breaks = seq(0,1, by = .25),
+    midpoint = 0.5,
     limits = c(0,NA),
+    # trans = "log10",
     guide = guide_colorbar(
       barwidth = ggplot2::unit(9, "lines"),
       axis.linewidth = 1,
