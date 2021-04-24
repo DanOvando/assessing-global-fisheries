@@ -4,6 +4,7 @@
 
 library(tidyverse)
 library(ggridges)
+library(ggtext)
 library(gganimate)
 library(rstan)
 library(mvtnorm)
@@ -797,7 +798,6 @@ exs <- exs %>%
   left_join(matched_sar, by = "stockid") %>%
   left_join(comp_stocks, by = "scientificname")
 
-
 if (run_case_studies){
   
   exs <- exs %>%
@@ -893,16 +893,23 @@ tmp2 <- tmp2 %>%
     )
   )
 
+ex_performance <- tmp2 %>% 
+  group_by(variable, data) %>% 
+  summarise(r2 = round(yardstick::rsq_vec(truth, value),2)) 
+
+
 ex_scatter_plot <- tmp2 %>% 
   ggplot(aes(truth, value)) + 
   geom_vline(aes(xintercept = 0)) + 
   geom_hline(aes(yintercept = 0)) +
   geom_abline(aes(slope = 1, intercept = 0),linetype = 2) +
-  geom_point(alpha = 0.75) + 
+  geom_point(alpha = 0.5, size = 2) + 
+  ggtext::geom_richtext(data = ex_performance, aes(x = 1, y = 4, label = paste0("R<sup>2</sup> = ",r2))) +
   facet_grid(variable ~ data, scales = "free_x")  + 
   # scale_size(trans = "sqrt", name = "Lifetime Catch") +
-  scale_x_continuous(name = "RAM Value", expand = expansion(add = c(0, .1))) + 
+  scale_x_continuous(name = "RLSADB Value", expand = expansion(add = c(0, .1))) + 
   scale_y_continuous("Estimated Value", expand = expansion(add = c(0, .1)))
+
 
 sraplus_v_truth <- tmp %>% 
   left_join(truth, by = c("stockid","year")) %>% 
@@ -2019,7 +2026,7 @@ ram_status <- fao_area_ram_status %>%
   group_by(f_area) %>% 
   slice(1) %>% 
   select(-data, -median_sraplus) %>% 
-  mutate(data = "RAM Assessment", median_sraplus = median_ram) 
+  mutate(data = "RLSADB Assessment", median_sraplus = median_ram) 
   
   
 
@@ -2030,7 +2037,7 @@ fao_area_ram_status %>%
 
 
 ram_labeller <- c(
-  "ram-data" = "RAM Index",
+  "ram-data" = "RLSADB Index",
   "sar" = "SAR",
   "fmi" = "FMI",
   "cpue" = "Effective CPUE",
@@ -2039,14 +2046,19 @@ ram_labeller <- c(
   "nominal-cpue-plus" = "Nominal CPUE+",
   "cmsy" = "CMSY",
   "guess" = "Guess",
-  "u_umsy" = "RAM U/Umsy"
+  "u_umsy" = "RLSADB U/Umsy"
 )
+
+
+collabs <-
+  c(paste0(seq(-100, 75, by = 25),"%"),
+    expression("" >= "100%"))
 
 ram_mpe_map_plot <- fao_area_ram_status %>%
   filter(!is.na(data)) %>% 
   mutate(data = fct_reorder(data, abs(mpe), .fun = median)) %>% 
   ggplot() +
-  geom_sf(aes(fill = mpe), size = .01) +
+  geom_sf(aes(fill = pmin(1,mpe)), size = .01) +
   geom_sf(
     data = world_map,
     fill = "darkgrey",
@@ -2055,14 +2067,13 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
   ) +
   facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
   scale_fill_gradient2(
-    low = "steelblue",
+    low = "darkblue",
     high = "tomato",
     mid = "white",
-    name = "% Bias",
-    labels = percent,
+    name = "% Bias (MPE)",
+    labels = collabs,
     midpoint = 0,
-    limits = c(-1,3.5),
-    breaks = seq(-1, 3.5, by = .5),
+    breaks = seq(-1, 1, by = .25),
     guide = guide_colorbar(
       barwidth = ggplot2::unit(15, "lines"),
       axis.linewidth = 1,
@@ -2075,11 +2086,15 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
         panel.background = element_rect(fill = "white"),
         legend.text = element_text(size = 8))
 
+collabs <-
+  c(paste0(seq(0, 75, by = 25),"%"),
+    expression("" >= "100%"))
+
 ram_mape_map_plot <- fao_area_ram_status %>%
   filter(!is.na(data)) %>% 
   mutate(data = fct_reorder(data, mape, .fun = median)) %>% 
   ggplot() +
-  geom_sf(aes(fill = mape), size = .01) +
+  geom_sf(aes(fill = pmin(1,mape)), size = .01) +
   geom_sf(
     data = world_map,
     fill = "darkgrey",
@@ -2087,14 +2102,16 @@ ram_mape_map_plot <- fao_area_ram_status %>%
     size = 0.01
   ) +
   facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
-  scale_fill_gradient(
-    low = "white",
-    # mid = "orange",
-    high = "firebrick",
-    name = "% Error",
-    # midpoint = 1.5,
-    labels = percent,
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "tomato",
+    high = "yellow",
+    name = "% Error (MAPE)",
+    labels = collabs,
+    breaks = seq(0,1, by = .25),
+    midpoint = 0.5,
     limits = c(0,NA),
+    # trans = "log10",
     guide = guide_colorbar(
       barwidth = ggplot2::unit(9, "lines"),
       axis.linewidth = 1,
@@ -2141,7 +2158,7 @@ ram_status <- fao_area_ram_status %>%
   group_by(f_area) %>% 
   slice(1) %>% 
   select(-data, -median_sraplus) %>% 
-  mutate(data = "RAM Assessment", median_sraplus = median_ram) 
+  mutate(data = "RLSADB Assessment", median_sraplus = median_ram) 
 
 ram_status <- ram_status[,colnames(fao_area_ram_status)]
 
@@ -2151,7 +2168,7 @@ combo <- fao_area_ram_status %>%
 
 ram_b_map_plot <- combo %>%
   filter(!is.na(data)) %>%
-  mutate(data = fct_relevel(data, "RAM Assessment")) %>%
+  mutate(data = fct_relevel(data, "RLSADB Assessment")) %>%
   ggplot() +
   geom_sf(aes(fill = median_sraplus), size = .01) +
   geom_sf(
