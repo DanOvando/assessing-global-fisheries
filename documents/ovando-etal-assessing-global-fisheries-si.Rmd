@@ -69,15 +69,7 @@ Our prior predictive tuning regime is similar in spirit to Bayesian melding [@po
 
 The SRA algorithm works in two steps. First, the algorithm rejects any draws that resulted in the collapse of the population (biomass less than catch in a given timestep). From there a standard SRA would sample from the priors in proportion to the stated prior on recent stock status. If the bulk of the prior on terminal stock status was concentrated at 50% of *K*, combinations of *r* and *K* that produce terminal stock status near 50% of *K* are sampled proportionally more frequently. However, lower values of terminal stock status have fewer candidate values of *r* and *K*, since it becomes harder and harder to find viable pairs that come close to but do not crash the population at any time step. Conversely, in the absence of constraints higher values of stock status have infinite combinations of plausible *r* and *K* combinations: since under this model the population cannot be greater than carrying capacity, as for example *K* approaches infinity terminal stock status asymptotes at close to 100% of *K*. The net result of this is that even though individual combinations of *r* and *K* that produce higher stock status than the mean of the prior on recent stock status individually have lower probability of being sampled, there are many more opportunities for the lower-probability events that produce higher stock status to be sampled. As a result, the post-model-pre-data prior on terminal depletion will always be higher under this method than the supplied prior on stock status.
 
-We use an approximation to this problem here, similar in spirit to Bayesian melding [@poole2000]. Our solution amounts to a two-step SIR algorithm. We first run the standard SIR algorithm as described above. We then break the resulting draws into bins based on terminal stock status, and calculate the mean sampling probability of each bin.
-
-$$p(bin_i) = \frac{1}{N_i}\sum_{n = 1}^{N_i}{p(b_{n,i})}$$
-
-We then divide the sampling probability of of bin *i* evenly among each of the draws within that bin *n*
-
-$$p(n_i) = \frac{p(bin_i)}{N_i}$$
-
-And we then perform a second SIR algorithm but now sampling each observation $n_i$ in proportion to $p(n_i)$. The net result of this is a post-model-pre-data distribution of parameters *r* and *K* that produce a distribution of recent stock status that roughly matches the supplied prior on recent stock status. In effect, this process answers the question "given the model, what combinations of parameters produce my prior on recent stock status". This is only an approximate solution, but it helps ensure that the post-model-pre-data distribution of stock status much more closely matches the stated prior on recent stock status, and reduced the positive bias resulting from use of the raw SRA algorithm (Fig.\@ref(fig:bias-plot), Fig.\@ref(fig:ppplot)).
+The net result of our correction is a post-model-pre-data distribution of life history parameters that produce a distribution of recent stock status that roughly matches the supplied prior on recent stock status. In effect, this process answers the question "given the model, what combinations of parameters produce my prior on recent stock status". This is only an approximate solution, but it helps ensure that the post-model-pre-data distribution of stock status much more closely matches the stated prior on recent stock status, and reduced the positive bias resulting from use of the raw SRA algorithm (Fig.\@ref(fig:bias-plot), Fig.\@ref(fig:ppplot)).
 
 ```{r bias-plot, fig.cap = "Post-model-pre-data distribution of depletion (biomass relative to carrying capacity) from raw SRA algorithm (untuned, top row), from SRA algorithm with approximate tuning applied (tuned, middle row), compared to the supplised prior on depletion (bottom row). Black vertical line indicates median value. "}
 
@@ -135,7 +127,6 @@ comps %>%
 
 ```
 
-## Sample Prior Posterior Plots {.unnumbered}
 
 
 ```{r ppplot, fig.cap="Prior posterior plots of fits for case study fishery"}

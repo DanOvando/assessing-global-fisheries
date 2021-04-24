@@ -11,7 +11,8 @@ fit_case_studies <-
            chains = 1,
            cores = 1,
            cmsy_cores = 4,
-           q_slope_prior = 0.025) {
+           q_slope_prior = 0.025,
+           use_b_reg = FALSE) {
  
     catches <- data$catch
     
@@ -63,7 +64,8 @@ fit_case_studies <-
         terminal_state = NA,
         terminal_state_cv =  0.05,
         use_heuristics = FALSE,
-        b_ref_type = "k"
+        b_ref_type = "k",
+        use_b_reg = use_b_reg
       )
     
     
@@ -101,7 +103,8 @@ fit_case_studies <-
         effort_years = effort_years,
         q_slope_prior = q_slope_prior,
         q_slope_prior_cv = 0.2,
-        b_ref_type = "k"
+        b_ref_type = "k",
+        use_b_reg = use_b_reg
       )
     
     sfs <- safely(fit_sraplus)

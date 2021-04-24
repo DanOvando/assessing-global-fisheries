@@ -798,7 +798,6 @@ exs <- exs %>%
   left_join(matched_sar, by = "stockid") %>%
   left_join(comp_stocks, by = "scientificname")
 
-
 if (run_case_studies){
   
   exs <- exs %>%
@@ -908,7 +907,7 @@ ex_scatter_plot <- tmp2 %>%
   ggtext::geom_richtext(data = ex_performance, aes(x = 1, y = 4, label = paste0("R<sup>2</sup> = ",r2))) +
   facet_grid(variable ~ data, scales = "free_x")  + 
   # scale_size(trans = "sqrt", name = "Lifetime Catch") +
-  scale_x_continuous(name = "RAM Value", expand = expansion(add = c(0, .1))) + 
+  scale_x_continuous(name = "RLSADB Value", expand = expansion(add = c(0, .1))) + 
   scale_y_continuous("Estimated Value", expand = expansion(add = c(0, .1)))
 
 
@@ -2027,7 +2026,7 @@ ram_status <- fao_area_ram_status %>%
   group_by(f_area) %>% 
   slice(1) %>% 
   select(-data, -median_sraplus) %>% 
-  mutate(data = "RAM Assessment", median_sraplus = median_ram) 
+  mutate(data = "RLSADB Assessment", median_sraplus = median_ram) 
   
   
 
@@ -2038,7 +2037,7 @@ fao_area_ram_status %>%
 
 
 ram_labeller <- c(
-  "ram-data" = "RAM Index",
+  "ram-data" = "RLSADB Index",
   "sar" = "SAR",
   "fmi" = "FMI",
   "cpue" = "Effective CPUE",
@@ -2047,7 +2046,7 @@ ram_labeller <- c(
   "nominal-cpue-plus" = "Nominal CPUE+",
   "cmsy" = "CMSY",
   "guess" = "Guess",
-  "u_umsy" = "RAM U/Umsy"
+  "u_umsy" = "RLSADB U/Umsy"
 )
 
 
@@ -2105,8 +2104,8 @@ ram_mape_map_plot <- fao_area_ram_status %>%
   facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
   scale_fill_gradient2(
     low = "blue",
-    mid = "yellow",
-    high = "tomato",
+    mid = "tomato",
+    high = "yellow",
     name = "% Error (MAPE)",
     labels = collabs,
     breaks = seq(0,1, by = .25),
@@ -2159,7 +2158,7 @@ ram_status <- fao_area_ram_status %>%
   group_by(f_area) %>% 
   slice(1) %>% 
   select(-data, -median_sraplus) %>% 
-  mutate(data = "RAM Assessment", median_sraplus = median_ram) 
+  mutate(data = "RLSADB Assessment", median_sraplus = median_ram) 
 
 ram_status <- ram_status[,colnames(fao_area_ram_status)]
 
@@ -2169,7 +2168,7 @@ combo <- fao_area_ram_status %>%
 
 ram_b_map_plot <- combo %>%
   filter(!is.na(data)) %>%
-  mutate(data = fct_relevel(data, "RAM Assessment")) %>%
+  mutate(data = fct_relevel(data, "RLSADB Assessment")) %>%
   ggplot() +
   geom_sf(aes(fill = median_sraplus), size = .01) +
   geom_sf(
