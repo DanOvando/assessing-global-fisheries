@@ -80,20 +80,20 @@ ram_comp_data <- ram_comp_data %>%
   left_join(fao_species, by = "scientific_name")
 
 
-assess_ram_fits <- read_rds(path = file.path(results_path,"assess_ram_fits.rds"))
+assess_ram_fits <- read_rds(file = file.path(results_path,"assess_ram_fits.rds"))
 
-ram_v_sraplus_area <- read_rds(path = file.path(results_path,"ram_v_sraplus_area.rds"))
+ram_v_sraplus_area <- read_rds(file = file.path(results_path,"ram_v_sraplus_area.rds"))
 
-ram_comp_data <- read_rds(path = file.path(results_path,"ram_comp_data.rds"))
+ram_comp_data <- read_rds(file = file.path(results_path,"ram_comp_data.rds"))
 
-fao_sraplus_comp_data <- read_rds(path = file.path(results_path, "fao_sraplus_comp_data.rds"))
+fao_sraplus_comp_data <- read_rds(file = file.path(results_path, "fao_sraplus_comp_data.rds"))
 
 
 load(file = file.path(results_path, "paper_plots.Rdata"))
 
 load(file = file.path(results_path, "voi_fits.RData"))
 
-  exs <- read_rds(path = file.path(results_path, "raw-case-study-fits.rds"))
+  exs <- read_rds(file = file.path(results_path, "raw-case-study-fits.rds"))
 
 
 breaks <- c(0.8, 1.2)

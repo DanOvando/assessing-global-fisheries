@@ -25,6 +25,7 @@ library(tidybayes)
 library(rstan)
 library(rstanarm)
 library(sf)
+library(rgdal)
 library(portedcmsy)
 extrafont::loadfonts()
 
@@ -807,11 +808,11 @@ if (run_case_studies){
     mutate(fit = map(data,
                      safely(fit_case_studies)))
   
-  write_rds(exs, path = file.path(results_path, "raw-case-study-fits.rds"))
+  write_rds(exs, file = file.path(results_path, "raw-case-study-fits.rds"))
   
 } else {
   
-  exs <- read_rds(path = file.path(results_path, "raw-case-study-fits.rds"))
+  exs <- read_rds(file = file.path(results_path, "raw-case-study-fits.rds"))
   
 }
 
@@ -1381,7 +1382,7 @@ if (run_sofia_comparison == TRUE) {
   
 } else {
   fao_status_fits <-
-    read_rds(path = file.path(results_path, "fao_status_fits.rds"))
+    read_rds(file = file.path(results_path, "fao_status_fits.rds"))
   
   
   
@@ -1489,8 +1490,10 @@ fao_sraplus_comp_data <-  faofits2 %>%
 
 
 if (!dir.exists(here("data", "FAO_AREAS_NOCOASTLINE"))) {
-  download.file(url = "http://www.fao.org/figis/geoserver/area/ows?service=WFS&request=GetFeature&version=1.0.0&typeName=area:FAO_AREAS_NOCOASTLINE&outputFormat=SHAPE-ZIP",
+
+  download.file(url = "http://www.fao.org/fishery/geoserver/fifao/ows?service=WFS&request=GetFeature&version=1.0.0&typeName=fifao:FAO_AREAS_CWP_NOCOASTLINE&outputFormat=SHAPE-ZIP",
                 destfile = here("data", "FAO_AREAS_NOCOASTLINE.zip"))
+ 
   
   unzip(
     here("data", "FAO_AREAS_NOCOASTLINE.zip"),
@@ -1505,23 +1508,14 @@ fao_sraplus_acc <- fao_sraplus_comp_data %>%
   group_by(data, fao_area_code) %>% 
   summarise(accuracy = mean(correct, na.rm = TRUE))
 
-fao_areas <- sf::st_read(here('data', "FAO_AREAS_NOCOASTLINE")) %>%
-  janitor::clean_names()
-
-fao_areas <- fao_areas %>%
-  group_by(f_area) %>%
-  nest() %>%
-  mutate(geometry = map(data, st_union)) %>%
-  select(-data)
-
-
-fao_areas = fao_areas %>%
-  unnest(cols = geometry) %>%
-  ungroup() %>%
-  sf::st_as_sf() %>%
-  # sf::st_simplify() %>%
+fao_areas <- sf::st_read(here('data', "FAO_AREAS_NOCOASTLINE"), promote_to_multi = FALSE) %>%
+  janitor::clean_names() %>% 
+  filter(f_level == "MAJOR") %>% 
   mutate(fao_area_code = as.numeric(f_area)) #%>% 
+
   # st_transform(crs = "+proj=moll")
+
+fao_areas %>% ggplot() + geom_sf()
 
 fao_area_accuracy <- fao_areas %>%
   left_join(fao_sraplus_acc %>% mutate(f_area = as.character(fao_area_code)), by = "f_area") %>%
@@ -1663,7 +1657,7 @@ if (run_ram_tests) {
   
 } else {
   
-  ram_fit_tests <-   read_rds(path = file.path(results_path,"ram_tests.rds"))
+  ram_fit_tests <-   read_rds(file = file.path(results_path,"ram_tests.rds"))
   
   
 }
@@ -1886,7 +1880,7 @@ if (run_ram_comparison == TRUE) {
   
 } else {
   ram_status_fits <-
-    read_rds(path = file.path(results_path, "ram_status_fits.rds"))
+    read_rds(file = file.path(results_path, "ram_status_fits.rds"))
   
   
 }
@@ -1917,8 +1911,27 @@ compare_to_ram <- function(data, fit){
 
 }
 
+compare_to_ramu <- function(data, fit){
+  
+  udat <- data %>% 
+    select(year, u_v_umsy) %>% 
+    rename(ram_u_v_umsy = u_v_umsy )
+  
+  fit <- fit %>% 
+    filter(variable == "u_div_umsy")
+  
+  comparison <- fit %>% 
+    left_join(udat, by = "year")
+  
+}
+
+
 ram_status_fits <- ram_status_fits %>% 
   mutate(performance = map2(data, fits, compare_to_ram))
+
+ram_u_fits <- ram_status_fits %>% 
+  mutate(performance = map2(data, fits, compare_to_ramu))
+
 
 i = 24
  # ram_status_fits$performance[[i]] %>%
@@ -1955,6 +1968,35 @@ assess_ram_fits <- assess_ram_fits %>%
 write_rds(assess_ram_fits, path = file.path(results_path,"assess_ram_fits.rds"))
 
 write_rds(ram_comp_data, path = file.path(results_path,"ram_comp_data.rds"))
+
+# repeat but for u/umsy, hacky but adding in review and don't want to break things later on
+# 
+assess_ramu_fits <- ram_u_fits %>% 
+select(stockid, performance) %>% 
+  unnest(cols = performance) %>% 
+  filter(!is.na(ram_u_v_umsy)) %>% 
+  group_by(stockid) %>% 
+  filter(year == max(year)) %>% 
+  ungroup() %>% 
+  mutate(ram_u_v_umsy = pmin(ram_u_v_umsy,5),
+         mean = pmin(mean, 5)) %>% 
+  mutate(resid = ram_u_v_umsy - mean,
+         ae = abs(resid)) %>% 
+  filter(!data %in%  c("heuristic", "catch_only")) 
+
+null_u_model <- assess_ramu_fits %>% 
+  filter(data == "cmsy") %>% 
+  mutate(mean = sample(c(.4,1,1.6), n(), replace = TRUE)) %>% 
+  mutate(data = "guess") %>% 
+  mutate(resid = ram_u_v_umsy - mean,
+         ae = abs(resid))
+
+assess_ramu_fits <- assess_ramu_fits %>% 
+  bind_rows(null_u_model)
+
+write_rds(assess_ramu_fits, path = file.path(results_path,"assess_ramu_fits.rds"))
+
+
 
 # assess_ram_fits %>% 
 #   ggplot(aes(pmin(5,ram_b_v_bmsy),pmin(5,mean))) + 
@@ -2007,14 +2049,43 @@ ram_v_sraplus_area <- assess_ram_fits %>%
             mape = median(abs((mean -  ram_b_v_bmsy) / ram_b_v_bmsy), na.rm = TRUE),
             mpe = median(((mean -  ram_b_v_bmsy) / ram_b_v_bmsy), na.rm = TRUE),
             rmse = mean(((mean -  ram_b_v_bmsy)^2)), na.rm = TRUE) %>% 
-  group_by(primary_fao_area)
+  group_by(primary_fao_area) %>% 
+  ungroup()
 
 write_rds(ram_v_sraplus_area, path = file.path(results_path,"ram_v_sraplus_area.rds"))
 
   
+ramu_v_sraplus_area <- assess_ramu_fits %>%
+  left_join(ram_comp_data %>% select(stockid, primary_FAOarea) %>% unique(),
+            by = "stockid") %>%
+  rename(primary_fao_area = primary_FAOarea) %>% 
+  group_by(primary_fao_area, data) %>%
+  mutate(sraplus_bin = cut(mean, breaks = breaks, labels = labels)) %>%
+  mutate(ram_bin = cut(ram_u_v_umsy, breaks = breaks, labels = labels)) %>%
+  summarise(median_sraplus = median(mean, na.rm = TRUE),
+            median_ram = median(ram_u_v_umsy, na.rm = TRUE),
+            accuracy = mean(sraplus_bin == ram_bin, na.rm = TRUE),
+            mape = median(abs((mean -  ram_u_v_umsy) / ram_u_v_umsy), na.rm = TRUE),
+            mpe = median(((mean -  ram_u_v_umsy) / ram_u_v_umsy), na.rm = TRUE),
+            rmse = mean(((mean -  ram_u_v_umsy)^2)), na.rm = TRUE) %>% 
+  group_by(primary_fao_area) %>% 
+  ungroup()
+
+
+write_rds(ramu_v_sraplus_area, path = file.path(results_path,"ramu_v_sraplus_area.rds"))
+
+
 
 fao_area_ram_status <- fao_areas %>%
   left_join(ram_v_sraplus_area,
+            by = c("f_area" = "primary_fao_area")) %>%
+  mutate(pe = (median_sraplus - median_ram) / median_ram) %>% 
+  mutate(data = fct_relevel(data, "ram-data")) %>% 
+  filter(data != "u_umsy")
+
+
+fao_area_ram_u <- fao_areas %>%
+  left_join(ramu_v_sraplus_area,
             by = c("f_area" = "primary_fao_area")) %>%
   mutate(pe = (median_sraplus - median_ram) / median_ram) %>% 
   mutate(data = fct_relevel(data, "ram-data")) %>% 
@@ -2086,6 +2157,38 @@ ram_mpe_map_plot <- fao_area_ram_status %>%
         panel.background = element_rect(fill = "white"),
         legend.text = element_text(size = 8))
 
+ramu_mpe_map_plot <- fao_area_ram_u %>%
+  filter(!is.na(data)) %>% 
+  mutate(data = fct_reorder(data, abs(mpe), .fun = median)) %>% 
+  ggplot() +
+  geom_sf(aes(fill = pmin(1,mpe)), size = .01) +
+  geom_sf(
+    data = world_map,
+    fill = "darkgrey",
+    color = "black",
+    size = 0.01
+  ) +
+  facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
+  scale_fill_gradient2(
+    low = "darkblue",
+    high = "tomato",
+    mid = "white",
+    name = "% Bias (MPE)",
+    labels = collabs,
+    midpoint = 0,
+    breaks = seq(-1, 1, by = .25),
+    guide = guide_colorbar(
+      barwidth = ggplot2::unit(15, "lines"),
+      axis.linewidth = 1,
+      ticks.colour = "black",
+      frame.colour = "black"
+    )
+  ) + 
+  theme(legend.position = "top",
+        legend.direction = "horizontal",
+        panel.background = element_rect(fill = "white"),
+        legend.text = element_text(size = 8))
+
 collabs <-
   c(paste0(seq(0, 75, by = 25),"%"),
     expression("" >= "100%"))
@@ -2124,6 +2227,38 @@ ram_mape_map_plot <- fao_area_ram_status %>%
         panel.background = element_rect(fill = "white"))
 
   
+ramu_mape_map_plot <- fao_area_ram_u %>%
+  filter(!is.na(data)) %>% 
+  mutate(data = fct_reorder(data, mape, .fun = median)) %>% 
+  ggplot() +
+  geom_sf(aes(fill = pmin(1,mape)), size = .01) +
+  geom_sf(
+    data = world_map,
+    fill = "darkgrey",
+    color = "black",
+    size = 0.01
+  ) +
+  facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "tomato",
+    high = "yellow",
+    name = "% Error (MAPE)",
+    labels = collabs,
+    breaks = seq(0,1, by = .25),
+    midpoint = 0.5,
+    limits = c(0,NA),
+    # trans = "log10",
+    guide = guide_colorbar(
+      barwidth = ggplot2::unit(9, "lines"),
+      axis.linewidth = 1,
+      ticks.colour = "black",
+      frame.colour = "black"
+    )
+  ) + 
+  theme(legend.position = "top",
+        legend.direction = "horizontal",
+        panel.background = element_rect(fill = "white"))
 
 
 ram_acc_map_plot <- fao_area_ram_status %>%
@@ -2152,6 +2287,34 @@ ram_acc_map_plot <- fao_area_ram_status %>%
     theme(legend.position = "top",
           legend.direction = "horizontal",
           panel.background = element_rect(fill = "white"))
+
+ramu_acc_map_plot <- fao_area_ram_u %>%
+  filter(!is.na(data)) %>%
+  mutate(data = fct_reorder(data, -accuracy, .fun = mean)) %>% 
+  ggplot() +
+  geom_sf(aes(fill = accuracy), size = .01) +
+  geom_sf(
+    data = world_map,
+    fill = "darkgrey",
+    color = "black",
+    size = 0.01
+  ) +
+  facet_wrap(~ data, labeller = labeller(data = ram_labeller)) +
+  scale_fill_viridis(
+    limits = c(0,1),
+    breaks = c(0,.33, .66,1),
+    name = "Accuracy",
+    labels = percent,
+    guide = guide_colorbar(
+      barwidth = ggplot2::unit(9, "lines"),
+      axis.linewidth = 1,
+      ticks.colour = "white",
+      frame.colour = "black"
+    )) +
+  theme(legend.position = "top",
+        legend.direction = "horizontal",
+        panel.background = element_rect(fill = "white"))
+
     
 ram_status <- fao_area_ram_status %>% 
   filter(!is.na(data)) %>% 
@@ -2191,7 +2354,7 @@ ram_b_map_plot <- combo %>%
   theme(legend.position = "top",
         panel.background = element_rect(fill = "white"))
 
-
+browser()
 
 # ----save-plots----------------------------------------------------------
 
