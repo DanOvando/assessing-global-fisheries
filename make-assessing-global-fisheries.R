@@ -896,8 +896,8 @@ tmp2 <- tmp2 %>%
 
 ex_performance <- tmp2 %>% 
   group_by(variable, data) %>% 
-  summarise(r2 = round(yardstick::rsq_vec(truth, value),2)) 
-
+  summarise(r2 = round(yardstick::rsq_vec(truth, value),2),
+            rmse = round(yardstick::rmse_vec(truth, value),2)) 
 
 ex_scatter_plot <- tmp2 %>% 
   ggplot(aes(truth, value)) + 
@@ -905,7 +905,7 @@ ex_scatter_plot <- tmp2 %>%
   geom_hline(aes(yintercept = 0)) +
   geom_abline(aes(slope = 1, intercept = 0),linetype = 2) +
   geom_point(alpha = 0.5, size = 2) + 
-  ggtext::geom_richtext(data = ex_performance, aes(x = 1, y = 4, label = paste0("R<sup>2</sup> = ",r2))) +
+  ggtext::geom_richtext(data = ex_performance, size = 3,alpha = 0.75,aes(x = 1.25, y = 3.5, label = paste0("RMSE = ",rmse))) +
   facet_grid(variable ~ data, scales = "free_x")  + 
   # scale_size(trans = "sqrt", name = "Lifetime Catch") +
   scale_x_continuous(name = "RLSADB Value", expand = expansion(add = c(0, .1))) + 
@@ -1997,7 +1997,6 @@ assess_ramu_fits <- assess_ramu_fits %>%
 write_rds(assess_ramu_fits, path = file.path(results_path,"assess_ramu_fits.rds"))
 
 
-
 # assess_ram_fits %>% 
 #   ggplot(aes(pmin(5,ram_b_v_bmsy),pmin(5,mean))) + 
 #   geom_hex(binwidth = c(0.33, 0.33), color = "white") + 
@@ -2354,7 +2353,6 @@ ram_b_map_plot <- combo %>%
   theme(legend.position = "top",
         panel.background = element_rect(fill = "white"))
 
-browser()
 
 # ----save-plots----------------------------------------------------------
 

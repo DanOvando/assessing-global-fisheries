@@ -50,7 +50,7 @@ fit_case_studies <-
     }
     
     
-    # fit heuristic
+    # fit sar_fmi
     
     sar_fmi_driors <-
       format_driors(
@@ -85,6 +85,39 @@ fit_case_studies <-
       filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy","depletion")) %>%
       mutate(year = rep(years, each = 4)) %>%
       mutate(data = "SAR & FMI")
+    
+    # fit naive sraplus
+    
+    basic_driors <-
+      format_driors(
+        taxa = scientific_name,
+        catch = catches,
+        years = seq_along(years),
+        initial_state = NA,
+        initial_state_cv = 0.2,
+        terminal_state = NA,
+        terminal_state_cv =  0.05,
+        use_heuristics = TRUE,
+        b_ref_type = "k",
+        use_b_reg = FALSE
+      )
+    
+    basic_fit <-
+      fit_sraplus(
+        driors = basic_driors,
+        include_fit = TRUE,
+        model = model,
+        engine = "sir",
+        estimate_shape = estimate_shape,
+        estimate_qslope = estimate_qslope,
+        estimate_proc_error = estimate_proc_error
+      )
+    
+    
+    basic_fit <- basic_fit$results %>%
+      filter(variable %in% c("b_div_bmsy", "u_div_umsy", "c_div_msy","depletion")) %>%
+      mutate(year = rep(years, each = 4)) %>%
+      mutate(data = "Catch Heuristic")
     
     # effort fit
     
@@ -160,7 +193,8 @@ fit_case_studies <-
     }
     
     results <- cpue_fit_results %>%
-      bind_rows(sar_fmi_fit) %>% {
+      bind_rows(sar_fmi_fit) %>% 
+      bind_rows(basic_fit) %>% {
         if (cmsy_worked){
           bind_rows(., cmsy_results)
         } else {

@@ -18,10 +18,10 @@ The core of our model is a Pella-Tomlinson [@pella1969] production model in the 
 cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "$K$", `Default Prior` = "Prior predictive tuning") %>%
   rbind(c("Growth rate", "$r$", "Thorson, 2020 [@thorson2020] updated by prior predictive tuning")) %>%
   rbind(c("Shape parameter", "$m$", "Drawn from Thorson et al. 2012 (@thorson2012)")) %>%
-  rbind(c("Catchability", "$q$", "$logn(1e^{-3}, 1)$")) %>%
-  rbind(c("Observation Error", "$\\sigma_{obs}$", "$logn(.05,1)$")) %>%
-  rbind(c("Ratio of process to observation error", "$\\gamma$", "$logn(.5,0.25)$")) %>%
-  rbind(c("Initial State", "$B0$", "Posterior probability dist. of catch-based regressions"))
+  rbind(c("Catchability", "$q$", "$LN(1e^{-3}, 1)$")) %>%
+  rbind(c("Observation Error", "$\\sigma_{obs}$", "$LN(.05,1)$")) %>%
+  rbind(c("Ratio of process to observation error", "$\\gamma$", "$LN(.5,0.25)$")) %>%
+  rbind(c("Initial State", "$B/K_0$", "Posterior probability dist. of catch-based regressions"))
 
  
 knitr::kable(
@@ -39,13 +39,13 @@ knitr::kable(
 
 
 ```{r si-prior-tab}
-cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "K", `Default Prior` = "$logn(10\\times{max(catch)},4)$") %>%
-  rbind(c("Growth rate", "r", "$logn(r_{fishlife}, \\sigma_{r,fishlife})$")) %>%
-  rbind(c("Shape parameter", "m", "$logn(1.01, 0.25)$")) %>%
-  rbind(c("Catchability", "q", "$logn(1e^{-3}, 0.3)$")) %>%
-  rbind(c("Observation Error", "$\\sigma_{obs}$", "$logn(.05,2)$")) %>%
-  rbind(c("Process Error", "$\\sigma_{proc}$", "$logn(.05,0.5)$")) %>% 
-  rbind(c("Tech Creep", "$creep$", "$logn(0.025,0.2)$"))
+cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "K", `Default Prior` = "$LN(10\\times{max(catch)},4)$") %>%
+  rbind(c("Growth rate", "r", "$LN(r_{fishlife}, \\sigma_{r,fishlife})$")) %>%
+  rbind(c("Shape parameter", "m", "Thorson et al. (2012)")) %>%
+  rbind(c("Catchability", "q", "$LN(1e^{-3}, 0.3)$")) %>%
+  rbind(c("Observation Error", "$\\sigma_{obs}$", "$LN(.05,2)$")) %>%
+  rbind(c("Process Error", "$\\sigma_{proc}$", "$LN(.05,0.5)$")) %>% 
+  rbind(c("Tech Creep", "$creep$", "$LN(0.025,0.2)$"))
 
  
 knitr::kable(
@@ -60,6 +60,23 @@ knitr::kable(
   kableExtra::kable_styling(full_width = T, font_size = 9) %>%
   kableExtra::row_spec(0, bold = T)
 ```
+
+```{r shape-tab}
+
+knitr::kable(
+  sraplus::ssb0msy_to_ssb0,
+  "latex",
+  align = "l",
+  booktabs = TRUE,
+  escape = F,
+  row.names = F,
+  caption = "Ratio of SSBmsy to SSB0 by taxinomic group from Thorson et al. (2012) used as default priors in sraplus."
+) %>%
+  kableExtra::kable_styling(full_width = T, font_size = 9) %>%
+  kableExtra::row_spec(0, bold = T)
+
+```
+
 
 
 
@@ -273,4 +290,39 @@ We performed a value-of-information (VOI) exercise we assessed performance as th
 $$rmse \sim  Gamma(\pmb{\beta}{\pmb{X}} + (1 | stock), shape, scale)$$
 
 Where $\pmb{\beta}$ is the vector of coefficients associated with the matrix of dummy variables marking the use of different data types in the vector $\pmb{X}$
+
+## F/F~MSY~ Performance {.unnumbered}
+
+Our results focused on the performance of candidate models in estimating B/B~MSY~, as this reflects the broad mission of the FAO's SOFIA reports to assess the current biomass status of global fisheries. However, fishing mortality rates, specifically F/F~MSY~ are also of importance to managers and commonly considered as an output of catch-only models. 
+
+As such, we repeated our performance calculations summarized in Figures \@ref(fig: mpe-map)-\@ref(fig:acc-map) but now focused on F/F~MSY~. Performance was comparably poor to the B/B~MSY~ based results, with the exception that the default settings of CMSY produced a consistent positive bias in F/F~MSY~. 
+
+```{r uperf-tab}
+
+knitr::kable(uperf %>% rename(MPE = mpe, MAPE = mape, Accuracy = accuracy), digits = 2,
+             caption = "Global performance statistics in the most recent year available of models using different sources of data. MPE = median percent error (bias), MAPE = median absolute percent error (error), Accuracy = percent of times that stocks were classified to the correct FAO status bin (underfished, maximally sustainably fished, overfished). Performance is judged relative to *F/F~MSY~* values reported values in RAM Legacy Stock Assessment Database.",
+              format = "pipe")
+
+```
+
+```{r umpe-map, fig.width=8, fig.height=6, fig.cap="Median percent error (MPE, predicted relative to observed) in most recent *F/F~MSY~* by FAO statistical area from different data sources. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *F/F~MSY~* of 0.4,1, or 1.6. Panels ordered in ascending (starting from top left) mean MPE at the FAO region level. "}
+ramu_mpe_map_plot
+
+ggsave(here("documents","figs","u-mpe-map.pdf"), ram_mpe_map_plot, width = 8, height = 6)
+```
+
+```{r umape-map, fig.cap = "Median absolute percent error (MAPE) in most recent *F/F~MSY~* by FAO statistical area from different data sources. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *F/F~MSY~* of 0.4,1, or 1.6. Panels ordered in descending (starting from top left) mean MAPE at the FAO region level",fig.width=8, fig.height=6}
+ramu_mape_map_plot
+
+ggsave(here("documents","figs","u-mape-map.pdf"),ram_mape_map_plot, width = 8, height = 6)
+
+```
+
+```{r uacc-map, fig.cap="Mean classification accuracy (assignment to general bin of overfishing, fishing near F~MSY~, and underfishing) by FAO statistical area arising from different data sources. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *F/F~MSY~* of 0.4,1, or 1.6. Panels ordered in descending (starting from top left) mean accuracy at the FAO region level",fig.width=8, fig.height=6}
+
+ramu_acc_map_plot 
+
+ggsave(here("documents","figs","u-acc-map.pdf"),ram_acc_map_plot, width = 8, height = 6)
+
+```
 
