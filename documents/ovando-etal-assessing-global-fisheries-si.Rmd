@@ -21,7 +21,7 @@ cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "$K$", `Default
   rbind(c("Catchability", "$q$", "$LN(1e^{-3}, 1)$")) %>%
   rbind(c("Observation Error", "$\\sigma_{obs}$", "$LN(.05,1)$")) %>%
   rbind(c("Ratio of process to observation error", "$\\gamma$", "$LN(.5,0.25)$")) %>%
-  rbind(c("Initial State", "$B/K_0$", "Posterior probability dist. of catch-based regressions"))
+  rbind(c("Initial State", "$B_0$", "Posterior probability dist. of catch-based regressions"))
 
  
 knitr::kable(
@@ -29,51 +29,29 @@ knitr::kable(
   align = "l",
   escape = F,
   row.names = F,
-  caption = "Name, abbreviations, and priors distribution for parameters potentially estimated by sraplus in this manuscript.",
+  caption = "Name, abbreviations, and priors distribution for parameters potentially estimated by sraplus in this manuscript. LN refers to log normal, where the mean is reported on the unit scale.",
   format = "pipe"
 ) %>%
   kableExtra::kable_styling(full_width = T, font_size = 9) %>%
   kableExtra::row_spec(0, bold = T)
 ```
 
-
-
-```{r si-prior-tab}
-cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "K", `Default Prior` = "$LN(10\\times{max(catch)},4)$") %>%
-  rbind(c("Growth rate", "r", "$LN(r_{fishlife}, \\sigma_{r,fishlife})$")) %>%
-  rbind(c("Shape parameter", "m", "Thorson et al. (2012)")) %>%
-  rbind(c("Catchability", "q", "$LN(1e^{-3}, 0.3)$")) %>%
-  rbind(c("Observation Error", "$\\sigma_{obs}$", "$LN(.05,2)$")) %>%
-  rbind(c("Process Error", "$\\sigma_{proc}$", "$LN(.05,0.5)$")) %>% 
-  rbind(c("Tech Creep", "$creep$", "$LN(0.025,0.2)$"))
-
- 
-knitr::kable(
-  cd,
-  "latex",
-  align = "l",
-  booktabs = TRUE,
-  escape = F,
-  row.names = F,
-  caption = "Potential parameters included in sraplus, abbreviations, and default priors"
-) %>%
-  kableExtra::kable_styling(full_width = T, font_size = 9) %>%
-  kableExtra::row_spec(0, bold = T)
-```
+\newpage
 
 ```{r shape-tab}
 
 knitr::kable(
-  sraplus::ssb0msy_to_ssb0,
-  "latex",
-  align = "l",
-  booktabs = TRUE,
+  sraplus::ssb0msy_to_ssb0 %>% rename(
+    "Taxanomic Group" = tax_group,
+    "SSBMSY/SSB0" = ssbmsy_to_ssb0,
+    "SSBMSY/SSB0 SD" = ssbmsy_to_ssb0_sd
+  ),
+    align = "l",
   escape = F,
   row.names = F,
-  caption = "Ratio of SSBmsy to SSB0 by taxinomic group from Thorson et al. (2012) used as default priors in sraplus."
-) %>%
-  kableExtra::kable_styling(full_width = T, font_size = 9) %>%
-  kableExtra::row_spec(0, bold = T)
+  format = "pipe",
+  caption = "SSBMSY to SSB ratios from Thorson et al. (2012) used in the paper. Taxa not within the groups assigned at the genus level by Thorson et al. (2012) are assigned the ratio reported for 'Other'"
+)
 
 ```
 

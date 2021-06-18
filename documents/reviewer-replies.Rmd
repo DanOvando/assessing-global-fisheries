@@ -8,6 +8,12 @@ bibliography: ["../references.bib"]
 csl: fish-and-fisheries.csl
 ---
 
+We thank both reviewers for their insightful and helpful comments. We have incorporated all of them into our revised manuscript unless otherwise stated, and we feel the suggestions have greatly improved the paper. 
+
+We include specific replies to individual comments below. Our responses to comments are noted in *italics* following each comment. We have not included individual responses to all editorial comments (e.g. missing punctuation) but have resolved each of those instances pointed out by the reviewers. 
+
+We hope the reviewers feel that our responses satisfy their concerns, but are happy to resolve any outstanding issues as required. 
+
 # Reviewer 1
 
 
@@ -16,7 +22,7 @@ csl: fish-and-fisheries.csl
 
 The stock status of a fish stock is commonly evaluated in terms of biomass and fishing mortality. The authors present all performance metrics for the regional fishery assessments (MPE, MAPE, and accuracy) only in terms of B/BMSY . For the case study, the authors present the stock status in terms of both B/BMSY and F/FMSY . Is there a reason why the authors considered only B/BMSY for the regional fishery assessments? I would be interested in all performance metrics in terms of F/FMSY and recommend to include this quantity for the regional fishery assessments at least for the supporting information.
 
-*Good question. We focused on B/B~MSY~ as this project was originally designed with an eye towards improving the SOFIA status estimates, which consider B/B~MSY~, not F/F~MSY~. However, F/F~MSY~ is clearly of interest as well, particularly as catch-only model F/Fmsy outputs are often used for assessment or projection, in the manner of @costello2016.*
+*Good question. We focused on B/B~MSY~ as this project was originally designed with an eye towards improving the SOFIA status estimates, which consider B/B~MSY~, not F/F~MSY~. However, F/F~MSY~ is clearly of interest as well, particularly as catch-only model F/Fmsy outputs are often used for assessment or projection, in the manner of @costello2016a.*
 
 *We added F/F~MSY~ performance metrics summarized in the same type of table and figures used in the main document to the Supporting Information (we do not include in the main text due to limitations on numbers of available figures and tables). We also briefly mention these results in the results and discussion section. Broadly, we find similar patterns of generally poor and variable performance, with the notable exception that while in terms of B/B~MSY~ the default settings of the version of CMSY used in this paper performed in the middle of the pack in most cases, in terms of F/F~MSY~ CMSY was last in terms of performance across every metric, due to severe positive biases in F/F~MSY~ .*
 
@@ -31,7 +37,7 @@ The results reveal highly variable results and no consistent patterns among regi
 
 *Good question. We have not explored this idea empirically, but we now mention it explicitly in the discussion as an area for future research.*
 
-Simiarly for the case studies, I wonder if the authors found any common characteristics for the stocks with larger biases?
+Similarly for the case studies, I wonder if the authors found any common characteristics for the stocks with larger biases?
 
 *One reason that we identified and more clearly articulate in the results that the effort data wasn't helpful was that construction of a CPUE index based on fishery catches and large-scale estimated effort resulted in very low CPUE values during quota or market constrained periods in a fishery's history. During these periods, according to the CPUE index abundance was very low, but RLSADB reports relatively high biomass levels, causing the model to perform badly. We address this general idea of "why" of performance in the discussion now.*
 
@@ -45,30 +51,17 @@ Lastly, the conclusion that catch-only methods may be useful contradicts the fin
 
 l. 148pp. Why do you x the shape parameter rather than using the priors recommended by Thorson et al. (2012)?
 
-*We believe the question here is why did we fix the shape parameter the mean values reported by @thorson2012, rather than taking thoes values as informative priors and estimating the shape parameter? We tried this, but it slowed the models down substantially, and often resulted in very poor fits / convergence given the lack of information in the data on this parameter. It also had a tendency to shoot the shape parameter into odd spaces, given the relatively large CVs aroudn the values reported in @thorson2012. We have clarified this in the methods.*
+*We believe the question here is why did we fix the shape parameter the mean values reported by @thorson2012, rather than taking those values as informative priors and estimating the shape parameter? We tried this, but it slowed the models down substantially, and often resulted in very poor fits / convergence given the lack of information in the data on this parameter. It also had a tendency to shoot the shape parameter into odd spaces, given the relatively large CVs around the values reported in @thorson2012. We have clarified this in the methods.*
 
 
-l. 153 Please specify whether you follow Winker et al. (2018) dening BMSY/K = 0.25 (in your case) when BMSY/K < 0:25. If another assumptions is made, this needs to be specied.
+l. 153 Please specify whether you follow Winker et al. (2018) defining BMSY/K = 0.25 (in your case) when BMSY/K < 0:25. If another assumptions is made, this needs to be specified.
 
-*Good catch! In the results in the paper Bmsy / K is never below 0.25, though it comes close for Clupeiformes. However, you are correct that there was not a check for this possibility in the broader sraplus pacakge, so we are adding that in in case users try and specify a shape parameter such that Bmsy/K < 0.25.*
+*Good catch! In the results in the paper Bmsy / K is never below 0.25, though it comes close for Clupeiformes. However, you are correct that there was not a check for this possibility in the broader sraplus package, so we are adding that in in case users try and specify a shape parameter such that Bmsy/K < 0.25.*
 
-*We have included the table below in the SI as well for reference.*
-
-```{r shape-tab}
-
-knitr::kable(
-  sraplus::ssb0msy_to_ssb0,
-  "latex",
-  align = "l",
-  booktabs = TRUE,
-  escape = F,
-  row.names = F,
-  caption = "Ratio of SSBmsy to SSB0 by taxinomic group from Thorson et al. (2012) used as default priors in sraplus."
-) 
-```
+*We have included the relevant table in the SI now.*
 
 
-l. 169 Do you mean proc instead of obs? obs not defined at this point of the manuscript. Where is defined? It is mentioned in Table S1 as the ratio of process and observation error, but not mentioned in the main text. Consider lifting Table S1 to main text and add more explanation to on estimated parameters. Be specic whether proc is estimated or fixed. Are the priors of Table S2 used? Further, consider using Bo instead of B0 and define B0 as it can also be used as virgin biomass.
+l. 169 Do you mean proc instead of obs? obs not defined at this point of the manuscript. Where is defined? It is mentioned in Table S1 as the ratio of process and observation error, but not mentioned in the main text. Consider lifting Table S1 to main text and add more explanation to on estimated parameters. Be specific whether proc is estimated or fixed. Are the priors of Table S2 used? Further, consider using Bo instead of B0 and define B0 as it can also be used as virgin biomass.
 
 *Thank you for pointing these out. We have clarified the notation here and included expanded definitions in the text at the section in question. Unfortunately we do not have space to bring in another table to the main results, but we have stated explicitly how the default priors are used and pointed the readers to that table.*
 
@@ -94,7 +87,7 @@ General comments
 Terms like biomass and notation B can often be used to refer to different things, ie., total biomass, vulnerable biomass, or spawning biomass. A non-structured model such as the SRA used here doesn’t distinguish between these three, and given the model is scaled with catches, B really represents vulnerable biomass; i.e., K = unfished vulnerable biomass, and the estimate of B/BMSY reported by the SRA corresponds with VB/VBMSY in a structured model. As the authors point out, the assessments in the RLSADB are typically more structurally complex – presumably many of them age-structured – and I assume report B/BMSY as SB/SBMSY given spawning population is generally the focus for conservation outcomes. The relationship between SB/SBMSY and VB/VBMSY would depend on the selectivity pattern relative to maturity and level of fishing mortality (eg VB/VBMSY could go to 0 while SB/SBMSY > 0). From a quick analysis with some operating models I have on hand the ratio of VB/VBMSY and SB/SBMSY ranged from 0.7 to 1.6.
 If it is true that the SRA is reporting VB/VBMSY and comparing it to SB/SBMSY from the RLSADB there will be an additional level of bias and variability. This issue applies more widely any time outputs from models with fundamental structure are compared, but I rarely see it acknowledged or discussed. I don’t expect this would make a significant difference to the results of this study, and I don’t think this is a flaw in the study, but I’m curious if the authors have any thoughts on this.*
 
-*We thank the reviewer for raising this important point. We have raised this issue broadly in the discussion (XX). We agree that it could play a role, and suggest that it should be explored as a potential explanation for the performance patterns observed in our results. XX*
+*We thank the reviewer for raising this important point. We have raised this issue broadly in the discussion section ("Our fits to the RLSADB data provide..."). We agree that this dynamic could explain the improved but still error-prone estimates of stock status when the model was fit with an index of abundance drawn directly from RLSADB. We have used this helpful suggestion to more clearly highlight the role that our results play in potentially quantifying the barrier that model misspecification plays in attempting to provide global assessments of age structured populations with surplus production models.*
 
 
 It seems strange to me that having information on the most recent B/BMSY doesn’t result in lower RMSE for the predicted B/BMSY from the most recent 5 years of data (Figure 5). Presumably B/BMSY wouldn’t change a great deal between years, so it seems counter-intuitive that F/FMSY complete results in a better prediction of B/BMSY than when most recent B/BMSY is known. Perhaps the authors could add a bit of text to explain this.
@@ -104,14 +97,14 @@ It seems strange to me that having information on the most recent B/BMSY doesn�
 
 The paragraph beginning on line 379 is useful, but from my perspective is a little overly generous to catch-only methods. The claim on this paper could be defended more strongly than is implied here. It’s logical that catch-only methods *need* some other data (or assumptions which are essentially assuming data look a certain way) to provide reliable estimate of stock status. E.g., even in unmanaged fisheries, the relationship between catch history and B/BMSY would have to at least depend on the time the stock has been fished, and the relative fishing effort on the stock (e.g., highly targeted, by-catch, etc). This paper makes the important point that providing estimates of stock status for unassessed fisheries requires better data (and capacity building to analyze the data); that is, essentially a stock assessment. Short-cut methods are appealing, but have the danger of over-simplifying a complex reality and could be detrimental to both sustainability and livelihoods if they don’t reliably categorize fisheries.
 
-*Both reviewer's flagged this closing statement *
+*Both reviewer's pointed out that some of the comments in our discussion did not seem to reflect the broadly poor performance of catch-only models shown in our results. We agree, and in the paragraph highlighted by the reviewer have sought to make clearer that any improvements have to come from new data, stronger assumptions, or improved empirical models. We then make clearer that this has largely been tried and we would argue largely failed. We have also included a paraphrased version of the reviewer's closing sentiments in the opening paragraph of our discussion.*
 
 Minor comments
 
 *We thank the reviewer for these comments. Unless otherwise stated all have been addressed*
 
 56 – is it possible to say what % of the world’s fisheries this 50% of catch represents? 
-*Not precisely, but it's a small percent, which we now clarify in the text. The FAO reports roughly 20000 individual "stocks", at least as defined by the intersection of taxa, country, and major FAO region. That resolution will be too coarse for some stocks (e.g. tuna) but likely too fine for others. The RLSADB contains roughly 1000 stocks at the moment, though fewer of those have consistent timeseries of reference points. So, an optimistic assesment would be 5% of fisheries?*
+*Not precisely, but it's a small percent, which we now clarify in the text. The FAO reports roughly 20000 individual "stocks", at least as defined by the intersection of taxa, country, and major FAO region. That resolution will be too coarse for some stocks (e.g. tuna) but likely too fine for others. The RLSADB contains roughly 1000 stocks at the moment, though fewer of those have consistent timeseries of reference points. So, an optimistic assessment would be 5% of fisheries?*
 
 169 – what are sigma obs and gamma? Described later on I think.
 
@@ -128,18 +121,18 @@ Minor comments
 
 *To keep things more consistent with the rest of the paper we have replaced the R2 values in the plot with root mean squared error (RMSE) values, and double checked that the values in the text match the figures.*
 
-302-317 – helpful in this section to refer to figure 1 and panels with figure
-
 313 – only SAR & FMI fit better to F/FMSY right? The others had higher R2 (though too low to consider) for B/BMSY (Figure 1)
 
 *That is correct, much clearer now with RMSE instead of R2*
 
 332 – did you consider sub-setting some of the RLSADB assessments to only use the earlier years where management may not have been as effective and B/BMSY in the terminal year less optimistic?
 
-*This is a very interesting idea. We did consider this, the challenge is we only have FMI/SAR data for recent years, and so would not have been able to use those values to predict status in the past, when presumably both values would have been very different. We have another paper in the works where we have explored this exact idea though and found that catch-only models performed similarly poorly with data all pre-1990. We briefly mention this in the discussion now.*
+*This is a very interesting idea. We did consider this, the challenge is we only have FMI/SAR data for recent years, and so would not have been able to use those values to predict status in the past, when presumably both values would have been very different. We have another paper in the works where we have explored this exact idea though and found that catch-only models performed similarly poorly on RLSADB stocks even when restricted to pre-1990 data. We briefly mention this in the discussion now.*
 
 
 
 441 – 449 – It may be worth pointing out that developing management methods that do not explicitly rely on an estimate of stock status could be useful as well, eg spatial closures, size regulations, empirical index-based MPs
 
-*A very important point that we have included.*
+*A very important point that we have included in the discussion in the suggested section.*
+
+# References
