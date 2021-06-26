@@ -1,4 +1,222 @@
+---
+title: Improving Estimates of the State of Global Fisheries <br> Depends on Better Data
+subtitle: Supplementary Information
+bibliography: ["../references.bib"]
+csl: fish-and-fisheries.csl
+output: 
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+  bookdown::word_document2:
+    reference_docx: template.docx
+params:
+  results_name: ["v1.0"]
+  min_years_catch: [25]
+always_allow_html: true
+linkcolor: blue
+header-includes:
+  - \usepackage{setspace}\doublespacing
+  - \usepackage{lineno}\linenumbers
+toc: false
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, dpi = 600,
+                      cache = FALSE, fig.width = 6, fig.asp = .75, dev = "png")
+library(tidyverse)
+library(viridis)
+library(sf)
+library(hrbrthemes)
+library(extrafont)
+library(scales)
+library(patchwork)
+library(rstanarm)
+library(bayesplot)
+library(here)
+library(sraplus)
+extrafont::loadfonts()
+
+functions <- list.files(here::here("functions"))
+
+purrr::walk(functions, ~ source(here::here("functions", .x)))
+
+results_name <- params$results_name
+
+results_path <- here("results",results_name)
+
+min_years_catch <- params$min_years_catch
+
+prepare_sofia_data(lookup_fmi_names = FALSE)
+
+ram_comp_data <- ram_data %>%
+  mutate(has_things = !(is.na(catch) | catch == 0)) %>%
+  filter(has_things) %>%
+  group_by(stockid) %>%
+  mutate(delta_year = as.integer(year - lag(year))) %>%
+  mutate(delta_year = case_when(year == min(year) ~ as.integer(1),
+                                TRUE ~ delta_year)) %>%
+  mutate(missing_gaps = any(delta_year > 1)) %>%
+  filter(missing_gaps == FALSE) %>%
+  group_by(stockid) %>%
+  mutate(n = length(catch)) %>%
+  filter(n >= min_years_catch) %>%
+  ungroup()
+
+ram_comp_data <- ram_comp_data %>%
+  select(
+    year,
+    stockid,
+    country,
+    primary_FAOarea,
+    scientificname,
+    commonname,
+    year,
+    catch,
+    b_v_bmsy,
+    u_v_umsy,
+    total_biomass
+  ) %>%
+  rename(scientific_name = scientificname) %>% 
+  mutate(fao_area_code = as.numeric(primary_FAOarea)) %>% 
+  left_join(fao_species, by = "scientific_name")
+
+
+assess_ram_fits <- read_rds(file = file.path(results_path,"assess_ram_fits.rds"))
+
+assess_ramu_fits <- read_rds(file = file.path(results_path,"assess_ramu_fits.rds"))
+
+ram_v_sraplus_area <- read_rds(file = file.path(results_path,"ram_v_sraplus_area.rds"))
+
+ram_comp_data <- read_rds(file = file.path(results_path,"ram_comp_data.rds"))
+
+fao_sraplus_comp_data <- read_rds(file = file.path(results_path, "fao_sraplus_comp_data.rds"))
+
+
+load(file = file.path(results_path, "paper_plots.Rdata"))
+
+load(file = file.path(results_path, "voi_fits.RData"))
+
+  exs <- read_rds(file = file.path(results_path, "raw-case-study-fits.rds"))
+
+
+breaks <- c(0.8, 1.2)
+
+breaks <- c(0, breaks, Inf)
+
+labels <- c("over", "fully", "under")
+
+
+# rand_fits <- assess_ram_fits %>%
+#   filter(data == "ram-data") %>%
+#   mutate(mean = sample(c(0.1, 1, 2), n(), replace = TRUE),
+#          data = "guess")
+
+
+perf <- assess_ram_fits %>% 
+  # bind_rows(rand_fits) %>% 
+  mutate(sraplus_bin = cut(mean, breaks = breaks, labels = labels)) %>%
+  mutate(ram_bin = cut(ram_b_v_bmsy, breaks = breaks, labels = labels)) %>%
+  mutate(data = as.factor(data)) %>% 
+  filter(data != "u_umsy") %>% 
+  mutate(data = forcats::fct_recode(data, 
+                                    "RLSADB Index" = "ram-data",
+                                    "SAR" = "sar",
+                                    "FMI" = "fmi",
+                                    "Effective CPUE" = "cpue",
+                                    "Effective CPUE+" = "cpue-plus",
+                                    "Nominal CPUE" = "nominal-cpue",
+                                    "Nominal CPUE+" ="nominal-cpue-plus",
+                                    "CMSY" = "cmsy",
+                                    "Guess" = "guess",
+                                    "RLSADB F/Fmsy" = "u_umsy"
+                                     
+                                    )) %>% 
+  group_by(data) %>% 
+  summarise(
+    mpe = median((mean - ram_b_v_bmsy ) / ram_b_v_bmsy),
+    mape = median(abs(mean - ram_b_v_bmsy ) / ram_b_v_bmsy),
+    accuracy = mean(ram_bin == sraplus_bin, na.rm = TRUE)
+  ) %>% 
+  arrange((mape)) %>% 
+  rename("Data Used" = "data")
+
+uperf <- assess_ramu_fits %>% 
+  # bind_rows(rand_fits) %>% 
+  mutate(sraplus_bin = cut(mean, breaks = breaks, labels = labels)) %>%
+  mutate(ram_bin = cut(ram_u_v_umsy, breaks = breaks, labels = labels)) %>%
+  mutate(data = as.factor(data)) %>% 
+  filter(data != "u_umsy") %>% 
+  mutate(data = forcats::fct_recode(data, 
+                                    "RLSADB Index" = "ram-data",
+                                    "SAR" = "sar",
+                                    "FMI" = "fmi",
+                                    "Effective CPUE" = "cpue",
+                                    "Effective CPUE+" = "cpue-plus",
+                                    "Nominal CPUE" = "nominal-cpue",
+                                    "Nominal CPUE+" ="nominal-cpue-plus",
+                                    "CMSY" = "cmsy",
+                                    "Guess" = "guess",
+                                    "RLSADB F/Fmsy" = "u_umsy"
+                                     
+                                    )) %>% 
+  group_by(data) %>% 
+  summarise(
+    mpe = median((mean - ram_u_v_umsy ) / ram_u_v_umsy),
+    mape = median(abs(mean - ram_u_v_umsy ) / ram_u_v_umsy),
+    accuracy = mean(ram_bin == sraplus_bin, na.rm = TRUE)
+  ) %>% 
+  arrange((mape)) %>% 
+  rename("Data Used" = "data")
+
+
+
+fao_area_codes <- fao %>% 
+  ungroup() %>% 
+  select(fao_area, fao_area_code) %>% 
+  unique()
+
+
+
+pub_theme <- theme_ipsum(base_size = 10,
+                         axis_text_size = 10,
+                         axis_title_size = 12) +
+    theme(panel.spacing = unit(.5,"lines"))
+
+theme_set(pub_theme)
+
+
+```
+
+
+# Title Page {.unnumbered}
+
+**Title 1**: Improving Estimates of the State of Global Fisheries Depends on Better Data
+
+**Title 2**: Status of Global Unassessed Fisheries will Remain Highly Uncertain without Better Data
+
+**Running Title**: Unassessed Fisheries
+
+**Authors**:
+Daniel Ovando^1^, Ray Hilborn^1^, Cole Monnahan^2^, Merrill Rudd^3^, Rishi Sharma^4^, James T. Thorson^2^, Yannick Rousseau^5^, Yimin Ye^4^
+
+**Affiliations**: 
+
+^1^University of Washington, School of Aquatic and Fishery Sciences
+1122 NE Boat St, Box 355020 Seattle, WA 98195-5020
+Seattle, WA, USA 98103
+
+^2^NOAA Fisheries Alaska Fisheries Science Center, Seattle, WA, USA
+
+^3^Scaleability LLC
+
+^4^Food and Agriculture Organization of the United Nations, Fisheries and Aquaculture,Rome, IT
+
+^5^University of Tasmania, Institute for Marine and Antarctic Studies,Hobart, TAS, AUS
+
+**Authorship**: DO, RH, CM,MR, RS, JT designed model structure and ran analyses. RS, YR, and YE supplied data. All authors contributed to writing of the manuscript
+
+**Conflict of Interest**: RH receives research funding from many groups that have interests in fisheries outcomes including environmental NGOs, foundations, governments and fishing industry groups.
+
+\newpage
 
 \renewcommand{\thefigure}{S\arabic{figure}}
 
@@ -16,8 +234,8 @@ The core of our model is a Pella-Tomlinson [@pella1969] production model in the 
 
 ```{r param-tab}
 cd <- data_frame(Parameter = "Carrying Capacity", Abbreviation = "$K$", `Default Prior` = "Prior predictive tuning") %>%
-  rbind(c("Growth rate", "$r$", "Thorson, 2020 [@thorson2020] updated by prior predictive tuning")) %>%
-  rbind(c("Shape parameter", "$m$", "Drawn from Thorson et al. 2012 (@thorson2012)")) %>%
+  rbind(c("Growth rate", "$r$", "@thorson2020 updated by prior predictive tuning")) %>%
+  rbind(c("Shape parameter", "$m$", "Drawn from @thorson2012")) %>%
   rbind(c("Catchability", "$q$", "$LN(1e^{-3}, 1)$")) %>%
   rbind(c("Observation Error", "$\\sigma_{obs}$", "$LN(.05,1)$")) %>%
   rbind(c("Ratio of process to observation error", "$\\gamma$", "$LN(.5,0.25)$")) %>%
@@ -50,7 +268,7 @@ knitr::kable(
   escape = F,
   row.names = F,
   format = "pipe",
-  caption = "SSBMSY to SSB ratios from Thorson et al. (2012) used in the paper. Taxa not within the groups assigned at the genus level by Thorson et al. (2012) are assigned the ratio reported for 'Other'"
+  caption = "SSBMSY to SSB ratios from @thorson2012 used in the paper. Taxa not within the groups assigned at the genus level by @thorson2012 are assigned the ratio reported for 'Other'"
 )
 
 ```
@@ -283,24 +501,31 @@ knitr::kable(uperf %>% rename(MPE = mpe, MAPE = mape, Accuracy = accuracy), digi
 
 ```
 
-```{r umpe-map, fig.width=8, fig.height=6, fig.cap="Median percent error (MPE, predicted relative to observed) in most recent *F/F~MSY~* by FAO statistical area from different data sources. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *F/F~MSY~* of 0.4,1, or 1.6. Panels ordered in ascending (starting from top left) mean MPE at the FAO region level. "}
+```{r umpe-map, fig.width=8, fig.height=6, fig.cap="Median percent error (MPE, predicted relative to observed) in most recent *F/F~MSY~* by FAO statistical area from different data sources. Data source panels are ordered in ascending (starting from top left) mean MPE at the FAO region level. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *F/F~MSY~* of 0.4,1, or 1.6. Panels ordered in ascending (starting from top left) mean MPE at the FAO region level. "}
 ramu_mpe_map_plot
 
 ggsave(here("documents","figs","u-mpe-map.pdf"), ram_mpe_map_plot, width = 8, height = 6)
 ```
 
-```{r umape-map, fig.cap = "Median absolute percent error (MAPE) in most recent *F/F~MSY~* by FAO statistical area from different data sources. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *F/F~MSY~* of 0.4,1, or 1.6. Panels ordered in descending (starting from top left) mean MAPE at the FAO region level",fig.width=8, fig.height=6}
+```{r umape-map, fig.cap = "Median absolute percent error (MAPE) in most recent *F/F~MSY~* by FAO statistical area from different data sources. Data source panels are ordered in ascending (starting from top left) total bias at the FAO region level. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *F/F~MSY~* of 0.4,1, or 1.6. Panels ordered in descending (starting from top left) mean MAPE at the FAO region level",fig.width=8, fig.height=6}
 ramu_mape_map_plot
 
 ggsave(here("documents","figs","u-mape-map.pdf"),ram_mape_map_plot, width = 8, height = 6)
 
 ```
 
-```{r uacc-map, fig.cap="Mean classification accuracy (assignment to general bin of overfishing, fishing near F~MSY~, and underfishing) by FAO statistical area arising from different data sources. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *F/F~MSY~* of 0.4,1, or 1.6. Panels ordered in descending (starting from top left) mean accuracy at the FAO region level",fig.width=8, fig.height=6}
+```{r uacc-map, fig.cap="Mean classification accuracy (assignment to general bin of overfishing, fishing near F~MSY~, and underfishing) by FAO statistical area arising from different data sources. Data source panels are ordered in descending (starting from top left) mean accuracy at the FAO region leve. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *F/F~MSY~* of 0.4,1, or 1.6. Panels ordered in descending (starting from top left) mean accuracy at the FAO region level",fig.width=8, fig.height=6}
 
 ramu_acc_map_plot 
 
 ggsave(here("documents","figs","u-acc-map.pdf"),ram_acc_map_plot, width = 8, height = 6)
 
 ```
+
+\newpage
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
 
