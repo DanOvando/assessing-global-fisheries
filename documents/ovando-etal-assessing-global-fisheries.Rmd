@@ -1,6 +1,4 @@
 ---
-title: Improving Estimates of the State of Global Fisheries <br> Depends on Better Data
-date: "`r Sys.Date()`"
 bibliography: ["../references.bib"]
 csl: fish-and-fisheries.csl
 output: 
@@ -16,12 +14,11 @@ linkcolor: blue
 header-includes:
   - \usepackage{setspace}\doublespacing
   - \usepackage{lineno}\linenumbers
-toc: false
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, dpi = 600,
-                      cache = FALSE, fig.width = 6, fig.asp = .75, dev = "png")
+                      cache = FALSE, fig.width = 6, fig.asp = .75)
 library(tidyverse)
 library(viridis)
 library(sf)
@@ -189,14 +186,11 @@ theme_set(pub_theme)
 
 # Title Page {.unnumbered}
 
-**Title 1**: Improving Estimates of the State of Global Fisheries Depends on Better Data
+**Title**: Improving Estimates of the State of Global Fisheries Depends on Better Data
 
-**Title 2**: Status of Global Unassessed Fisheries will Remain Highly Uncertain without Better Data
-
-**Running Title**: Unassessed Fisheries
 
 **Authors**:
-Daniel Ovando^1^, Ray Hilborn^1^, Cole Monnahan^2^, Merrill Rudd^3^, Rishi Sharma^4^, James T. Thorson^2^, Yannick Rousseau^5^, Yimin Ye^4^
+Daniel Ovando^1^*, Ray Hilborn^1^, Cole Monnahan^2^, Merrill Rudd^3^, Rishi Sharma^4^, James T. Thorson^2^, Yannick Rousseau^5^, Yimin Ye^4^
 
 **Affiliations**: 
 
@@ -212,15 +206,51 @@ Seattle, WA, USA 98103
 
 ^5^University of Tasmania, Institute for Marine and Antarctic Studies,Hobart, TAS, AUS
 
+**Corresponding Author** *Daniel Ovando, danovan@uw.edu, University of Washington, School of Aquatic and Fishery Sciences
+1122 NE Boat St, Box 355020 Seattle, WA 98195-5020
+Seattle, WA, USA 98103
+
 **Authorship**: DO, RH, CM,MR, RS, JT designed model structure and ran analyses. RS, YR, and YE supplied data. All authors contributed to writing of the manuscript
 
 **Conflict of Interest**: RH receives research funding from many groups that have interests in fisheries outcomes including environmental NGOs, foundations, governments and fishing industry groups.
 
+**Running Title**: Unassessed Fisheries
+
+
 \newpage
 
-# Abstract {.unnumbered}
+# Abstract {.unnumbered .unlisted}
 
-Implementation of the United Nations Sustainable Development Goals requires assessments of the global state of fish populations. While we have reliable estimates of stock status for fish populations accounting for approximately half of recent global catch, our knowledge of the state of the majority of the world's 'unassessed' fish stocks remains highly uncertain. Numerous publications have produced estimates of the global status of these unassessed fisheries, but limited quantity and quality of data along with methodological differences have produced counterintuitive and conflicting results. Here, we show that despite numerous efforts, our understanding of the status of global fish stocks remains incomplete, even when new sources of broadly available data are added. Estimates of fish populations based primarily on catch histories on average performed 25% better than a random guess. But, on average these methods assigned fisheries to the wrong FAO status category 57% of the time. Within these broad summaries the performance of models trained on our tested data sources varied widely across regions. Effective improvement in estimates of the state of the world's exploited fish populations depends more on expanded collection of new information and efficient use of existing data than development of new modeling methods.
+Implementation of the United Nations Sustainable Development Goals requires assessments of the global state of fish populations. While we have reliable estimates of stock status for fish populations accounting for approximately half of recent global catch, our knowledge of the state of the majority of the world's 'unassessed' fish stocks remains highly uncertain. Numerous publications have produced estimates of the global status of these unassessed fisheries, but limited quantity and quality of data along with methodological differences have produced counterintuitive and conflicting results. Here, we show that despite numerous efforts, our understanding of the status of global fish stocks remains incomplete, even when new sources of broadly available data are added. Estimates of fish populations based primarily on catch histories on average performed 25% better than a random guess. But, on average these methods assigned fisheries to the wrong FAO status category 57% of the time. Within these broad summaries the performance of models trained on our tested data sources varied widely across regions. Substantial improvements to estimates of the state of the world's exploited fish populations depends more on expanded collection of new information and efficient use of existing data than development of new modeling methods.
+
+# Keywords  {.unnumbered}
+- Stock assessment
+- Fisheries management
+- Data-limited assessment
+- Catch-only
+- Global fisheries
+- United Nations Sustainable Development Goals
+
+# Table of Contents {.unnumbered}
+  
+  - Introduction
+  - Methods
+      - Data Sources
+      - Population Model
+      - Estimation Model
+      - CMSY
+      - Priors
+      - Assessing Performance
+      - Value of Information
+      - Case Study
+  - Results
+      - Case Study
+      - Performance of Regional Fishery Assessments
+      - Value of Information
+  - Discussion
+  - Acknowledgments
+  - Data Availability Statement
+  - References
 
 # Introduction {.unnumbered}
 
@@ -346,7 +376,7 @@ B_{t + 1} = \left(B_{t} + \frac{B_{t}}{0.25 \times K}\left(B_{t}\frac{r}{m - 1}\
 
 Where $B_t$ is biomass at time *t*, *K* is carrying capacity ,*r* is the intrinsic growth rate, *m* is the scaling parameter that allows for the ratio of *B~MSY~/K* to shift. When *m* = 2, *B~MSY~ / K* = 0.5. Lower values of *m* shift the production function left, higher values right. The shape parameter *m* is usually not reliably estimable given available data for surplus production models, however, @thorson2012 provides estimates of the ratio of *B~MSY~* to *K* for many fish taxa. For each stock we fix the shape parameter based on the distributions reported in @thorson2012 for the genus of the species in question. We chose to fix the shape parameter at the mean stock-appropriate values from @thorson2012 rather than estimating the shape parameter with an informative prior since there is so little information regarding the shape in the data considered. Attempts to estimate the shape parameter with priors from @thorson2012 frequently resulted in poor model performance. $\pmb{c}$ is a vector of catches, and $\pmb{p}$ is vector of process errors. Growth rates can become unrealistically large when the population reaches low sizes under the Pella-Tomlinson model. We dealt with this problem by following the methods described in @winker2018 to reduce the production of the population when it falls below a threshold of 25% of carrying capacity.
 
-We allow for process error $p_t$ (in the manner of the stochastic stock reduction analysis (SRA) suggested by @walters2006). Process error $p_t$ is assumed to be log-normally distributed, such that
+We allow for process error $p_t$ (in the manner of the stochastic stock reduction analysis suggested by @walters2006). Process error $p_t$ is assumed to be log-normally distributed, such that
 
 <!-- This allows the population dynamics to deviate from the exact values given by the Pella-Tomlinson operating model, while still conforming to the assumptions of this model on average. Incorporation of process errors is useful for two reasons: (1) when you have an abundance index, process errors can reduce bias arising from lack of fit in a deterministic SRA whenever dynamics are poorly explained by catch-history alone, and (2) with or without an abundance index (or other info), the stochastic portion is necessary to get good uncertainty intervals (i.e., with close to nominal coverage, see [@thorson2018]). -->
 
@@ -369,7 +399,7 @@ All of our estimates are Bayesian in nature. sraplus can be run in two forms: ei
 
 <!-- sraplus can be run in two forms: either as a stock reduction analysis [SRA, @walters2006], or fit to an index of abundance (fishery dependent or independent). Unless there is an abundance index to fit to the model runs as a stock reduction analysis. A stock reduction analysis works by specifying prior distributions on population parameters and critically the recent state of the fishery. sraplus allows users to specify the most recent status in units of depletion, B/B~MSY~, F, or F/F~MSY~. We then sample from the prior distributions of the population model parameters and apply those to the production model, along with the catch history. Any run that results in the collapse of the population (catch greater than biomass in any time step) is immediately rejected. The remaining viable draws from the prior distributions are sampled in proportion to the supplied prior on recent stock status. Any model results based on data sources listed in Table.\@ref(tab:dat-desc) that do not contain "cpue" or "RAM data" are estimated through stock reduction analysis. All SRA style runs in our paper sampled 2,000 draws of the prior-predictive distribution from a total of 1e6 candidate draws. -->
 
-When an index of abundance is available the model estimates the posterior probability distributions of the estimated and transformed parameters using Hamiltonian Monte Carlo implemented in Stan [@standevelopmentteam2018] accessed through the `tmbstan` interface [@monnahan2018]. By default the model uses 2000 draws with a 1000 step warm-up and one chain. Any detailed fit for an individual fishery would likely use more draws and chains, but we verified that this sampling routine produced an acceptable tradeoff of speed and convergence criteria. The model fits to a direct estimate of abundance (e.g. a fishery independent survey or a standardized catch-per-unit-effort index), the likelihood calculated per
+When an index of abundance is available the model estimates the posterior probability distributions of the estimated and transformed parameters using Hamiltonian Monte Carlo implemented in Stan [@standevelopmentteam2020] accessed through the `tmbstan` interface [@monnahan2018]. By default the model uses 2000 draws with a 1000 step warm-up and one chain. Any detailed fit for an individual fishery would likely use more draws and chains, but we verified that this sampling routine produced an acceptable tradeoff of speed and convergence criteria. The model fits to a direct estimate of abundance (e.g. a fishery independent survey or a standardized catch-per-unit-effort index), the likelihood calculated per
 
 
 \begin{equation}
@@ -417,7 +447,7 @@ We then fit to the index of abundance per Equation 3 and
 (\#eq:cpue)
 \end{equation}
 
-### CMSY {.unnumbered}
+## CMSY {.unnumbered}
 
 In addition to the results from sraplus, we include a set of results produced by the default settings of the CMSY method [@froese2017]. For computational efficiency, we used a ported version of the CMSY model available at <https://github.com/DanOvando/portedcmsy>. The only modification made is to convert the underlying population model to C++ for faster computation. For each stock we used all the default options and priors provided and generated by CMSY, in the same manner as @palomares2020, except for resilience, which was pulled from the vulnerability scores from FishBase accessed through `rfishbase` [@boettiger2012]. Vulnerability scores greater than 66 were scored as low resilience, between 33 and 66 medium resilience, and lower than 33 high resilience.
 
@@ -435,7 +465,7 @@ In addition to the results from sraplus, we include a set of results produced by
 
 In the absence of any data to fit to, sraplus works by assuming that we know current stock status, and then finds feasible parameters to satisfy that belief given a catch history, life history priors, and model structure. This creates a problem for the Bayesian nature of our analysis. Consider a production model with two parameters, a growth rate *r* and a carrying capacity *K*. Once we specify prior distributions on *r* and *K*, and then apply these distributions to our model (the shape of the production function along with the catch histories), we have implicitly provided a prior on the status of the stock in all time periods, since each unique combination of *r* and *K* together with the model and the catch history produces a deterministic stock status in each time step. Doing so places two priors on recent stock status: one implicit prior through the population parameter priors, and one explicit through the users perception of recent stock status, creating a problem termed Borel's Paradox (See @poole2000 and references therein for a discussion of Borel's Paradox in a fisheries context).
 
-This may seem like an academic concern, and indeed in our experience when the data are sufficiently informative the Bayesian version of our model subject to Borel's paradox produces effectively identical results to those produce by the same model fit by maximum likelihood. However, Borel's Paradox poses a particular problem when there are no data to fit to(i.e. when the model is simply filtering through prior distributions in the manner of a traditional SRA) due to the fact that there are more parameter combinations that allow for a fishery to be relatively unexploited than for a fishery to be close to collapse (but never actually collapsed, i.e. predicted biomass less than observed catch). In this context Borel's Paradox causes the posterior distribution of stock status to be positively biased relative to the supplied prior (although combined with other modeling choices can result in a net negative bias in stock status, @free2020). This process can also make it easy for users to accidentally supply very informative priors on stock status, without realizing that choices relating to population biology priors that may appear independent of stock status are in fact dictating the posterior distributions of stock status resulting from the SRA algorithm.
+This may seem like an academic concern, and indeed in our experience when the data are sufficiently informative the Bayesian version of our model subject to Borel's paradox produces effectively identical results to those produce by the same model fit by maximum likelihood. However, Borel's Paradox poses a particular problem when there are no data to fit to (i.e. when the model is simply filtering through prior distributions in the manner of a traditional SRA) due to the fact that there are more parameter combinations that allow for a fishery to be relatively unexploited than for a fishery to be close to collapse (but never actually collapsed, i.e. predicted biomass less than observed catch). This causes the posterior distribution of stock status to be positively biased relative to the supplied prior (although combined with other modeling choices can result in a net negative bias in stock status, @free2020). This process can also make it easy for users to accidentally supply very informative priors on stock status, without realizing that choices relating to population biology priors that may appear independent of stock status are in fact dictating the posterior distributions of stock status resulting from the SRA algorithm.
 
 We use an approximate solution to this problem here, similar in spirit to Bayesian melding [@poole2000]. Our solution amounts to a two-step sampling-importance-resampling (SIR) algorithm. We first run the standard SRA algorithm as described in the Estimation Model section of the methods. We then break the resulting draws into bins based on terminal stock status, and calculate the mean probability density *p* (defined by the prior distributions of estimated parameters) of each bin.
 
@@ -454,11 +484,11 @@ We then divide the mean probability density of bin *i* evenly among each of the 
 
 And we then perform a second SIR algorithm but now sampling each observation $n_i$ in proportion to $p(n_i)$.
 
-The net result of this is that it allows users to place an explicit prior on stock status, and then adjust their priors on life history parameters to reflect this prior. While the range of possible life history values supplied still influences stock status under this approach, this prior predictive tuning process makes the resulting priors more consistent with explicit priors on recent stock status supplied by the user. Users can turn this functionality off and instead base priors on stock status primarily on life history. See Supplementary Information for a detailed explanation of this problem and our solution.
+The net result of this is that it allows users to place an explicit prior on stock status, and then adjust their priors on life history parameters to reflect this prior. While the range of possible life history values supplied still influences stock status under this approach, this prior predictive tuning process makes the resulting priors more consistent with explicit priors on recent stock status supplied by the user. Users can turn this functionality off and instead base priors on stock status primarily on life history. See Supplementary Information (SI) for a detailed explanation of this problem and our solution.
 
 ### Priors Informed by Outside Data {.unnumbered}
 
-Along with allowing users to supply their own priors, the sraplus package contains three built-in methods for converting information on stock status from additional outside data into a form usable as a stock status prior by sraplus. We paired data on catch histories, swept area ratio, and Fisheries Management Index with estimates of stock status from the RLSADB. We then trained a regression of the general form $log(status) \sim N(variable,\sigma)$ for each of these three data types. Given values of these variables for a new fishery, sraplus uses the fitted model to generate posterior predictive distributions of stock status based on these data, which can then be used as priors on stock status by sraplus for new fisheries. For example, given data on SAR or FMI scores, together with a catch history, sraplus uses these regressions to convert those SAR and FMI values into priors on *B/B~MSY~* or *F/F~MSY~* in the most recent year of the fishery usable by sraplus (See Supplementary Information). All prior regression models were tested by out-of-sample predictive power, and where competing models were considered the final model was chosen by leave-on-out validation [@vehtari2017]. The final models are intended as a reasonably robust means of translating available data (catch histories, FMI, and SAR values) into a form usable by sraplus. For all results presented in this paper we used these data to provide priors on *F/F~MSY~*, as we found clearer predictive relationships and subsequent model performance between catch, FMI, and SAR values and *F/F~MSY~* than we did for *B/B~MSY~*.
+Along with allowing users to supply their own priors, the sraplus package contains three built-in methods for converting information on stock status from additional outside data into a form usable as a stock status prior by sraplus. We paired data on catch histories, swept area ratio, and Fisheries Management Index with estimates of stock status from the RLSADB. We then trained a regression of the general form $log(status) \sim N(variable,\sigma)$ for each of these three data types. Given values of these variables for a new fishery, sraplus uses the fitted model to generate posterior predictive distributions of stock status based on these data, which can then be used as priors on stock status by sraplus for new fisheries. For example, given data on SAR or FMI scores, together with a catch history, sraplus uses these regressions to convert those SAR and FMI values into priors on *B/B~MSY~* or *F/F~MSY~* in the most recent year of the fishery usable by sraplus (See SI). All prior regression models were tested by out-of-sample predictive power, and where competing models were considered the final model was chosen by leave-on-out validation [@vehtari2017]. The final models are intended as a reasonably robust means of translating available data (catch histories, FMI, and SAR values) into a form usable by sraplus. For all results presented in this paper we used these data to provide priors on *F/F~MSY~*, as we found clearer predictive relationships and subsequent model performance between catch, FMI, and SAR values and *F/F~MSY~* than we did for *B/B~MSY~*.
 
 <!-- Given the scope of this analysis, we do not claim that the regressions used here are the best possible model relating these data with the fishery status indicators of interest. Rather, each regression was tested to ensure that it is unlikely that, given the same data, an alternative model would perform substantially better than those presented here. -->
 
@@ -494,11 +524,11 @@ Nearly all of the fisheries used in this case study have *F/F~MSY~* values less 
 <!-- `FishLife` [@thorson2017c] provides informative priors for key life history parameters (such as growth rates) needed by our model. We use the FMI and SAR values to construct Bayesian priors on initial and terminal stock status values (e.g B/B~MSY~ or F/F~MSY~, the fishing mortality *F* relative to the fishing mortality rate that would produce *MSY* at equilibrium), allowing us to translate local values of for example SAR into a prior on terminal B/B~MSY~. Where available, we use effort data to create stock-specific timeseries of catch-per-unit-effort (CPUE), which can be used as an index of stock abundance.  -->
 
 
-```{r cs-plot, fig.cap="RLSADB values of *B/B~MSY~* and *F/F~MSY~* (x-axes) for case study fisheries plotted against estimated values (y-axes) using CMSY [@froese2017], catch heuristics, priors informed by stock-specific Fisheries Management Index (FMI) and swept area ratio (SAR) scores, and an abundance index based on reconstructed effort (Effort) trends assuming a rate of technological increase of 2.6%. Each point is a stock in the RLSADB. Black dashed line shows the 1:1 relationship. Text displys root mean squared error (RMSE) of each panel."}
+```{r cs-plot, fig.cap="RLSADB values of *B/B~MSY~* and *F/F~MSY~* (x-axes) for case study fisheries plotted against estimated values (y-axes) using CMSY [@froese2017], catch heuristics, priors informed by stock-specific Fisheries Management Index (FMI) and swept area ratio (SAR) scores, and an abundance index based on reconstructed effort (Effort) trends assuming a rate of technological increase of 2.6%. Each point is a stock in the RLSADB. Black dashed line shows the 1:1 relationship. Text displys root mean squared error (RMSE) of each panel.", include=TRUE}
 ex_scatter_plot + 
   theme(strip.text = element_text(size = 8))
 
-ggsave(here("documents","figs","cs-plot.png"),ex_scatter_plot, height = 6, width = 6)
+ggsave(here("documents","figs","figure_1.eps"),ex_scatter_plot, height = 6, width = 6, device = cairo_ps, dpi = 600)
  
 ```
 
@@ -516,29 +546,29 @@ We next assessed the ability of FMI, SAR, and effort data to improve estimates o
 
 Focusing on MAPE (our measure of error rather than bias) and classification accuracy, the error of the models jumps dramatically as soon as data other than the RLSADB abundance indices are used, to a minimum value of `r percent(perf$mape[2])` and a maximum of `r percent(max(perf$mape))`. The mean accuracy of the sraplus models across all non-RLSADB data fits was `r percent(mean(perf$accuracy[!perf$"Data Used" %in% c("RLSADB Index","Guess")]))`. Note that there are only three bins in the FAO stock status classifications, and as such our "Guess" model has a mean accuracy of `r percent(perf$accuracy[perf$"Data Used" == "Guess"])`. This means that the accuracy of our models designed as a proxy for a global assessment process were across all non-RLSADB index data fits `r percent(mean(perf$accuracy[!perf$"Data Used" %in% c("RLSADB Index","Guess")]) / perf$accuracy[perf$"Data Used" == "Guess"] - 1)` more accurate than a random guess, certainly an improvement, but on average assigned fisheries to the wrong FAO status bin `r percent(1 - mean(perf$accuracy[!perf$"Data Used" %in% c("RLSADB Index","Guess")]))` of the time. 
 
-Looking geographically we found a similar pattern of a rapid decrease in performance for models besides those fit to the RLSADB Index. Across the models, performance was not consistent in space: use of different data performed best or worst for different FAO regions. Models fit to nominal CPUE data substantially overestimate stock status in the Mediterranean, while models based on data using effective CPUE perform better in that region (but worse in others) (Fig.\@ref(fig:mape-map)). We find similarly inconsistent performance for both bias (Fig.\@ref(fig:mpe-map)) and accuracy (Fig.\@ref(fig:acc-map)). Overall, while some data sources performed slightly better than others by some metrics in some places, no models using any non-RLSADB index data were able to capture the overall state or geographic distribution of stock status represented in RLSADB in a consistent manner. Performance in estimating *F/F~MSY~ * was similarly variable and poor, with the exception that the default settings of CMSY performed much more consistently poorly in terms of *F/F~MSY~* than *B/B~MSY~* (due to systemic overestimation of *F/F~MSY~*, see Supplementary Information [SI]). 
+Looking geographically we found a similar pattern of a rapid decrease in performance for models besides those fit to the RLSADB Index. Across the models, performance was not consistent in space: use of different data performed best or worst for different FAO regions. Models fit to nominal CPUE data substantially overestimate stock status in the Mediterranean, while models based on data using effective CPUE perform better in that region (but worse in others) (Fig.\@ref(fig:mape-map)). We find similarly inconsistent performance for both bias (Fig.\@ref(fig:mpe-map)) and accuracy (Fig.\@ref(fig:acc-map)). Overall, while some data sources performed slightly better than others by some metrics in some places, no models using any non-RLSADB index data were able to capture the overall state or geographic distribution of stock status represented in RLSADB in a consistent manner. Performance in estimating *F/F~MSY~ * was similarly variable and poor, with the exception that the default settings of CMSY performed much more consistently poorly in terms of *F/F~MSY~* than *B/B~MSY~* (due to systemic overestimation of *F/F~MSY~*, see SI). 
 
 
 <!-- xx dig into this, which stocks are in that region? XX -->
 
-```{r mpe-map, fig.width=8, fig.height=6, fig.cap="Median percent error (MPE, predicted relative to observed) in most recent *B/B~MSY~* by FAO statistical area from different data sources. Data source panels are ordered in ascending total bias at the FAO region level. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *B/B~MSY~* of 0.4,1, or 1.6. "}
+```{r mpe-map, fig.width=8, fig.height=6, fig.cap="Median percent error (MPE, predicted relative to observed) in most recent *B/B~MSY~* by FAO statistical area from different data sources. Data source panels are ordered in ascending total bias at the FAO region level. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *B/B~MSY~* of 0.4,1, or 1.6.", include=TRUE}
 ram_mpe_map_plot
 
-ggsave(here("documents","figs","mpe-map.png"), ram_mpe_map_plot, width = 8, height = 6)
+ggsave(here("documents","figs","figure_2.eps"), ram_mpe_map_plot, width = 8, height = 6, device = cairo_ps,dpi = 600)
 ```
 
-```{r mape-map, fig.cap = "Median absolute percent error (MAPE) in most recent *B/B~MSY~* by FAO statistical area from different data sources. Data source panels are ordered in ascending (starting from top left) mean MAPE at the FAO region level. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *B/B~MSY~* of 0.4,1, or 1.6.",fig.width=8, fig.height=6}
+```{r mape-map, fig.cap = "Median absolute percent error (MAPE) in most recent *B/B~MSY~* by FAO statistical area from different data sources. Data source panels are ordered in ascending (starting from top left) mean MAPE at the FAO region level. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *B/B~MSY~* of 0.4,1, or 1.6.",fig.width=8, fig.height=6, include=TRUE}
 ram_mape_map_plot
 
-ggsave(here("documents","figs","mape-map.png"),ram_mape_map_plot, width = 8, height = 6)
+ggsave(here("documents","figs","figure_3.eps"),ram_mape_map_plot, width = 8, height = 6,device = cairo_ps,dpi = 600)
 
 ```
 
-```{r acc-map, fig.cap="Mean classification accuracy (assignment to FAO stock status category) by FAO statistical area arising from different data sources. Data source panels are ordered in descending (starting from top left) mean accuracy at the FAO region level. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *B/B~MSY~* of 0.4,1, or 1.6.",fig.width=8, fig.height=6}
+```{r acc-map, fig.cap="Mean classification accuracy (assignment to FAO stock status category) by FAO statistical area arising from different data sources. Data source panels are ordered in descending (starting from top left) mean accuracy at the FAO region level. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent *B/B~MSY~* of 0.4,1, or 1.6.",fig.width=8, fig.height=6,include=TRUE}
 
 ram_acc_map_plot 
 
-ggsave(here("documents","figs","acc-map.png"),ram_acc_map_plot, width = 8, height = 6)
+ggsave(here("documents","figs","figure_4.eps"),ram_acc_map_plot, width = 8, height = 6,device = cairo_ps,dpi = 600)
 
 ```
 
@@ -552,14 +582,14 @@ Having access to estimates of *F/F~MSY~* reduced model error in proportion to th
 
 <!-- We may have to wait many years for new surveys to provide substantial improvements in status estimates, or work to expand access to long-running existing surveys that have yet to be fully utilized in fisheries assessment [@maureaud2020]. -->
 
-```{r voi-plot, fig.cap="Posterior probability distributions of estimated effect of different data types on root mean squared error (RMSE) of *B/B~MSY~* in the most recent 5 years of data available for each model fit. Distribution is full posterior probability distribution. Point is median, thicker black section inner 66th quantile of the posterior, the thinner black line the 95th. Change is relative to the mean performance of a catch-only heuristic model."}
+```{r voi-plot, fig.cap="Posterior probability distributions of estimated effect of different data types on root mean squared error (RMSE) of *B/B~MSY~* in the most recent 5 years of data available for each model fit. Distribution is full posterior probability distribution. Point is median, thicker black section inner 66th quantile of the posterior, the thinner black line the 95th. Change is relative to the mean performance of a catch-only heuristic model.", include = TRUE}
 
 voi_plot <- b_voi_plot + 
   geom_vline(aes(xintercept = 0), alpha = 0.75)
 
 voi_plot
 
-ggsave(here("documents","figs","voi-plot.png"),voi_plot, width = 8, height = 6)
+ggsave(here("documents","figs","figure_5.eps"),voi_plot, width = 8, height = 6,device = cairo_ps,dpi = 600)
 
 
 ```
@@ -603,7 +633,7 @@ We must also prioritize collection and curation of fish population survey data w
 
 Expanded training of fisheries scientists around the globe is another critical need. Even were we to dramatically expand the amount and types of data available for global assessment, individual fisheries and regions will need to make informed decisions about which sources of data may be applicable and which not, and to critically evaluate the results of any model based on local expertise. This is why stock assessments even in data-rich fisheries are not an automated process; the real challenge is often not in fitting a model to data but in understanding how best to use the data and the quality and limitations of the model used. Empowering a global network of fisheries scientists through training and peer-support would help local experts make the most of available data, ensure the reliability of newly collected data, and improve the interpretation of assessment results. We may also need to acknowledge that in some fisheries reliable estimates of stock status relative to MSY based reference points are simply not possible (or perhaps desirable), and instead rely on more precautionary or empirical management management measures such as spatial closures, size restrictions, and indicator based harvest strategies (ideally tested through management strategy evaluation) [@prince2019;@dowling2015;@fulton2016].
 
-The coming decades are a critical time for the future of fisheries and ocean health. Achieving the United Nations Sustainable Development Goal 14 for the conservation and sustainable use of the world's oceans depends on our ability to effectively assess the status of fish stocks around the world. The RAM Legacy Stock Assessment Database combined with the FAO's expert elicitation of status for select stocks have dramatically improved our understanding of global fisheries in recent years. However, this process still leaves a substantial number of fisheries and proportion of global catch unassessed. Numerous catch-based data-limited approaches have attempted to fill that gap, and while these efforts have advanced our knowledge and interest in unassessed fisheries, none have yet been able to provide a solution to this problem which has proven to be unbiased and sufficiently precise at a global or regional level.
+The coming decades are a critical time for the future of fisheries and ocean health. Achieving the United Nations Sustainable Development Goal 14 for the conservation and sustainable use of the world's oceans depends on our ability to effectively assess the status of fish stocks around the world. The RAM Legacy Stock Assessment Database combined with the FAO's expert elicitation of status for select stocks have dramatically improved our understanding of global fisheries in recent years. However, this process still leaves a substantial number of fisheries and proportion of global catch lacking specific assessments of stock status relative to reference points. Numerous catch-based data-limited approaches have attempted to fill that gap, and while these efforts have advanced our knowledge and interest in unassessed fisheries, none have yet been able to provide a solution to this problem which has proven to be unbiased and sufficiently precise at a global or regional level.
 
 <!-- Our results show that improving estimates of global stock status depends on investing in an improved and expanded global network of fishery data and fisheries scientists. -->
 
@@ -611,13 +641,13 @@ The lack of strong information on stock status within catch histories alone mean
 
 <!-- The need is to develop better datasets and approaches on the ground that can lead to more conclusive inferences about the state of global unassessed fisheries. -->
 
-# Data Availability Statement {.unnumbered}
-
-All data and materials needed to reproduce our results are publicly available or queried by code available at https://github.com/DanOvando/assessing-global-fisheries. 
-
 # Acknowledgements {.unnumbered}
 
 Funding for this work was provided by the Food and Agriculture Organization of the United Nations (FAO). We thank participants of the FAO "Methods for Global Assessment" workshop held in Rome, Italy February 2019 for helpful feedback on this project. We also thank A. Hordyk and one anonymous reviewer for their helpful comments. The scientific results and conclusions, as well as any views or opinions expressed herein, are those of the author(s) and do not necessarily reflect those of the FAO, NOAA or the Department of Commerce.
+
+# Data Availability Statement {.unnumbered}
+
+All data and materials needed to reproduce our results are publicly available or queried by code available at https://github.com/DanOvando/assessing-global-fisheries. The data used at time of submission have also been archived at https://figshare.com/articles/preprint/assessing-global-fisheries/13070627. 
 
 # References {.unnumbered}
 
@@ -629,18 +659,13 @@ Funding for this work was provided by the Food and Agriculture Organization of t
 # Tables {.unnumbered}
 
 
-+---------------------------------------------+------------------+--------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
-| Data Source                                 | Short Name       | Data Use                                                                 | Caveats                                                                                                         |
-+=============================================+==================+==========================================================================+=================================================================================================================+
-| Catch data [@fao2020]                       | catches          | Priors on stock status, scaling of population size, exploitation history | Heuristics or regressions used to translate shape of catch history into priors on stock status                  |
-+---------------------------------------------+------------------+--------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
-| Fisheries Management Index [@melnychuk2017] | FMI              | Priors on most recent *F/F~MSY~* values                                    | Priors produced by regression trained on data from RAM Legacy Stock Assessment Database                         |
-+---------------------------------------------+------------------+--------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
-| Swept Area Ratio [@amoroso2018]             | SAR              | Priors on most recent *F/F~MSY~* values                                    | Priors produced by regression trained on data from RAM Legacy Stock Assessment Database                         |
-+---------------------------------------------+------------------+--------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
-| Reconstructed effort data [@rousseau2019]  | effort           | Combined with catch data to create an index of abundance                 | Total reconstructed effort across all sectors. Assumed rate of technology creep reported in individual sections |
-+---------------------------------------------+------------------+--------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
-:(\#tab:data) Data sources included across model fits.
+| Data Source            | Short Name | Data Use | Caveats |
+|------------------------|------------|----------|---------|
+| Catch data [@fao2020] |  Catch    | Priors on stock status, scaling of population size, exploitation history |  Heuristics or regressions used to translate shape of catch history into priors on stock status |
+| Fisheries Management Index [@melnychuk2017] | FRI  | Priors on most recent *F/F~MSY~* values   |  Priors produced by regression trained on data from RAM Legacy Stock Assessment Database |
+| Swept Area Ratio [@amoroso2018]   |  SAR | Priors on most recent *F/F~MSY~* values | Priors produced by regression trained on data from RAM Legacy Stock Assessment Database |  
+| Reconstructed effort data [@rousseau2019] | effort |  Combined with catch data to create an index of abundance | Total reconstructed effort across all sectors. Assumed rate of technology creep reported in individual sections |
+Table: (\#tab:data) Candidate data types included across sraplus model fits.
 
 
 ```{r dat-desc}
