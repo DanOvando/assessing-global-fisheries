@@ -9,6 +9,7 @@ results/*
 # Data
 *.pdf
 *.png
+*.eps
 sraplus_tmb.*
 
 *.zip
