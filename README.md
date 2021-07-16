@@ -31,26 +31,12 @@ added. Estimates of fish populations based primarily on catch histories
 on average performed 25% better than a random guess. But, on average
 these methods assigned fisheries to the wrong FAO status category 57% of
 the time. Within these broad summaries the performance of models trained
-on our tested data sources varied widely across regions. Effective
-improvement in estimates of the state of the world’s exploited fish
+on our tested data sources varied widely across regions. Substantial
+improvements to estimates of the state of the world’s exploited fish
 populations depends more on expanded collection of new information and
-efficient use of existing data than development of new modeling
-methods.s exploited fish populations depends on prioritizing the
-collection of high-priority
+efficient use of existing data than development of new modeling methods.
 
-*Mean classification accuracy (assignment to FAO stock status category)
-by FAO statistical area arising from different data sources. Data source
-panels are ordered in descending (starting from top left) mean accuracy
-at the FAO region level. RLSADB Index refers to catch and abundance
-index drawn from RLSADB. Effective CPUE refers to an index of abundance
-based on reconstructed effort data. Effective CPUE+ uses CPUE along with
-Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For
-both CPUE series ‘nominal’ assumes a 0% technology creep, for
-‘effective’ a 2.6% technology creep is assumed. FMI uses FMI scores to
-develop a prior on recent fishing mortality rates, SAR does the same but
-based on swept area ratio. CMSY uses the methods from Froese et al. 2017
-\[@froese2017\]. Guess assigns a random recent B/B<sub>MSY</sub> of
-0.4,1, or 1.6.* <img src="documents/figs/acc-map.png" width="2400" />
+<!-- *Mean classification accuracy (assignment to FAO stock status category) by FAO statistical area arising from different data sources. Data source panels are ordered in descending (starting from top left) mean accuracy at the FAO region level. RLSADB Index refers to catch and abundance index drawn from RLSADB. Effective CPUE refers to an index of abundance based on reconstructed effort data. Effective CPUE+ uses CPUE along with Fisheries Management Index (FMI) and/or swept area ratio (SAR) data. For both CPUE series 'nominal' assumes a 0% technology creep, for 'effective' a 2.6% technology creep is assumed. FMI uses FMI scores to develop a prior on recent fishing mortality rates, SAR does the same but based on swept area ratio. CMSY uses the methods from Froese et al. 2017 [@froese2017]. Guess assigns a random recent B/B~MSY~ of 0.4,1, or 1.6.* -->
 
 # Reproducing Results
 
