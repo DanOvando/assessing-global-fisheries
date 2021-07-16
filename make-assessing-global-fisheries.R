@@ -60,29 +60,31 @@ results_name <- "v1.0"
 results_description <-
   "publication version of results"
 
-run_voi_models <- TRUE
+message("First time running results, set all the following options to TRUE")
+
+run_voi_models <- TRUE # run value of information calculations
 # sub options for run_voi_models
-fit_models <- FALSE
+fit_models <- FALSE # actually fit the VOI models
 
-write_results <- FALSE
+write_results <- TRUE # leave as TRUE generally
 
-process_fits <- FALSE
+process_fits <- FALSE # process fits to RAM data
 
-run_case_studies <- FALSE
+run_case_studies <- FALSE # run case studies
 
-run_sofia_comparison <- FALSE
+run_sofia_comparison <- FALSE # run comparison to SOFIA estimates
 
-run_ram_tests <- FALSE
+run_ram_comparison <- FALSE # run comparison to RAM estimates, the main results
 
-run_ram_comparison <- FALSE
+run_ram_tests <- FALSE # mostly diagnostic tests, no included in published results
 
-knit_paper <- FALSE
+knit_paper <- FALSE # set to TRUE to knit paper based on results
 
-warning("Running full analysis takes upwards of 24 hours on 2 cores. Recommend starting on a Friday night and then having a nice weekend. Given memory constraints of models, more than 2 cores is not recommended (memory routinely runs out on a 16 core 36GB machine when cores > 2)")
+message("Running full analysis takes upwards of 24 hours on 2 cores. Recommend starting on a Friday night and then having a nice weekend. Given memory constraints of models, more than 2 cores is not recommended (memory routinely runs out on a 16 core 36GB machine when cores > 2)")
 
-engine <-  "stan"
+engine <-  "stan" # leave as stan
 
-catchability = 1e-2
+catchability = 1e-2 # defauly catchability coefficient
 
 pub_theme <- theme_ipsum(base_size = 10,
                          axis_text_size = 10,
@@ -1681,16 +1683,16 @@ compare_to_ram <- function(data, fit){
 
 ram_test_comparison <- map2_df(ram_fit_tests$data, ram_fit_tests$fit, compare_to_ram,.id = "stock")
 
-# ram_test_comparison %>% 
-#   ggplot(aes(observed, mean, color = stock)) + 
-#   geom_point(show.legend = FALSE, alpha = 0.5) + 
-#   geom_abline(slope = 1, intercept = 0)
-# 
-# ram_test_comparison %>% 
-#   ggplot(aes(observed, mean)) + 
-#   geom_hex(show.legend = TRUE, alpha = 0.5, binwidth = c(0.25, 0.25)) + 
-#   geom_abline(slope = 1, intercept = 0) + 
-#   scale_fill_gradient(low = "lightgrey", high = "tomato")
+ram_test_comparison %>%
+  ggplot(aes(observed, mean, color = stock)) +
+  geom_point(show.legend = FALSE, alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0)
+
+ram_test_comparison %>%
+  ggplot(aes(observed, mean)) +
+  geom_hex(show.legend = TRUE, alpha = 0.5, binwidth = c(0.25, 0.25)) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_fill_gradient(low = "lightgrey", high = "tomato")
 
 
 # run RAM comparison  -----------------------------------------------------------
