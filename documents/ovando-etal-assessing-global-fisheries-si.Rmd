@@ -474,7 +474,7 @@ pi_plot <- ppc_intervals(y = fit_data$log_value, yrep = pp, x = fit_data$log_val
  pub_theme
 
 pi_plot + r2_plot
-
+pi_plot
 ```
 
 

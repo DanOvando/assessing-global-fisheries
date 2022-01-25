@@ -221,25 +221,11 @@ if (run_voi_models == TRUE) {
     saveRDS(ram_fits,
             file = here::here("results", results_name, "ram_experiments.rds"))
     
-    # sra_model <-
-    #   rstan::stan_model(file = here::here("src", "biosra.stan"))
-    
+ 
     future::plan(multiprocess, workers = n_cores)
     
     
     ram_fits <- ram_fits %>%
-      # filter(initial_state_type == "unfished",
-      #        u_window == "snapshot",
-      #        use_index == TRUE,
-      #        use_u_priors == TRUE,
-      #        estimate_shape == FALSE) %>%
-      # filter(use_u_priors == FALSE,
-      #        use_index == TRUE,
-      #        index_window == 1) %>%
-      # mutate(sciname = map_chr(data,~unique(.x$"scientificname"))) %>%
-      # filter(sciname == "Ophiodon elongatus") %>%
-      # sample_n(4) %>%
-    # slice(6) %>%
     mutate(
       fits = future_pmap(
         list(
@@ -273,10 +259,6 @@ if (run_voi_models == TRUE) {
   }
   
   
-  # wtf <- map(ram_fits$fits,'error') %>% map_lgl(is.null)
-  #
-  # a <- ram_fits %>%
-  #   filter(!wtf)
   
   # process fits ------------------------------------------------------------
   
@@ -321,8 +303,7 @@ if (run_voi_models == TRUE) {
         return(out)
       }
     
-    # future::plan(multiprocess, workers = n_cores)
-    
+
     ram_fits <- ram_fits %>%
       mutate(
         fits = map2(
@@ -372,20 +353,7 @@ if (run_voi_models == TRUE) {
       summary_plot = map(fit, "summary_plot"),
       summary = map(fit, "fit_summary")
     )
-  # test <- test %>%
-  #   mutate(
-  #     summary_plot = map_plot(fit_performance, "summary_plot"),
-  #     summary = map(fit_performance, "fit_summary")
-  #   )
-  
-  
-  
-  # trelliscopejs::trelliscope(
-  #   ram_fits %>%
-  #     filter(use_index == TRUE),
-  #   name = "blah",
-  #   panel_col = "summary_plot"
-  # )
+
   
   
   fits <- ram_fits %>%
@@ -398,8 +366,7 @@ if (run_voi_models == TRUE) {
     mutate(delta_rmse = rmse - baseline_rmse) %>%
     ungroup()
   
-  # why infinite RMSE
-  
+
   
   fits$initial_state_type <-
     forcats::fct_relevel(fits$initial_state_type, "heuristic")
@@ -408,27 +375,7 @@ if (run_voi_models == TRUE) {
   
   fits$u_window <- forcats::fct_relevel(fits$u_window, "none")
   
-
-  # View(wtf)
-  
   i <- 2
-  
-  # huh <-
-  #   read_rds(file.path(
-  #     results_path,
-  #     "experiments",
-  #     paste0("experiment-", wtf$experiment[i], ".rds")
-  #   ))
-  # 
-  # driors <-
-  #   ram_fits$priors[ram_fits$experiment == wtf$experiment[i]][[1]]
-  # 
-  # data <-
-  #   ram_fits$data[ram_fits$experiment == wtf$experiment[i]][[1]]
-  # 
-  # plot_sraplus(huh$sirplus)
-  
-  # plot_prior_posterior(huh$sraplus, driors)
   
   
   # plot diagnostics --------------------------------------------------------
@@ -454,22 +401,6 @@ if (run_voi_models == TRUE) {
   voi_data <- fits %>%
     filter(fit_name != "cmsy")
   
-  
-  # voi_data %>%
-  #   filter(use_index == FALSE,
-  #          metric == "b_v_bmsy",
-  #          b_ref_type == "b") %>%
-  #   ggplot(aes(rmse, fill = use_terminal_state)) +
-  #   geom_density(position = "dodge")
-  
-  
-  
-  # noerror_data %>%
-  #   filter(use_index == FALSE,
-  #          metric == "b_v_bmsy",
-  #          b_ref_type == "b") %>%
-  #   ggplot(aes(observed, predicted, color = use_terminal_state)) +
-  #   geom_point()
   
   obs_v_pred_plot <- noerror_data %>%
     filter(metric == "b_v_bmsy") %>%
@@ -528,29 +459,6 @@ if (run_voi_models == TRUE) {
     scale_y_continuous(limits = c(-.5, .5))  +
     scale_fill_viridis(option = "A")
 
-  # b_rmse_fit <-
-  #   rstanarm::stan_glmer(
-  #     log(rmse) ~ fit_name + (1 | stockid),
-  #     data = noerror_data %>% filter(metric == "b_v_bmsy"),
-  #     cores = 4
-  #   )
-  
-  # b_rmse_fit_posterior <- as.array(b_rmse_fit)
-  
-  # b_rmse_plot <- bayesplot::mcmc_areas(
-  #   b_rmse_fit_posterior,
-  #   regex_pars = "fit_name",
-  #   prob = 0.8,
-  #   # 80% intervals
-  #   prob_outer = 0.99,
-  #   # 99%
-  #   point_est = "mean"
-  # ) +
-  #   scale_x_percent(name = "Percent change in B/Bmsy RMSE")
-  # 
-  # 
-  # 
-  # value of information regressions
   
   b_voi_fit <-
     rstanarm::stan_glm(
@@ -596,131 +504,7 @@ if (run_voi_models == TRUE) {
     scale_y_discrete(name = '')
   
   
-  # u_voi_fit <-
-  #   rstanarm::stan_glmer(
-  #     rmse ~  initial_state_type  + use_index + u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
-  #                                                                                                                         stockid),
-  #     data = voi_data %>% filter(metric == "u_v_umsy", is.finite(rmse)),
-  #     cores = 4,
-  #     family = Gamma(link = "log")
-  #   )
   
-  # u_voi_plot <- bayesplot::mcmc_areas(
-  #   as.array(u_voi_fit),
-  #   regex_pars = c("use", "state", "estimate", "index", "u_"),
-  #   prob = 0.8,
-  #   # 80% intervals
-  #   prob_outer = 0.95,
-  #   # 99%
-  #   point_est = "mean",
-  #   transformations = function(x)
-  #     exp(x) - 1
-  # ) +
-  #   scale_x_percent(name = "% Change in RMSE")
-  # 
-  
-  # 
-  # index_voi_fit <-
-  #   rstanarm::stan_glmer(
-  #     rmse ~  factor(index_freq) + factor(index_window) + index_rmse + (1 |
-  #                                                                         stockid),
-  #     data = voi_data %>% filter(metric == "b_v_bmsy", use_index == TRUE, error_cv > min(error_cv)) %>% mutate(index_rmse = scale(index_rmse)),
-  #     family = Gamma(link = "log"),
-  #     cores = 4
-  #   )
-  # 
-  # 
-  # index_voi_plot <- bayesplot::mcmc_areas(
-  #   as.array(index_voi_fit),
-  #   regex_pars = c("freq", "window","index"),
-  #   prob = 0.8,
-  #   # 80% intervals
-  #   prob_outer = 0.95,
-  #   # 99%
-  #   point_est = "mean",
-  #   transformations = function(x)
-  #     exp(x) - 1
-  # ) +
-  #   scale_x_percent(name = "% Change in RMSE")
-  # 
-  # 
-  # effect on accuracy
-  
-  # acc_data <- voi_data %>%
-  #   filter(metric == "b_v_bmsy") %>%
-  #   mutate(bin_acc = accuracy > 0.5)
-  # 
-  # 
-  # acc_voi_fit <-
-  #   rstanarm::stan_glmer(
-  #     bin_acc ~  initial_state_type  + use_index + u_window + estimate_shape + estimate_proc_error + use_terminal_state + (1 |
-  #                                                                                                                            stockid),
-  #     data = acc_data,
-  #     cores = 4,
-  #     family = binomial()
-  #   )
-  # 
-  # 
-  # acc_voi_plot <- bayesplot::mcmc_areas(
-  #   as.array(acc_voi_fit),
-  #   regex_pars = c("use", "state", "estimate", "index", "u_"),
-  #   prob = 0.8,
-  #   # 80% intervals
-  #   prob_outer = 0.95,
-  #   # 99%
-  #   point_est = "mean",
-  #   transformations = function(x)
-  #     exp(x) - 1
-  # ) +
-  #   scale_x_percent(name = "% Change in Accuracy")
-  # 
-  # acc_index_voi_fit <-
-  #   rstanarm::stan_glmer(
-  #     bin_acc ~  factor(index_freq) + factor(index_window) + (1 | stockid),
-  #     data = acc_data %>% filter(use_index == TRUE),
-  #     cores = 4,
-  #     family = binomial()
-  #   )
-  # 
-  # 
-  # acc_index_voi_plot <- bayesplot::mcmc_areas(
-  #   as.array(acc_index_voi_fit),
-  #   regex_pars = c("use", "state", "estimate", "index"),
-  #   prob = 0.8,
-  #   # 80% intervals
-  #   prob_outer = 0.95,
-  #   # 99%
-  #   point_est = "mean",
-  #   transformations = function(x)
-  #     exp(x) - 1
-  # ) +
-  #   scale_x_percent(name = "% Change in Accuracy")
-  # 
-  # # how wrong can you be?
-  # 
-  # quality_data <- fits %>%
-  #   filter(use_index == TRUE,
-  #          fit_name == "sraplus",
-  #          error_cv > min(error_cv))
-  # 
-  # quality_obs_v_pred_plot <- quality_data %>%
-  #   filter(metric == "b_v_bmsy") %>%
-  #   ggplot(aes(observed, predicted, color = pmin(20, index_rmse))) +
-  #   geom_point(alpha = 0.75, size = 4) +
-  #   geom_abline(aes(slope = 1, intercept = 0), linetype = 2) +
-  #   geom_smooth(method = 'lm') +
-  #   facet_wrap( ~ metric) +
-  #   scale_color_viridis()
-  # 
-  # quality_effect_plot <- quality_data %>%
-  #   filter(metric == "b_v_bmsy") %>%
-  #   ggplot(aes(index_rmse, rmse)) +
-  #   geom_point() +
-  #   geom_abline(aes(slope = 0, intercept = mean(rmse))) +
-  #   geom_smooth(method = "lm") +
-  #   scale_x_log10() +
-  #   scale_y_log10()
-  # 
   flist <- ls()[str_detect(ls(), "_fit")]
   
   save(list = flist,
@@ -760,11 +544,6 @@ comp_stocks <- exs %>%
     )
   ) %>%
   select(scientificname, resilience)
-
-
-# exs %>%
-#   ggplot(aes(year, b_v_bmsy, color = stockid)) +
-#   geom_line(show.legend = FALSE)
 
 total_nominal_effort <- rous_data %>%
   left_join(effort_region_to_country, by = "country") %>%
@@ -917,11 +696,6 @@ ex_scatter_plot <- tmp2 %>%
 sraplus_v_truth <- tmp %>% 
   left_join(truth, by = c("stockid","year")) %>% 
   filter(data == "cpue") 
-
-# sraplus_v_truth %>% 
-#   ggplot(aes(catch, b_div_bmsy)) + 
-#   geom_point(size = 2)
-
 
 # run sofia-comparison --------------------------------------------------------
 
@@ -1210,13 +984,7 @@ assign_effort <-
            effort,
            fao_catch,
            scalar = 1000) {
-    # data <- temp_fao$data[[which(temp_fao$stockid == huh)]]
-    #
-    # fao_catch <- fao
-    #
-    # effort <- rous_data
-    #
-    # fao_stock <- temp_fao$stockid[which(temp_fao$stockid == huh)]
+   
     
     comm_name <-
       str_split(fao_stock, pattern = '_')[[1]][1] %>% str_remove_all("(\\d)|(-)")
@@ -1268,26 +1036,6 @@ temp_fao <- temp_fao %>%
 fao_status <- temp_fao %>%
   unnest(cols = data)
 
-
-# fao_status %>%
-#   group_by(year, area) %>%
-#   summarise(effort_index = unique(effort_index)) %>%
-#   ggplot(aes(year, effort_index)) +
-#   geom_line() +
-#   facet_wrap(~area)
-
-# temp <- fao_status %>%
-#   # filter(area %in% 67) %>%
-#   group_by(stockid) %>%
-#   nest() %>%
-#   ungroup()
-#
-# huh <- temp$stockid[4]
-#
-# wtf <- fao_status %>%
-#   filter(stockid == huh)
-
-
 fao_status <- fao_status %>%
   group_by(stockid) %>%
   mutate(
@@ -1301,24 +1049,13 @@ fao_status <- fao_status %>%
          nas == 0,!is.na(common_name)) %>%
   ungroup() %>%
   mutate(sp_group = isscaap_number) %>%
-  # left_join(fao_species %>% select(isscaap_group, isscaap_number) %>% unique(), by = c("sp_group" = "isscaap_number")) %>%
   mutate(species = scientific_name)
 
 
 support_data <-
   list(mean_regional_isscaap_fmi = mean_regional_isscaap_fmi)
 
-# areas <- c(67, 57, 37,71)
-
 areas <- unique(fao_status$fao_area_code)
-
-# fao_status %>%
-#   filter(year == max(year)) %>%
-#   summarise(catch = sum(catch))
-#
-# fao %>%
-#   filter(year == max(year)) %>%
-#   summarise(catch = sum(capture))
 
 # annnnnd try and run assessments
 # 
@@ -1515,8 +1252,6 @@ fao_areas <- sf::st_read(here('data', "FAO_AREAS_NOCOASTLINE"), promote_to_multi
   filter(f_level == "MAJOR") %>% 
   mutate(fao_area_code = as.numeric(f_area)) #%>% 
 
-  # st_transform(crs = "+proj=moll")
-
 fao_areas %>% ggplot() + geom_sf()
 
 fao_area_accuracy <- fao_areas %>%
@@ -1524,17 +1259,13 @@ fao_area_accuracy <- fao_areas %>%
   filter(!is.na(data))
 
 
-# world_map <-
-#   rnaturalearth::ne_countries(returnclass = "sf", scale = "small")
-
 world_map <-
   rnaturalearth::ne_download(
     scale = 50,
     type = 'land',
     category = 'physical',
     returnclass = "sf"
-  ) #%>% 
-  # st_transform(crs = "+proj=moll")
+  ) 
   
 
 fao_acc_map_plot <- fao_area_accuracy %>%
@@ -1603,9 +1334,7 @@ if (run_ram_tests) {
                               initial_state = NA,
                               initial_state_cv = 0.05)
       
-      # browser()
-      # sraplus::plot_driors(driors)
-      # 
+
       fit <- fit_sraplus(driors = driors,
                          engine = "stan",
                          model = "sraplus_tmb",
@@ -1615,12 +1344,7 @@ if (run_ram_tests) {
                          n_keep = 2000)
       
       
-      # b <- fit$results %>%
-      #   filter(variable == "b_t")
-      
-      # plot(b$mean, data$total_biomass)
-      # abline(a = 0, b = 1)
-      #
+
       out <- list(fit = fit,
                   driors = driors)
     }
@@ -1671,10 +1395,6 @@ sraplus::plot_prior_posterior(ram_fit_tests$fit[[i]]$fit, ram_fit_tests$fit[[i]]
 
 
 compare_to_ram <- function(data, fit){
-  
-  # data <- ram_fit_data$data[[1]]
-  # 
-  # fit <- ram_fit_data$fit[[1]]
   
   comparison <- tibble(observed = data$b_v_bmsy) %>% 
     bind_cols(fit$fit$results[fit$fit$results$variable == "b_div_bmsy",])
@@ -1828,24 +1548,7 @@ ram_comp_data <- ram_comp_data %>%
 if (run_ram_comparison == TRUE) {
   
  
-  
-  # rous_data %>% 
-  #   group_by(year, area) %>% 
-  #   summarise(effort = mean(effort_cell_reported_nom, na.rm = TRUE)) %>% 
-  #   ungroup() %>% 
-  #   ggplot(aes(year, effort)) + 
-  #   geom_line() + 
-  #   facet_wrap(~area, scales = "free_y")
-  # 
-  # 
-  # ram_comp_data %>% 
-  #   group_by(year, fao_area_code) %>% 
-  #   summarise(effort = mean(effort_index, na.rm = TRUE)) %>% 
-  #   ungroup() %>% 
-  #   ggplot(aes(year, effort)) + 
-  #   geom_line() + 
-  #   facet_wrap(~fao_area_code, scales = "free_y")
-  # 
+
   future::plan(multisession, workers = n_cores)
   
   ram_status_fits <- ram_comp_data %>%
@@ -1936,13 +1639,6 @@ ram_u_fits <- ram_status_fits %>%
 
 
 i = 24
- # ram_status_fits$performance[[i]] %>%
- #  ggplot() +
- #  geom_point(aes(year, ram_b_v_bmsy, fill = "Observed from RAM"), shape = 21) +
- #   geom_line(aes(year, mean, color = data)) +
- #  facet_wrap(~data) +
- #  scale_x_continuous(name = "B/Bmsy") +
- #  labs(title = ram_status_fits$stockid[[i]])
 
 assess_ram_fits <- ram_status_fits %>% 
   select(stockid, performance) %>% 
@@ -1998,14 +1694,6 @@ assess_ramu_fits <- assess_ramu_fits %>%
 
 write_rds(assess_ramu_fits, path = file.path(results_path,"assess_ramu_fits.rds"))
 
-
-# assess_ram_fits %>% 
-#   ggplot(aes(pmin(5,ram_b_v_bmsy),pmin(5,mean))) + 
-#   geom_hex(binwidth = c(0.33, 0.33), color = "white") + 
-#   geom_smooth(method = "lm", aes(color = "fit")) +
-#   geom_abline(slope = 1, intercept = 0) +
-#   facet_wrap(~data, scales = "free") 
-#   
 
 ram_v_sraplus_plot <- assess_ram_fits %>% 
   ggplot(aes(pmin(ram_b_v_bmsy,5), pmin(mean,5))) +
